@@ -1,0 +1,53 @@
+body {
+  background-color: $c-dark-4;
+}
+
+div,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span {
+  color: $c-white-2;
+}
+
+div,
+p,
+span,
+a {
+  font-family: "Source Sans Pro", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Poppins", sans-serif;
+}
+
+h1 {
+  font-weight: 700;
+  font-size: 64px;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+}
+
+a {
+  color: $c-green-1;
+  text-decoration: none;
+
+  &:hover {
+    color: $c-green-2;
+  }
+}

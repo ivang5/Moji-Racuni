@@ -15,7 +15,7 @@ const Header = () => {
         <Link to="/Login">Login</Link>
       )}
 
-      {user && <p>Hello {user.username}</p>}
+      {user && <span className="pl-1">Hello {user.username}</span>}
     </div>
   );
 };

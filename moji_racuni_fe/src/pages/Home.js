@@ -28,9 +28,9 @@ const Home = () => {
 
   return (
     <div>
-      <p>Welcome to home page</p>
+      <h1 className="py-1">Welcome to home page</h1>
 
-      {users.length != 0 ? (
+      {users.length !== 0 ? (
         <ul>
           {users.map((user) => (
             <li key={user.id}>{user.username}</li>

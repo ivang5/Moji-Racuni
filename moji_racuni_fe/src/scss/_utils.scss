@@ -1,0 +1,140 @@
+//* Display
+.d-none {
+  display: none;
+}
+.d-block {
+  display: block;
+}
+.d-inline {
+  display: inline-block;
+}
+.d-flex {
+  display: flex;
+}
+
+//* Text transform
+.lowercase {
+  text-transform: lowercase;
+}
+.uppercase {
+  text-transform: uppercase;
+}
+.capitalize {
+  text-transform: capitalize;
+}
+
+//* Font size
+.fs-1 {
+  font-size: 32px;
+}
+.fs-2 {
+  font-size: 24px;
+}
+.fs-3 {
+  font-size: 20px;
+}
+.fs-4 {
+  font-size: 16px;
+}
+.fs-5 {
+  font-size: 14px;
+}
+
+//* Font weight
+.fw-bold {
+  font-weight: 700;
+}
+.fw-semi-bold {
+  font-weight: 600;
+}
+.fw-normal {
+  font-weight: 400;
+}
+.fw-light {
+  font-weight: 300;
+}
+
+//* Font style
+.fs-normal {
+  font-style: normal;
+}
+.fs-italic {
+  font-style: italic;
+}
+
+//* Text color
+.c-green-1 {
+  color: $c-green-1;
+}
+.c-green-2 {
+  color: $c-green-2;
+}
+.c-green-3 {
+  color: $c-green-3;
+}
+.c-green-4 {
+  color: $c-green-4;
+}
+.c-green-5 {
+  color: $c-green-5;
+}
+.c-green-6 {
+  color: $c-green-6;
+}
+
+//* Cursor
+.cursor-n {
+  cursor: none;
+}
+.cursor-p {
+  cursor: pointer;
+}
+
+//* Spacing
+$spaceamounts: (1, 2, 3, 4, 5);
+
+@each $space in $spaceamounts {
+  .m-#{$space} {
+    margin: #{$space * 20}px;
+  }
+  .mx-#{$space} {
+    margin: 0 #{$space * 20}px;
+  }
+  .my-#{$space} {
+    margin: #{$space * 20}px 0;
+  }
+  .mt-#{$space} {
+    margin-top: #{$space * 20}px;
+  }
+  .mb-#{$space} {
+    margin-bottom: #{$space * 20}px;
+  }
+  .mr-#{$space} {
+    margin-right: #{$space * 20}px;
+  }
+  .ml-#{$space} {
+    margin-left: #{$space * 20}px;
+  }
+
+  .p-#{$space} {
+    padding: #{$space * 20}px;
+  }
+  .px-#{$space} {
+    padding: 0 #{$space * 20}px;
+  }
+  .py-#{$space} {
+    padding: #{$space * 20}px 0;
+  }
+  .pt-#{$space} {
+    padding-top: #{$space * 20}px;
+  }
+  .pb-#{$space} {
+    padding-bottom: #{$space * 20}px;
+  }
+  .pr-#{$space} {
+    padding-right: #{$space * 20}px;
+  }
+  .pl-#{$space} {
+    padding-left: #{$space * 20}px;
+  }
+}
