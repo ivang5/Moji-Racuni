@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     'account.apps.AccountConfig',
+    'company.apps.CompanyConfig',
+    'receipt.apps.ReceiptConfig',
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
