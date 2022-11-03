@@ -3,6 +3,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from .serializers import ReceiptSerializer, ItemSerializer
 from receipt.models import Receipt, Item
@@ -32,7 +33,7 @@ class ReceiptViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, pk=None):
-        receipt = Receipt.objects.get(pk=pk)
+        receipt = get_object_or_404(Receipt, pk=pk)
         user = request.user
         if (receipt.user != user):
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -41,11 +42,12 @@ class ReceiptViewSet(viewsets.ViewSet):
     
 @permission_classes([IsAuthenticated])
 class ItemViewSet(viewsets.ViewSet):
-    def list(self, request, pk=None):
+    @action(detail=True)
+    def all(self, request, pk=None):
         queryset = Item.objects.all()
         items = []
         for item in queryset:
-            if item.receipt == pk:
+            if item.receipt.id == int(pk):
                 items.append(item)
         serializer = ItemSerializer(items, many=True)
         return Response(serializer.data)
@@ -64,7 +66,7 @@ class ItemViewSet(viewsets.ViewSet):
         return Response(serializer.data)
     
     def update(self, request, pk=None):
-        item = Item.objects.get(pk=pk)
+        item = get_object_or_404(Item, pk=pk)
         serializer = ItemSerializer(item, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -72,6 +74,6 @@ class ItemViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
-        item = Item.objects.get(pk=pk)
+        item = get_object_or_404(Item, pk=pk)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

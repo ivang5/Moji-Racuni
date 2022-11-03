@@ -3,9 +3,9 @@ from .views import CompanyViewSet, CompanyUnitViewSet, CompanyTypeViewSet
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
-router.register('company', CompanyViewSet, basename='company')
-router.register('company-units', CompanyUnitViewSet, basename='company')
-router.register('company-types', CompanyTypeViewSet, basename='company')
+router.register('companies', CompanyViewSet, basename='companies')
+router.register('company-units', CompanyUnitViewSet, basename='company-units')
+router.register('company-types', CompanyTypeViewSet, basename='company-types')
 
 urlpatterns = [
     path('', include(router.urls))
