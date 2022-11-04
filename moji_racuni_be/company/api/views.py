@@ -51,7 +51,9 @@ class CompanyViewSet(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, pk=None):
-        #TODO: Proveriti da li je zahtev poslao admin
+        user = request.user
+        if (user.role != "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         company = get_object_or_404(Company, pk=pk)
         company.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -89,7 +91,9 @@ class CompanyUnitViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def destroy(self, request, pk=None):
-        #TODO: Proveriti da li je zahtev poslao admin
+        user = request.user
+        if (user.role != "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         companyUnit = get_object_or_404(CompanyUnit, pk=pk)
         companyUnit.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

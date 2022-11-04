@@ -12,11 +12,22 @@ from receipt.models import Receipt, Item
 class ReceiptViewSet(viewsets.ViewSet):
     def list(self, request):
         user = request.user
-        receipts = user.receipt_set.all()
+        if (user.role == "ADMIN"):
+            receipts = Receipt.objects.all()
+        else:
+            receipts = user.receipt_set.all()
         serializer = ReceiptSerializer(receipts, many=True)
         return Response(serializer.data)
 
     def create(self, request):
+        user = request.user
+        if (user.role == "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        receipts = user.receipt_set.all()
+        receipt_link = request.data.get('link')
+        for receipt in receipts:
+            if (receipt.link == receipt_link):
+                return Response(status=status.HTTP_409_CONFLICT)
         serializer = ReceiptSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -42,6 +53,14 @@ class ReceiptViewSet(viewsets.ViewSet):
     
 @permission_classes([IsAuthenticated])
 class ItemViewSet(viewsets.ViewSet):
+    def list(self, request):
+        user = request.user
+        if (user.role != "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        items = Item.objects.all()
+        serializer = ItemSerializer(items, many=True)
+        return Response(serializer.data)
+    
     @action(detail=True, url_path='receipt', url_name='receipt')
     def all(self, request, pk=None):
         queryset = Item.objects.all()
@@ -53,6 +72,9 @@ class ItemViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request):
+        user = request.user
+        if (user.role == "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         serializer = ItemSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -66,6 +88,9 @@ class ItemViewSet(viewsets.ViewSet):
         return Response(serializer.data)
     
     def update(self, request, pk=None):
+        user = request.user
+        if (user.role == "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         item = get_object_or_404(Item, pk=pk)
         serializer = ItemSerializer(item, data=request.data)
         if serializer.is_valid():
@@ -74,6 +99,9 @@ class ItemViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
+        user = request.user
+        if (user.role == "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
         item = get_object_or_404(Item, pk=pk)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
