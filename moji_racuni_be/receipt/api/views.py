@@ -42,7 +42,7 @@ class ReceiptViewSet(viewsets.ViewSet):
     
 @permission_classes([IsAuthenticated])
 class ItemViewSet(viewsets.ViewSet):
-    @action(detail=True)
+    @action(detail=True, url_path='receipt', url_name='receipt')
     def all(self, request, pk=None):
         queryset = Item.objects.all()
         items = []

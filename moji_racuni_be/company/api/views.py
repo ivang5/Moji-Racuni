@@ -38,7 +38,7 @@ class CompanyViewSet(viewsets.ViewSet):
         serializer = CompanySerializer(company)
         return Response(serializer.data)
     
-    @action(detail=True, methods=['put'])
+    @action(detail=True, methods=['put'], url_path='change-type', url_name='change_type')
     def change_type(self, request, pk=None):
         company_queryset = Company.objects.all()
         company = get_object_or_404(company_queryset, pk=pk)

@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register('receipts', ReceiptViewSet, basename='receipts')
-router.register('receipt-items', ItemViewSet, basename='receipt-items')
+router.register('items', ItemViewSet, basename='receipt-items')
 
 urlpatterns = [
     path('', include(router.urls))
