@@ -1,28 +1,19 @@
-import React, { useState, useEffect, useContext } from "react";
-import AuthContext from "../context/AuthContext";
+import React, { useState, useEffect } from "react";
+import useFetch from "../utils/useFetch";
 
 const Home = () => {
   const [users, setUsers] = useState([]);
-  const { authTokens, logoutUser } = useContext(AuthContext);
+  const api = useFetch();
 
   useEffect(() => {
     getUsers();
   }, []);
 
   const getUsers = async () => {
-    const response = await fetch("http://127.0.0.1:8000/api/users/", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authTokens.access}`,
-      },
-    });
-    const data = await response.json();
+    const { response, data } = await api("/api/users/");
 
     if (response.status === 200) {
       setUsers(data);
-    } else if (response.statusText === "Unauthorized") {
-      logoutUser();
     }
   };
 
