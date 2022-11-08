@@ -5,7 +5,7 @@ const Login = () => {
   const { loginUser } = useContext(AuthContext);
 
   return (
-    <div>
+    <div className="mt-5">
       <form onSubmit={loginUser}>
         <input type="text" name="username" placeholder="Enter Username" />
         <input type="password" name="password" placeholder="Enter Password" />
