@@ -27,6 +27,7 @@
 }
 .d-flex {
   display: flex;
+  justify-content: center;
 }
 
 //* Text transform
@@ -177,6 +178,10 @@ $screen-lg: 1200px;
     }
   } @else if $media == desktop {
     @media (min-width: $screen-lg) {
+      @content;
+    }
+  } @else if $media == ls {
+    @media (orientation: landscape) {
       @content;
     }
   } @else {

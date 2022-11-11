@@ -1,24 +1,38 @@
 .btn {
   display: inline-block;
   color: $c-green-2;
-  border: 2px solid $c-green-3;
-  padding: 8px 14px;
-  margin: 6px;
-  font-size: 16px;
+  border: 2px solid $c-green-4;
+  padding: 12px 22px;
+  font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgb(34 51 49 / 13%);
   transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
-    border-color 0.2s ease-in-out;
+    border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+  @include respond-to(desktop) {
+    font-size: 16px;
+  }
+
+  &:hover {
+    box-shadow: none;
+  }
 
   &-lg {
-    font-size: 18px;
+    padding: 10px 18px;
+
+    @include respond-to(desktop) {
+      padding: 14px 24px;
+    }
   }
 
   &-primary {
-    background-color: $c-green-3;
-    color: $c-dark-6;
+    background-color: $c-green-4;
+    color: $c-white-2;
 
     &:hover {
-      background-color: $c-green-2;
+      background-color: $c-green-5;
+      border-color: $c-green-5;
     }
 
     &--white {
@@ -36,7 +50,7 @@
     background-color: transparent;
 
     &:hover {
-      color: $c-dark-6;
+      color: $c-gray-2;
       background-color: $c-green-3;
     }
 

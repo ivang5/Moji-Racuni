@@ -1,0 +1,95 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px;
+
+  @include respond-to(phone) {
+    padding-top: 35px;
+  }
+
+  @include respond-to(tablet) {
+    padding-top: 60px;
+  }
+
+  &__group-wrapper {
+    @include respond-to(tablet) {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 800px;
+    }
+
+    .form__group {
+      &:nth-child(odd) {
+        @include respond-to(tablet) {
+          margin-right: 30px;
+        }
+
+        @include respond-to(desktop) {
+          margin-right: 40px;
+        }
+      }
+    }
+  }
+
+  &__group {
+    margin-bottom: 20px;
+
+    @include respond-to(tablet) {
+      margin-bottom: 25px;
+    }
+  }
+
+  &__label {
+    position: relative;
+    display: flex;
+  }
+
+  &__input {
+    border: none;
+    border-radius: 10px;
+    height: 48px;
+    width: 260px;
+    padding: 15px 15px 0;
+    box-shadow: 0 12px 24px rgb(34 51 49 / 13%);
+
+    @include respond-to(phone) {
+      width: 340px;
+    }
+
+    @include respond-to(tablet) {
+      width: 280px;
+    }
+
+    @include respond-to(desktop) {
+      width: 340px;
+    }
+
+    &:focus,
+    &:focus-visible {
+      outline: none;
+      border-bottom: 2px solid $c-green-3;
+    }
+
+    &:focus,
+    &:not(:placeholder-shown) {
+      ~ .form__label-text {
+        font-size: 12px;
+        top: 2px;
+        left: 10px;
+        transform: translateY(0);
+        color: $c-gray-1;
+      }
+    }
+  }
+
+  &__label-text {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    transition: 0.2s;
+    cursor: text;
+  }
+}
