@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+ <rect width="500" height="500" fill-opacity="0"/>
+ <path d="m172.26 43.228h218.12s-23.466 1.3897-28.948 30.294c-17.728 93.48 21.86 192.84 0 285.44-8.0699 34.185-47.124 94.249-47.124 94.249h-218.12s39.054-60.064 47.124-94.249c21.86-92.601-17.728-191.96 0-285.44 5.4816-28.905 28.948-30.294 28.948-30.294" fill="#e2e3de"/>
+ <rect x="164.95" y="117.32" width="135.19" height="6.6644" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect transform="matrix(1 0 -.27722 .96081 0 0)" x="185.08" y="62.741" width="162.81" height="23.212" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect x="165.91" y="169.29" width="68.548" height="9.5206" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect x="167.09" y="191.19" width="168.51" height="8.5685" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect x="172.48" y="214.99" width="57.123" height="11.425" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect x="171.92" y="237.84" width="51.411" height="7.6164" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect x="172.48" y="274.02" width="170.84" height="5.7123" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect x="170.97" y="291.15" width="164.5" height="7.6164" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect transform="matrix(1 0 -.14242 .98981 0 0)" x="211.23" y="323.72" width="35.226" height="5.5378" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect transform="matrix(1 0 -.37139 .92848 0 0)" x="303.73" y="414.07" width="169.47" height="10.254" color="#000000" fill="#ababab" opacity=".62724"/>
+ <rect transform="matrix(1 0 -.53056 .84765 0 0)" x="393.49" y="492.27" width="111.39" height="16.495" color="#000000" fill="#ababab" opacity=".62724"/>
+</svg>

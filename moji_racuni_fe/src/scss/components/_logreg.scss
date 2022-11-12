@@ -6,6 +6,53 @@
 
   &--registration {
     justify-content: space-between;
+
+    .logreg__bg-img {
+      left: 0;
+      transform: scaleX(-1) rotate(25deg);
+
+      @include respond-to(wide) {
+        left: 5%;
+      }
+    }
+  }
+
+  &__bg {
+    display: none;
+
+    @include respond-to(laptop) {
+      display: unset;
+      z-index: -1;
+      overflow: hidden;
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    &-img {
+      position: absolute;
+      top: 8%;
+      left: 310px;
+      width: 75%;
+      transform: rotate(25deg);
+      opacity: 0.3;
+      overflow: hidden;
+      transition: left 0.6s ease, transform 0.6s ease;
+
+      @include respond-to(desktop) {
+        top: 5%;
+        left: 30%;
+        max-width: 900px;
+      }
+
+      @include respond-to(wide) {
+        top: 0;
+        left: 38%;
+        max-width: 1000px;
+      }
+    }
   }
 
   &__form {

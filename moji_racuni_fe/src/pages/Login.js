@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import AuthContext from "../context/AuthContext";
+import receipt from "../rec.svg";
 
 const Login = () => {
   const { loginUser, registerUser } = useContext(AuthContext);
@@ -48,6 +49,9 @@ const Login = () => {
               : "logreg__form-wrapper"
           }
         >
+          <div className="logreg__bg">
+            <img className="logreg__bg-img" src={receipt} alt="receipt" />
+          </div>
           <div
             className={
               registration
