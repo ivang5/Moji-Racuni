@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import AuthContext from "../context/AuthContext";
 
 const Login = () => {
-  const { loginUser } = useContext(AuthContext);
+  const { loginUser, registerUser } = useContext(AuthContext);
   const [registration, setRegistration] = useState(false);
 
   const goToLogin = () => {
@@ -15,7 +15,7 @@ const Login = () => {
 
   return (
     <>
-      <div className="logreg">
+      <div className={registration ? "logreg logreg--registration" : "logreg"}>
         <div
           className={
             registration
@@ -102,7 +102,7 @@ const Login = () => {
               <h1 className="logreg__form-title capitalize">Kreirajte nalog</h1>
               <span className="logreg__form-title-line"></span>
             </div>
-            <form className="form" onSubmit={loginUser}>
+            <form className="form" onSubmit={registerUser}>
               <div className="form__group-wrapper">
                 <div className="form__group">
                   <label className="form__label" htmlFor="reg-name">
@@ -170,7 +170,7 @@ const Login = () => {
                       className="form__input"
                       id="reg-password-1"
                       type="password"
-                      name="password-1"
+                      name="password1"
                       placeholder=" "
                     />
                     <span className="form__label-text">Ponovite lozinku</span>

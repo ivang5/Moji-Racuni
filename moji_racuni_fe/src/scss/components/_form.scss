@@ -34,7 +34,7 @@
   }
 
   &__group {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 
     @include respond-to(tablet) {
       margin-bottom: 25px;
@@ -91,5 +91,9 @@
     transform: translateY(-50%);
     transition: 0.2s;
     cursor: text;
+  }
+
+  .btn {
+    margin-top: 10px;
   }
 }

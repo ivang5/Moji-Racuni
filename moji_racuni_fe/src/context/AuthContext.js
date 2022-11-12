@@ -28,17 +28,15 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, [authTokens, loading]);
 
-  const loginUser = async (e) => {
-    e.preventDefault();
-
+  const callLogin = async (username, password) => {
     const response = await fetch("http://127.0.0.1:8000/api/token/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username: e.target.username.value,
-        password: e.target.password.value,
+        username: username,
+        password: password,
       }),
     });
     const data = await response.json();
@@ -48,6 +46,44 @@ export const AuthProvider = ({ children }) => {
       setUser(jwt_decode(data.access));
       localStorage.setItem("authTokens", JSON.stringify(data));
       navigate("/");
+    } else {
+      // TODO: Prikazati gresku na lepsi nacin
+      alert("Doslo je do greske");
+    }
+  };
+
+  const loginUser = async (e) => {
+    e.preventDefault();
+    await callLogin(e.target.username.value, e.target.password.value);
+  };
+
+  const registerUser = async (e) => {
+    e.preventDefault();
+
+    if (e.target.password.value !== e.target.password1.value) {
+      // TODO: Prikazati gresku na lepsi nacin
+      alert("Lozinke moraju biti iste!");
+    }
+
+    const response = await fetch("http://127.0.0.1:8000/api/users/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        first_name: e.target.name.value,
+        last_name: e.target.lastname.value,
+        email: e.target.email.value,
+        username: e.target.username.value,
+        password: e.target.password.value,
+        role: "REGULAR",
+        date_joined: "2022-11-12",
+        is_active: true,
+      }),
+    });
+
+    if (response.status === 201) {
+      await callLogin(e.target.username.value, e.target.password.value);
     } else {
       // TODO: Prikazati gresku na lepsi nacin
       alert("Doslo je do greske");
@@ -67,6 +103,7 @@ export const AuthProvider = ({ children }) => {
     authTokens: authTokens,
     setAuthTokens: setAuthTokens,
     loginUser: loginUser,
+    registerUser: registerUser,
     logoutUser: logoutUser,
   };
 
