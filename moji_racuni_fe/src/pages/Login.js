@@ -1,10 +1,25 @@
 import React, { useContext, useState } from "react";
+import FormGroup from "../components/FormGroup";
 import AuthContext from "../context/AuthContext";
 import receipt from "../rec.svg";
 
 const Login = () => {
   const { loginUser, registerUser } = useContext(AuthContext);
   const [registration, setRegistration] = useState(false);
+  const [loginValid, setLoginValid] = useState({
+    username: "",
+    password: "",
+    server: "",
+  });
+  const [registrationValid, setRegistrationValid] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    username: "",
+    password: "",
+    passwordRepeat: "",
+    server: "",
+  });
 
   const goToLogin = () => {
     setRegistration(false);
@@ -12,6 +27,137 @@ const Login = () => {
 
   const goToRegistration = () => {
     setRegistration(true);
+  };
+
+  const initiateLogin = async (e) => {
+    e.preventDefault();
+    let valid = true;
+    let validationObj = { username: "", password: "", server: "" };
+
+    if (e.target.username.value.trim() === "") {
+      validationObj.username = "Korisničko ime ne može biti prazno!";
+      valid = false;
+    }
+
+    if (e.target.password.value.trim() === "") {
+      validationObj.password = "Lozinka ne može biti prazna!";
+      valid = false;
+    }
+
+    if (!valid) {
+      setLoginValid(validationObj);
+      return;
+    }
+
+    const response = await loginUser(e);
+
+    if (response === 404) {
+      validationObj.username = "Korisničko ime ne postoji!";
+    } else if (response === 401) {
+      validationObj.password = "Pogrešna lozinka!";
+    } else {
+      validationObj.server =
+        "Došlo je do greške, pokušajte ponovo za nekoliko minuta...";
+    }
+
+    setLoginValid(validationObj);
+  };
+
+  const initiateRegistration = async (e) => {
+    e.preventDefault();
+    let valid = true;
+    let validationObj = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      username: "",
+      password: "",
+      passwordRepeat: "",
+      server: "",
+    };
+
+    if (e.target.regName.value.trim() === "") {
+      validationObj.firstName = "Ime ne može biti prazno!";
+      valid = false;
+    } else if (e.target.regName.value.trim().length < 2) {
+      validationObj.firstName = "Ime je previše kratko!";
+      valid = false;
+    } else if (!isNaN(e.target.regName.value.trim())) {
+      validationObj.firstName = "Ime mora biti tekstualnog tipa!";
+      valid = false;
+    }
+
+    if (e.target.regLastname.value.trim() === "") {
+      validationObj.lastName = "Prezime ne može biti prazno!";
+      valid = false;
+    } else if (e.target.regLastname.value.trim().length < 2) {
+      validationObj.lastName = "Prezime je previše kratko!";
+      valid = false;
+    } else if (!isNaN(e.target.regName.value.trim())) {
+      validationObj.lastName = "Prezime mora biti tekstualnog tipa!";
+      valid = false;
+    }
+
+    if (e.target.regEmail.value.trim() === "") {
+      validationObj.email = "Email ne može biti prazan!";
+      valid = false;
+    } else if (!validateEmail(e.target.regEmail.value.trim())) {
+      validationObj.email = "Email nije validan!";
+      valid = false;
+    }
+
+    if (e.target.regUsername.value.trim() === "") {
+      validationObj.username = "Korisničko ime ne može biti prazno!";
+      valid = false;
+    } else if (e.target.regUsername.value.trim().length < 3) {
+      validationObj.username = "Korisničko ime je previše kratko!";
+      valid = false;
+    } else if (!isNaN(e.target.regName.value.trim())) {
+      validationObj.username =
+        "Korisničko ime mora sadržati barem jedno slovo!";
+      valid = false;
+    }
+
+    if (e.target.regPassword1.value.trim() === "") {
+      validationObj.passwordRepeat = "Morate ponoviti lozinku!";
+      valid = false;
+    } else if (
+      e.target.regPassword.value.trim() !== e.target.regPassword1.value.trim()
+    ) {
+      validationObj.passwordRepeat = "Lozinke moraju biti iste!";
+      valid = false;
+    }
+
+    if (e.target.regPassword.value.trim() === "") {
+      validationObj.password = "Lozinka ne može biti prazna!";
+
+      if (e.target.regPassword1.value.trim() === "") {
+        validationObj.passwordRepeat = "Lozinka ne može biti prazna!";
+      }
+      valid = false;
+    }
+
+    if (!valid) {
+      setRegistrationValid(validationObj);
+      return;
+    }
+
+    const response = await registerUser(e);
+
+    if (response === 409) {
+      validationObj.username = "Korisničko ime već postoji!";
+    } else {
+      validationObj.server =
+        "Izvinjavamo se, došlo je do greške, pokušajte ponovo za par minuta...";
+    }
+
+    setRegistrationValid(validationObj);
+  };
+
+  const validateEmail = (email) => {
+    return email.match(
+      /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    );
   };
 
   return (
@@ -65,31 +211,28 @@ const Login = () => {
               </h1>
               <span className="logreg__form-title-line"></span>
             </div>
-            <form className="form pt-3" onSubmit={loginUser}>
-              <div className="form__group">
-                <label className="form__label" htmlFor="username">
-                  <input
-                    className="form__input"
-                    id="username"
-                    type="text"
-                    name="username"
-                    placeholder=" "
-                  />
-                  <span className="form__label-text">Korisničko ime</span>
-                </label>
-              </div>
-              <div className="form__group">
-                <label className="form__label" htmlFor="password">
-                  <input
-                    className="form__input"
-                    id="password"
-                    type="password"
-                    name="password"
-                    placeholder=" "
-                  />
-                  <span className="form__label-text">Lozinka</span>
-                </label>
-              </div>
+            <form className="form pt-3" onSubmit={initiateLogin}>
+              <FormGroup
+                name="username"
+                text="Korisničko ime"
+                type="text"
+                error={loginValid.username}
+              />
+              <FormGroup
+                name="password"
+                text="Lozinka"
+                type="password"
+                error={loginValid.password}
+              />
+              <span
+                className={
+                  loginValid.server === ""
+                    ? "d-none"
+                    : "form__error form__error--lg"
+                }
+              >
+                {loginValid.server}
+              </span>
               <button className="btn btn-primary btn-round" type="submit">
                 Prijava
               </button>
@@ -106,81 +249,54 @@ const Login = () => {
               <h1 className="logreg__form-title capitalize">Kreirajte nalog</h1>
               <span className="logreg__form-title-line"></span>
             </div>
-            <form className="form" onSubmit={registerUser}>
+            <form className="form" onSubmit={initiateRegistration}>
               <div className="form__group-wrapper">
-                <div className="form__group">
-                  <label className="form__label" htmlFor="reg-name">
-                    <input
-                      className="form__input"
-                      id="reg-name"
-                      type="text"
-                      name="name"
-                      placeholder=" "
-                    />
-                    <span className="form__label-text">Ime</span>
-                  </label>
-                </div>
-                <div className="form__group">
-                  <label className="form__label" htmlFor="reg-lastname">
-                    <input
-                      className="form__input"
-                      id="reg-lastname"
-                      type="text"
-                      name="lastname"
-                      placeholder=" "
-                    />
-                    <span className="form__label-text">Prezime</span>
-                  </label>
-                </div>
-                <div className="form__group">
-                  <label className="form__label" htmlFor="reg-email">
-                    <input
-                      className="form__input"
-                      id="reg-email"
-                      type="email"
-                      name="email"
-                      placeholder=" "
-                    />
-                    <span className="form__label-text">Email</span>
-                  </label>
-                </div>
-                <div className="form__group">
-                  <label className="form__label" htmlFor="reg-username">
-                    <input
-                      className="form__input"
-                      id="reg-username"
-                      type="text"
-                      name="username"
-                      placeholder=" "
-                    />
-                    <span className="form__label-text">Korisničko ime</span>
-                  </label>
-                </div>
-                <div className="form__group">
-                  <label className="form__label" htmlFor="reg-password">
-                    <input
-                      className="form__input"
-                      id="reg-password"
-                      type="password"
-                      name="password"
-                      placeholder=" "
-                    />
-                    <span className="form__label-text">Lozinka</span>
-                  </label>
-                </div>
-                <div className="form__group">
-                  <label className="form__label" htmlFor="reg-password-1">
-                    <input
-                      className="form__input"
-                      id="reg-password-1"
-                      type="password"
-                      name="password1"
-                      placeholder=" "
-                    />
-                    <span className="form__label-text">Ponovite lozinku</span>
-                  </label>
-                </div>
+                <FormGroup
+                  name="regName"
+                  text="Ime"
+                  type="text"
+                  error={registrationValid.firstName}
+                />
+                <FormGroup
+                  name="regLastname"
+                  text="Prezime"
+                  type="text"
+                  error={registrationValid.lastName}
+                />
+                <FormGroup
+                  name="regEmail"
+                  text="Email"
+                  type="text"
+                  error={registrationValid.email}
+                />
+                <FormGroup
+                  name="regUsername"
+                  text="Korisničko ime"
+                  type="text"
+                  error={registrationValid.username}
+                />
+                <FormGroup
+                  name="regPassword"
+                  text="Lozinka"
+                  type="password"
+                  error={registrationValid.password}
+                />
+                <FormGroup
+                  name="regPassword1"
+                  text="Ponovite lozinku"
+                  type="password"
+                  error={registrationValid.passwordRepeat}
+                />
               </div>
+              <span
+                className={
+                  registrationValid.server === ""
+                    ? "d-none"
+                    : "form__error form__error--lg"
+                }
+              >
+                {registrationValid.server}
+              </span>
               <button className="btn btn-primary btn-round" type="submit">
                 Registracija
               </button>

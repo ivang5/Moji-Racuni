@@ -93,6 +93,17 @@
     cursor: text;
   }
 
+  &__error {
+    padding-left: 10px;
+    color: $c-red-4;
+    font-size: 14px;
+
+    &--lg {
+      font-size: 16px;
+      padding-bottom: 20px;
+    }
+  }
+
   .btn {
     margin-top: 10px;
   }

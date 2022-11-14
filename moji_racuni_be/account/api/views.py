@@ -62,6 +62,12 @@ class UserViewSet(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    @action(detail=True)
+    def user_exists(self, request, username):
+        queryset = User.objects.all()
+        get_object_or_404(queryset, username=username)
+        return Response(data=True)
+    
     def retrieve(self, request, pk=None):
         try:
             if (request.user.role != "ADMIN" and pk != request.user.id):

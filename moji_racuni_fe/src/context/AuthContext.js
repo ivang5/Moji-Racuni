@@ -29,64 +29,89 @@ export const AuthProvider = ({ children }) => {
   }, [authTokens, loading]);
 
   const callLogin = async (username, password) => {
-    const response = await fetch("http://127.0.0.1:8000/api/token/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: username,
-        password: password,
-      }),
-    });
-    const data = await response.json();
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/token/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
+      const data = await response.json();
 
-    if (response.status === 200) {
-      setAuthTokens(data);
-      setUser(jwt_decode(data.access));
-      localStorage.setItem("authTokens", JSON.stringify(data));
-      navigate("/");
-    } else {
-      // TODO: Prikazati gresku na lepsi nacin
-      alert("Doslo je do greske");
+      if (response.status === 200) {
+        setAuthTokens(data);
+        setUser(jwt_decode(data.access));
+        localStorage.setItem("authTokens", JSON.stringify(data));
+        navigate("/");
+      } else {
+        return response.status;
+      }
+    } catch (error) {
+      return 0;
+    }
+  };
+
+  const checkUsername = async (username) => {
+    try {
+      if (!isNaN(username)) {
+        return 404;
+      }
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/users/${username}/`
+      );
+      return response.status;
+    } catch (error) {
+      return 0;
     }
   };
 
   const loginUser = async (e) => {
     e.preventDefault();
-    await callLogin(e.target.username.value, e.target.password.value);
+    const usernameCheck = await checkUsername(e.target.username.value);
+
+    if (usernameCheck === 200) {
+      return await callLogin(e.target.username.value, e.target.password.value);
+    }
+
+    if (usernameCheck === 404) {
+      return 404;
+    }
+
+    return 0;
   };
 
   const registerUser = async (e) => {
     e.preventDefault();
 
-    if (e.target.password.value !== e.target.password1.value) {
-      // TODO: Prikazati gresku na lepsi nacin
-      alert("Lozinke moraju biti iste!");
-    }
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/users/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          first_name: e.target.regName.value,
+          last_name: e.target.regLastname.value,
+          email: e.target.regEmail.value,
+          username: e.target.regUsername.value,
+          password: e.target.regPassword.value,
+          role: "REGULAR",
+          date_joined: "2022-11-12",
+          is_active: true,
+        }),
+      });
 
-    const response = await fetch("http://127.0.0.1:8000/api/users/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        first_name: e.target.name.value,
-        last_name: e.target.lastname.value,
-        email: e.target.email.value,
-        username: e.target.username.value,
-        password: e.target.password.value,
-        role: "REGULAR",
-        date_joined: "2022-11-12",
-        is_active: true,
-      }),
-    });
-
-    if (response.status === 201) {
-      await callLogin(e.target.username.value, e.target.password.value);
-    } else {
-      // TODO: Prikazati gresku na lepsi nacin
-      alert("Doslo je do greske");
+      if (response.status === 201) {
+        await callLogin(e.target.regUsername.value, e.target.regPassword.value);
+      } else {
+        return response.status;
+      }
+    } catch (error) {
+      return 0;
     }
   };
 
