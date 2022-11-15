@@ -17,11 +17,19 @@ class Item(models.Model):
         KUT = "KUT"
         KG = "KG"
         L = "L"
+    class VatType(models.IntegerChoices):
+        OPSTI = 20
+        POSEBNI = 10
+        BEZ = 0
         
     measurementUnit = models.CharField(
         max_length=3,
         choices=MeasurementUnit.choices,
         default=MeasurementUnit.KOM
+    )
+    vatType = models.IntegerField(
+        choices=VatType.choices,
+        default=VatType.OPSTI
     )
     name = models.TextField()
     price = models.DecimalField(max_digits=9, decimal_places=2)
