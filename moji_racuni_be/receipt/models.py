@@ -9,6 +9,7 @@ class Receipt(models.Model):
     link = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
     totalPrice = models.DecimalField(max_digits=9, decimal_places=2)
+    totalVat = models.DecimalField(max_digits=9, decimal_places=2)
     companyUnit = models.ForeignKey(CompanyUnit, on_delete=models.SET_NULL, null=True)
     
 class Item(models.Model):
