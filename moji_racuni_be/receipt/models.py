@@ -5,7 +5,7 @@ from account.models import User
 from company.models import CompanyUnit
 
 class Receipt(models.Model):
-    date = models.DateField()
+    date = models.DateTimeField()
     link = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
     totalPrice = models.DecimalField(max_digits=9, decimal_places=2)

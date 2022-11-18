@@ -10,13 +10,13 @@ class CompanyType(models.Model):
 
 class Company(models.Model):
     tin = models.PositiveIntegerField(primary_key=True, validators=[MaxValueValidator(999999999)])
-    name = models.CharField(max_length=80)
+    name = models.CharField(max_length=100)
     type = models.ForeignKey(CompanyType, on_delete=models.SET_NULL, null=True)
     
 class CompanyUnit(models.Model):
-    name = models.CharField(max_length=80)
-    address = models.CharField(max_length=50)
-    place = models.CharField(max_length=50)
-    municipality = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=70)
+    place = models.CharField(max_length=60)
+    municipality = models.CharField(max_length=60)
     category = models.CharField(max_length=50)
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True)

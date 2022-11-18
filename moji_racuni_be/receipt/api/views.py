@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from .serializers import ReceiptSerializer, ItemSerializer
 from receipt.models import Receipt, Item
+from moji_racuni_be import utils
 
 @permission_classes([IsAuthenticated])
 class ReceiptViewSet(viewsets.ViewSet):
@@ -24,11 +25,12 @@ class ReceiptViewSet(viewsets.ViewSet):
         if (user.role == "ADMIN"):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         receipts = user.receipt_set.all()
-        receipt_link = request.data.get('link')
+        receipt_link = request.data.get('url')
         for receipt in receipts:
             if (receipt.link == receipt_link):
                 return Response(status=status.HTTP_409_CONFLICT)
-        serializer = ReceiptSerializer(data=request.data)
+        receipt = utils.retrieve_receipt(request.data.get('url'), request.data.get('companyUnit'), user.id)
+        serializer = ReceiptSerializer(data=receipt)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -63,22 +65,26 @@ class ItemViewSet(viewsets.ViewSet):
     
     @action(detail=True, url_path='receipt', url_name='receipt')
     def all(self, request, pk=None):
-        queryset = Item.objects.all()
-        items = []
-        for item in queryset:
-            if item.receipt.id == int(pk):
-                items.append(item)
-        serializer = ItemSerializer(items, many=True)
+        queryset = Receipt.objects.all()
+        receipt = get_object_or_404(queryset, pk=pk)
+        items = receipt.item_set.all()
+        serializer = ItemSerializer(items, many=True)    
         return Response(serializer.data)
 
     def create(self, request):
         user = request.user
         if (user.role == "ADMIN"):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
-        serializer = ItemSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        items = utils.retrieve_items(request.data.get('url'), request.data.get('receipt'))
+        is_valid = True
+        for item in items:
+            serializer = ItemSerializer(data=item)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                is_valid = False
+        if is_valid:
+            return Response(status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, pk=None):

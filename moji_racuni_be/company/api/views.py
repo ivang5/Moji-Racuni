@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from .serializers import CompanySerializer, CompanyUnitSerializer, CompanyTypeSerializer
 from company.models import CompanyType, Company, CompanyUnit
+from moji_racuni_be import utils
 
 @permission_classes([IsAuthenticated])
 class CompanyViewSet(viewsets.ViewSet):
@@ -17,16 +18,17 @@ class CompanyViewSet(viewsets.ViewSet):
 
     def create(self, request):
         companies = Company.objects.all()
-        company_tin = request.data.get('tin')
-        for company in companies:
-            if company.tin == company_tin:
-                serializer = CompanySerializer(company, data=request.data)
+        company = utils.retrieve_company(request.data.get('url'))
+        company_tin = company['tin']
+        for c in companies:
+            if c.tin == company_tin:
+                serializer = CompanySerializer(c, data=company)
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data, status=status.HTTP_200_OK)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                     
-        serializer = CompanySerializer(data=request.data)
+        serializer = CompanySerializer(data=company)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -67,18 +69,16 @@ class CompanyUnitViewSet(viewsets.ViewSet):
 
     def create(self, request):
         companyUnits = CompanyUnit.objects.all()
-        unit_name = request.data.get('name')
-        unit_address = request.data.get('address')
-        unit_company = request.data.get('company')
+        companyUnit = utils.retrieve_company_unit(request.data.get('url'), request.data.get('company'))
         for unit in companyUnits:
-            if unit.name == unit_name and unit.address == unit_address and unit.company.tin == unit_company:
-                serializer = CompanyUnitSerializer(unit, data=request.data)
+            if unit.name == companyUnit["name"] and unit.address == companyUnit["address"] and unit.company.tin == companyUnit["company"]:
+                serializer = CompanyUnitSerializer(unit, data=companyUnit)
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data, status=status.HTTP_200_OK)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
-        serializer = CompanyUnitSerializer(data=request.data)
+        serializer = CompanyUnitSerializer(data=companyUnit)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
