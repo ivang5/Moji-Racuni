@@ -12,6 +12,7 @@ class Company(models.Model):
     tin = models.PositiveIntegerField(primary_key=True, validators=[MaxValueValidator(999999999)])
     name = models.CharField(max_length=100)
     type = models.ForeignKey(CompanyType, on_delete=models.SET_NULL, null=True)
+    image = models.ImageField(upload_to='images', null=True)
     
 class CompanyUnit(models.Model):
     name = models.CharField(max_length=100)

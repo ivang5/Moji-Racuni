@@ -51,6 +51,19 @@ class CompanyViewSet(viewsets.ViewSet):
         company.save()
         serializer = CompanySerializer(company)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['put'], url_path='change-img', url_name='change_img')
+    def change_img(self, request, pk=None):
+        user = request.user
+        if (user.role != "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        company_queryset = Company.objects.all()
+        company = get_object_or_404(company_queryset, pk=pk)
+        img = request.data.get('img')
+        company.image = img
+        company.save()
+        serializer = CompanySerializer(company)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, pk=None):
         user = request.user
