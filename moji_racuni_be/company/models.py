@@ -6,12 +6,12 @@ from account.models import User
 class CompanyType(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
+    user = models.ForeignKey(User, db_column='user', on_delete=models.CASCADE, null=False)
 
 class Company(models.Model):
     tin = models.PositiveIntegerField(primary_key=True, validators=[MaxValueValidator(999999999)])
     name = models.CharField(max_length=100)
-    type = models.ForeignKey(CompanyType, on_delete=models.SET_NULL, null=True)
+    type = models.ForeignKey(CompanyType, db_column='type', on_delete=models.SET_NULL, null=True)
     image = models.ImageField(upload_to='images', null=True)
     
 class CompanyUnit(models.Model):
@@ -20,4 +20,4 @@ class CompanyUnit(models.Model):
     place = models.CharField(max_length=60)
     municipality = models.CharField(max_length=60)
     category = models.CharField(max_length=50)
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True)
+    company = models.ForeignKey(Company, db_column='company', on_delete=models.SET_NULL, null=True)

@@ -7,10 +7,10 @@ from company.models import CompanyUnit
 class Receipt(models.Model):
     date = models.DateTimeField()
     link = models.TextField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
+    user = models.ForeignKey(User, db_column='user', on_delete=models.CASCADE, null=False)
     totalPrice = models.DecimalField(max_digits=9, decimal_places=2)
     totalVat = models.DecimalField(max_digits=9, decimal_places=2)
-    companyUnit = models.ForeignKey(CompanyUnit, on_delete=models.SET_NULL, null=True)
+    companyUnit = models.ForeignKey(CompanyUnit, db_column='companyUnit', on_delete=models.SET_NULL, null=True)
     
 class Item(models.Model):
     class MeasurementUnit(models.TextChoices):
@@ -35,4 +35,4 @@ class Item(models.Model):
     name = models.TextField()
     price = models.DecimalField(max_digits=9, decimal_places=2)
     quantity = models.DecimalField(max_digits=9, decimal_places=3)
-    receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE, null=False)
+    receipt = models.ForeignKey(Receipt, db_column='receipt', on_delete=models.CASCADE, null=False)

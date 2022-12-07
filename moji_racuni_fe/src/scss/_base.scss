@@ -27,13 +27,57 @@ h2,
 h3,
 h4,
 h5,
-h6 {
+h6,
+.h-like {
   font-family: "Poppins", sans-serif;
 }
 
 h1 {
   font-weight: 700;
-  font-size: 64px;
+
+  @include respond-to(laptop) {
+    font-size: 64px;
+  }
+}
+
+h2 {
+  font-size: 28px;
+
+  @include respond-to(laptop) {
+    font-size: 36px;
+  }
+}
+
+h3 {
+  font-size: 24px;
+
+  @include respond-to(laptop) {
+    font-size: 32px;
+  }
+}
+
+h4 {
+  font-size: 18px;
+
+  @include respond-to(tablet) {
+    font-size: 22px;
+  }
+
+  @include respond-to(laptop) {
+    font-size: 28px;
+  }
+}
+
+h6 {
+  font-size: 11px;
+
+  @include respond-to(tablet) {
+    font-size: 12px;
+  }
+
+  @include respond-to(laptop) {
+    font-size: 14px;
+  }
 }
 
 h2,
@@ -45,6 +89,16 @@ h6 {
 }
 
 a {
-  color: $c-green-1;
+  color: $c-green-3;
   text-decoration: none;
+}
+
+::-moz-selection {
+  color: $c-dark-2;
+  background: $c-green-2;
+}
+
+::selection {
+  color: $c-dark-2;
+  background: $c-green-2;
 }

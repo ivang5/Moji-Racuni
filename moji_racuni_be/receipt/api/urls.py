@@ -7,5 +7,5 @@ router.register('receipts', ReceiptViewSet, basename='receipts')
 router.register('items', ItemViewSet, basename='receipt-items')
 
 urlpatterns = [
-    path('', include(router.urls))
+    path('', include(router.urls)),
 ]

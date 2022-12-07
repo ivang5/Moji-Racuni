@@ -15,6 +15,30 @@ class CompanyViewSet(viewsets.ViewSet):
         companies = Company.objects.all()
         serializer = CompanySerializer(companies, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, url_path='visited', url_name='visited')
+    def visited(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        visited_info = utils.count_visited_companies(user, dateFrom, dateTo)
+        return Response(visited_info)
+    
+    @action(detail=False, url_path='most-visited', url_name='most-visited')
+    def most_visited(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        limit = self.request.query_params.get('limit')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            most_visited_info = utils.get_most_visited_companies(user, dateFrom, dateTo, int(limit))
+            return Response(most_visited_info)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request):
         companies = Company.objects.all()

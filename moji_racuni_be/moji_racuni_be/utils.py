@@ -1,6 +1,11 @@
 from bs4 import BeautifulSoup
 import requests
 from srtools import cyrillic_to_latin
+from django.db import connection
+
+# ==========================================================
+#                        WEB-SCRAPING
+# ==========================================================
 
 def remove_line_breaks(receipt):
     """ 
@@ -52,8 +57,9 @@ def remove_item_code(name):
         try:
             #* U nekim slučajevima šifra počinje sa slovom, a nastavlja brojevima, ovde se to proverava
             int(name_parts_space[0][1:])
-            new_name = name.split(' ', 1)[1]
-            return new_name
+            if (name_parts_space[0][0] != '('):
+                new_name = name.split(' ', 1)[1]
+                return new_name
         except ValueError:
             #* Ponekad su šifra i naziv podeljeni samo povlakom, bez razmaka, taj slučaj se ovde rešava
             try:
@@ -298,6 +304,11 @@ def get_items(receipt, receipt_id):
         item["measurementUnit"] = item["measurementUnit"].upper()
         if (item["measurementUnit"] == "PCE"):
             item["measurementUnit"] = "KOM"
+        elif (item["measurementUnit"] == "UNKNOWN"):
+            if (item["quantity"] % 1 == 0):
+                item["measurementUnit"] = "KOM"
+            else:
+                item["measurementUnit"] = "KG"
     return items
     
 
@@ -312,7 +323,7 @@ def retrieve_company(url):
     
     company = {
         "tin": int(receipt.split('\r\n')[1]),
-        "name": receipt.split('\r\n')[2].title(),
+        "name": cyrillic_to_latin(receipt.split('\r\n')[2].title()),
     }
     return company
     
@@ -351,3 +362,232 @@ def retrieve_items(url, receipt_id):
     
     items = get_items(receipt, receipt_id)
     return items
+
+
+
+# ==========================================================
+#                  CUSTOM DATABASE QUERIES
+# ==========================================================
+
+def dictfetchall(cursor):
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]
+
+def get_last_receipt(user):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM receipt_receipt WHERE user = %s ORDER BY date DESC LIMIT 1", [user.id])
+        row = cursor.fetchone()
+        
+    if (row == None):
+        return row
+    
+    receipt = {
+        "id": row[0],
+        "date": row[1], 
+        "link": row[2], 
+        "companyUnit": row[3],
+        "user": row[4], 
+        "totalPrice": row[5], 
+        "totalVat": row[6]
+    }
+    return receipt
+
+def get_total_spent(user, dateFrom, dateTo):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT SUM(totalPrice) AS totalSpent, SUM(totalVat) AS totalSpentVat FROM receipt_receipt
+                    WHERE date BETWEEN %s AND %s
+                ''', 
+                [dateFrom, dateTo])
+            row = cursor.fetchone()
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT SUM(totalPrice), SUM(totalVat) FROM receipt_receipt
+                    WHERE user = %s AND date BETWEEN %s AND %s
+                ''', 
+                [user.id, dateFrom, dateTo])
+            row = cursor.fetchone()
+            
+    total_spent_info = {
+        "totalSpent": row[0],
+        "totalSpentVat": row[1]
+    }
+    return total_spent_info
+
+def get_receipts_sum_by_hours(user, dateFrom, dateTo):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT HOUR(date) monthNum, count(*) count
+                    FROM receipt_receipt
+                    WHERE date BETWEEN %s AND %s
+                    GROUP BY HOUR(date)
+                ''',
+                [dateFrom, dateTo])
+            receipts_by_hours = dictfetchall(cursor)
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT HOUR(date) monthNum, count(*) count
+                    FROM receipt_receipt
+                    WHERE user = %s AND date BETWEEN %s AND %s
+                    GROUP BY HOUR(date)
+                ''',
+                [user.id, dateFrom, dateTo])
+            receipts_by_hours = dictfetchall(cursor)
+    return receipts_by_hours
+
+def get_receipts_sum_by_weekdays(user, dateFrom, dateTo):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT (DAYOFWEEK(date)+5)%%7+1 dayofweek, count(*) count 
+                    FROM receipt_receipt 
+                    WHERE date BETWEEN %s AND %s 
+                    GROUP BY (DAYOFWEEK(date)+5)%%7+1
+                ''',
+                [dateFrom, dateTo])
+            receipts_by_weekdays = dictfetchall(cursor)
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT (DAYOFWEEK(date)+5)%%7+1 dayofweek, count(*) count 
+                    FROM receipt_receipt 
+                    WHERE user = %s AND date BETWEEN %s AND %s 
+                    GROUP BY (DAYOFWEEK(date)+5)%%7+1
+                ''',
+                [user.id, dateFrom, dateTo])
+            receipts_by_weekdays = dictfetchall(cursor)
+    return receipts_by_weekdays
+
+def get_receipts_sum_by_months(user, dateFrom, dateTo):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT MONTH(date) monthNum, count(*) count 
+                    FROM receipt_receipt 
+                    WHERE date BETWEEN %s AND %s 
+                    GROUP BY MONTH(date)
+                ''',
+                [dateFrom, dateTo])
+            receipts_by_months = dictfetchall(cursor)
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT MONTH(date) monthNum, count(*) count 
+                    FROM receipt_receipt 
+                    WHERE user = %s AND date BETWEEN %s AND %s 
+                    GROUP BY MONTH(date)
+                ''',
+                [user.id, dateFrom, dateTo])
+            receipts_by_months = dictfetchall(cursor)
+    return receipts_by_months
+
+def get_most_valuable_items(user, dateFrom, dateTo, limit):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT i.* FROM receipt_item i 
+                    JOIN receipt_receipt r ON i.receipt = r.id 
+                    WHERE r.date BETWEEN %s AND %s 
+                    ORDER BY price DESC 
+                    LIMIT %s
+                ''', 
+                [dateFrom, dateTo, limit])
+            items = dictfetchall(cursor)
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT i.* FROM receipt_item i 
+                    JOIN receipt_receipt r ON i.receipt = r.id 
+                    WHERE r.user = %s AND r.date BETWEEN %s AND %s 
+                    ORDER BY price DESC 
+                    LIMIT %s
+                ''', 
+                [user.id, dateFrom, dateTo, limit])
+            items = dictfetchall(cursor)
+    return items
+
+def count_visited_companies(user, dateFrom, dateTo):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT COUNT(DISTINCT c.tin) AS companyCount, COUNT(DISTINCT u.id) AS unitCount
+                    FROM company_company c
+                    JOIN company_companyunit u ON c.tin = u.company
+                    JOIN receipt_receipt r ON u.id = r.companyUnit
+                    WHERE r.date BETWEEN %s AND %s
+                ''', 
+                [dateFrom, dateTo])
+            row = cursor.fetchone()
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT COUNT(DISTINCT c.tin) AS companyCount, COUNT(DISTINCT u.id) AS unitCount
+                    FROM company_company c
+                    JOIN company_companyunit u ON c.tin = u.company
+                    JOIN receipt_receipt r ON u.id = r.companyUnit
+                    WHERE r.user = %s AND r.date BETWEEN %s AND %s
+                ''', 
+                [user.id, dateFrom, dateTo])
+            row = cursor.fetchone()
+            
+    visited_info = {
+        "companyCount": row[0],
+        "unitCount": row[1]
+    }
+    return visited_info
+
+def get_most_visited_companies(user, dateFrom, dateTo, limit):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT innerQuery.receiptCount AS receiptCount, innerQuery.priceSum, innerQuery.unitCount, innerQuery.companyTin, innerQuery.companyName FROM (
+                    SELECT COUNT(r.id) AS receiptCount, SUM(r.totalPrice) AS priceSum, COUNT(DISTINCT u.id) AS unitCount, c.tin AS companyTin, c.name AS companyName
+                        FROM receipt_receipt r
+                        JOIN company_companyunit u ON r.companyUnit = u.id
+                        JOIN company_company c ON u.company = c.tin
+                        WHERE r.date BETWEEN %s AND %s
+                        GROUP BY c.tin
+                ) innerQuery 
+                    ORDER BY receiptCount DESC, priceSum DESC
+                    LIMIT %s
+                ''', 
+                [dateFrom, dateTo,  limit])
+            most_visited_companies = dictfetchall(cursor)
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT innerQuery.receiptCount AS receiptCount, innerQuery.priceSum, innerQuery.unitCount, innerQuery.companyTin, innerQuery.companyName FROM (
+                    SELECT COUNT(r.id) AS receiptCount, SUM(r.totalPrice) AS priceSum, COUNT(DISTINCT u.id) AS unitCount, c.tin AS companyTin, c.name AS companyName
+                        FROM receipt_receipt r
+                        JOIN company_companyunit u ON r.companyUnit = u.id
+                        JOIN company_company c ON u.company = c.tin
+                        WHERE r.user = %s AND r.date BETWEEN %s AND %s
+                        GROUP BY c.tin
+                ) innerQuery 
+                    ORDER BY receiptCount DESC, priceSum DESC
+                    LIMIT %s
+                ''', 
+                [user.id, dateFrom, dateTo,  limit])
+            most_visited_companies = dictfetchall(cursor)
+    return most_visited_companies

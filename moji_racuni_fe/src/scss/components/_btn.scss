@@ -1,6 +1,6 @@
 .btn {
   display: inline-block;
-  color: $c-green-2;
+  color: $c-green-4;
   border: 2px solid $c-green-4;
   padding: 12px 22px;
   font-size: 14px;
@@ -44,14 +44,24 @@
         border-color: $c-white-1;
       }
     }
+
+    &--black {
+      background-color: $c-dark-1;
+      border-color: $c-dark-1;
+
+      &:hover {
+        background-color: $c-dark-0;
+        border-color: $c-dark-0;
+      }
+    }
   }
 
   &-secondary {
     background-color: transparent;
 
     &:hover {
-      color: $c-gray-2;
-      background-color: $c-green-3;
+      color: $c-white-1;
+      background-color: $c-green-4;
     }
 
     &--white {
@@ -59,7 +69,17 @@
       border-color: $c-white-3;
 
       &:hover {
+        color: $c-gray-2;
         background-color: $c-white-3;
+      }
+    }
+
+    &--black {
+      color: $c-dark-1;
+      border-color: $c-dark-1;
+
+      &:hover {
+        background-color: $c-dark-1;
       }
     }
   }

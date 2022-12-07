@@ -7,7 +7,7 @@ const useFetch = () => {
   const { authTokens, setAuthTokens, setUser, logoutUser } =
     useContext(AuthContext);
 
-  const baseURL = "http://127.0.0.1:8000";
+  const baseURL = "http://192.168.1.11:8000";
 
   const originalRequest = async (url, config) => {
     url = `${baseURL}${url}`;
@@ -38,17 +38,30 @@ const useFetch = () => {
   };
 
   const callFetch = async (url, config = {}) => {
-    const user = jwt_decode(authTokens.access);
+    const user = jwt_decode(
+      JSON.parse(localStorage.getItem("authTokens")).access
+    );
     const isExpired = dayjs.unix(user.exp).diff(dayjs()) < 1;
-    let at = authTokens;
+    let at = JSON.parse(localStorage.getItem("authTokens"));
 
     if (isExpired) {
-      at = await refreshToken(authTokens);
+      at = await refreshToken(JSON.parse(localStorage.getItem("authTokens")));
     }
 
-    config["headers"] = {
-      Authorization: `Bearer ${at?.access}`,
-    };
+    if (config === {}) {
+      config["headers"] = {
+        Authorization: `Bearer ${
+          JSON.parse(localStorage.getItem("authTokens"))?.access
+        }`,
+      };
+    } else {
+      config["headers"] = {
+        Authorization: `Bearer ${
+          JSON.parse(localStorage.getItem("authTokens"))?.access
+        }`,
+        "Content-Type": "application/json",
+      };
+    }
 
     const { response, data } = await originalRequest(url, config);
     return { response, data };

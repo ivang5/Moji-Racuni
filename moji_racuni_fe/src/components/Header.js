@@ -16,7 +16,7 @@ const Header = () => {
       {currentPath !== "/login" && user !== null && (
         <div>
           <header className={mobileNav ? "header header--active" : "header"}>
-            <div className="l-container p-1">
+            <div className="nav__wrapper p-2">
               <nav className="nav">
                 <div className="nav__brand d-inline">
                   <Link className="nav__logo" to="/">
@@ -37,28 +37,28 @@ const Header = () => {
                 </div>
                 <ul className="nav__list">
                   <li className="nav__list-item">
-                    <Link className="nav__link" data-content="Home" to="/">
-                      Home
+                    <Link className="nav__link" data-content="Početna" to="/">
+                      Početna
                     </Link>
                   </li>
                   <li className="nav__list-item">
                     <Link
-                      className="nav__link nav__link-active"
-                      data-content="About"
+                      className="nav__link nav__link--active"
+                      data-content="Statistike"
                       to="/"
                     >
-                      About
+                      Statistike
                     </Link>
                   </li>
                   <li className="nav__list-item">
-                    <Link className="nav__link" data-content="Contact" to="/">
-                      Contact
+                    <Link className="nav__link" data-content="Profil" to="/">
+                      Profil
                     </Link>
                   </li>
                 </ul>
                 <div className="nav__logout" onClick={logoutUser}>
-                  <span className="nav__link" data-content="Logout">
-                    Logout
+                  <span className="nav__link" data-content="Izloguj se">
+                    Izloguj se
                   </span>
                 </div>
               </nav>
@@ -72,8 +72,8 @@ const Header = () => {
           >
             <ul className="mobile-nav__list">
               <li className="nav__list-item">
-                <Link className="nav__link" data-content="Home" to="/">
-                  Home
+                <Link className="nav__link" to="/">
+                  Početna
                 </Link>
               </li>
               <li className="nav__list-item">
@@ -82,19 +82,17 @@ const Header = () => {
                   data-content="About"
                   to="/"
                 >
-                  About
+                  Statistike
                 </Link>
               </li>
               <li className="nav__list-item">
-                <Link className="nav__link" data-content="Contact" to="/">
-                  Contact
+                <Link className="nav__link" to="/">
+                  Profil
                 </Link>
               </li>
               <li>
                 <div className="mobile-nav__logout" onClick={logoutUser}>
-                  <span className="nav__link" data-content="Logout">
-                    Logout
-                  </span>
+                  <span className="nav__link">Izloguj se</span>
                 </div>
               </li>
             </ul>

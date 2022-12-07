@@ -1,8 +1,12 @@
 @import "reset";
 @import "vars";
-@import "base";
 @import "utils";
+@import "base";
 @import "components/btn";
 @import "components/nav";
 @import "components/form";
 @import "components/logreg";
+@import "components/stat-panel";
+@import "components/receipt";
+@import "components/text-animator";
+@import "components/spinner";

@@ -228,7 +228,7 @@ const Login = () => {
                 className={
                   loginValid.server === ""
                     ? "d-none"
-                    : "form__error form__error--lg"
+                    : "form__error form__error--lg t-center"
                 }
               >
                 {loginValid.server}
@@ -292,7 +292,7 @@ const Login = () => {
                 className={
                   registrationValid.server === ""
                     ? "d-none"
-                    : "form__error form__error--lg"
+                    : "form__error form__error--lg t-center"
                 }
               >
                 {registrationValid.server}

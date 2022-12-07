@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
 
   const callLogin = async (username, password) => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/token/", {
+      const response = await fetch("http://192.168.1.11:8000/api/token/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
         return 404;
       }
       const response = await fetch(
-        `http://127.0.0.1:8000/api/users/${username}/`
+        `http://192.168.1.11:8000/api/users/${username}/`
       );
       return response.status;
     } catch (error) {
@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }) => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/users/", {
+      const response = await fetch("http://192.168.1.11:8000/api/users/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

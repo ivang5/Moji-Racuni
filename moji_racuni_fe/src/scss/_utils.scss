@@ -1,20 +1,3 @@
-//* Layout
-.l-container {
-  max-width: 1400px;
-  margin: auto;
-}
-
-.l-relative {
-  position: relative;
-}
-
-.l-absolute {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-}
-
 //* Display
 .d-none {
   display: none;
@@ -32,52 +15,35 @@
 
 //* Text transform
 .lowercase {
-  text-transform: lowercase;
+  text-transform: lowercase !important;
 }
 .uppercase {
-  text-transform: uppercase;
+  text-transform: uppercase !important;
 }
 .capitalize {
-  text-transform: capitalize;
-}
-
-//* Font size
-.fs-1 {
-  font-size: 32px;
-}
-.fs-2 {
-  font-size: 24px;
-}
-.fs-3 {
-  font-size: 20px;
-}
-.fs-4 {
-  font-size: 16px;
-}
-.fs-5 {
-  font-size: 14px;
+  text-transform: capitalize !important;
 }
 
 //* Font weight
 .fw-bold {
-  font-weight: 700;
+  font-weight: 700 !important;
 }
 .fw-semi-bold {
-  font-weight: 600;
+  font-weight: 600 !important;
 }
 .fw-normal {
-  font-weight: 400;
+  font-weight: 400 !important;
 }
 .fw-light {
-  font-weight: 300;
+  font-weight: 300 !important;
 }
 
 //* Font style
 .fs-normal {
-  font-style: normal;
+  font-style: normal !important;
 }
 .fs-italic {
-  font-style: italic;
+  font-style: italic !important;
 }
 
 //* Text color
@@ -99,6 +65,9 @@
 .c-green-6 {
   color: $c-green-6;
 }
+.c-gray {
+  color: $c-gray-0;
+}
 
 //* Cursor
 .cursor-n {
@@ -108,53 +77,15 @@
   cursor: pointer;
 }
 
-//* Spacing
-$spaceamounts: (1, 2, 3, 4, 5);
-
-@each $space in $spaceamounts {
-  .m-#{$space} {
-    margin: #{$space * 20}px;
-  }
-  .mx-#{$space} {
-    margin: 0 #{$space * 20}px;
-  }
-  .my-#{$space} {
-    margin: #{$space * 20}px 0;
-  }
-  .mt-#{$space} {
-    margin-top: #{$space * 20}px;
-  }
-  .mb-#{$space} {
-    margin-bottom: #{$space * 20}px;
-  }
-  .mr-#{$space} {
-    margin-right: #{$space * 20}px;
-  }
-  .ml-#{$space} {
-    margin-left: #{$space * 20}px;
-  }
-
-  .p-#{$space} {
-    padding: #{$space * 20}px;
-  }
-  .px-#{$space} {
-    padding: 0 #{$space * 20}px;
-  }
-  .py-#{$space} {
-    padding: #{$space * 20}px 0;
-  }
-  .pt-#{$space} {
-    padding-top: #{$space * 20}px;
-  }
-  .pb-#{$space} {
-    padding-bottom: #{$space * 20}px;
-  }
-  .pr-#{$space} {
-    padding-right: #{$space * 20}px;
-  }
-  .pl-#{$space} {
-    padding-left: #{$space * 20}px;
-  }
+//* Text align
+.t-center {
+  text-align: center;
+}
+.t-start {
+  text-align: start;
+}
+.t-end {
+  text-align: end;
 }
 
 //* Media queries
@@ -194,4 +125,212 @@ $screen-xl: 1440px;
       @content;
     }
   }
+}
+
+//* Spacing
+$spaceamounts: (1, 2, 3, 4, 5);
+
+@each $space in $spaceamounts {
+  .m-#{$space} {
+    margin: #{$space * 10}px;
+  }
+  .m-lg-#{$space} {
+    @include respond-to(desktop) {
+      margin: #{$space * 20}px;
+    }
+  }
+  .mx-#{$space} {
+    margin: 0 #{$space * 10}px;
+  }
+  .mx-lg-#{$space} {
+    @include respond-to(desktop) {
+      margin: 0 #{$space * 20}px;
+    }
+  }
+  .my-#{$space} {
+    margin: #{$space * 10}px 0;
+  }
+  .my-lg-#{$space} {
+    @include respond-to(desktop) {
+      margin: #{$space * 20}px 0;
+    }
+  }
+  .mt-#{$space} {
+    margin-top: #{$space * 10}px;
+  }
+  .mt-lg-#{$space} {
+    @include respond-to(desktop) {
+      margin-top: #{$space * 20}px;
+    }
+  }
+  .mb-#{$space} {
+    margin-bottom: #{$space * 10}px;
+  }
+  .mb-lg-#{$space} {
+    @include respond-to(desktop) {
+      margin-bottom: #{$space * 20}px;
+    }
+  }
+  .mr-#{$space} {
+    margin-right: #{$space * 10}px;
+  }
+  .mr-lg-#{$space} {
+    @include respond-to(desktop) {
+      margin-right: #{$space * 20}px;
+    }
+  }
+  .ml-#{$space} {
+    margin-left: #{$space * 10}px;
+  }
+  .ml-lg-#{$space} {
+    @include respond-to(desktop) {
+      margin-left: #{$space * 20}px;
+    }
+  }
+
+  .p-#{$space} {
+    padding: #{$space * 10}px;
+  }
+  .p-lg-#{$space} {
+    @include respond-to(desktop) {
+      padding: #{$space * 20}px;
+    }
+  }
+  .px-#{$space} {
+    padding: 0 #{$space * 10}px;
+  }
+  .px-lg-#{$space} {
+    @include respond-to(desktop) {
+      padding: 0 #{$space * 20}px;
+    }
+  }
+  .py-#{$space} {
+    padding: #{$space * 10}px 0;
+  }
+  .py-lg-#{$space} {
+    @include respond-to(desktop) {
+      padding: #{$space * 20}px 0;
+    }
+  }
+  .pt-#{$space} {
+    padding-top: #{$space * 10}px;
+  }
+  .pt-lg-#{$space} {
+    @include respond-to(desktop) {
+      padding-top: #{$space * 20}px;
+    }
+  }
+  .pb-#{$space} {
+    padding-bottom: #{$space * 10}px;
+  }
+  .pb-lg-#{$space} {
+    @include respond-to(desktop) {
+      padding-bottom: #{$space * 20}px;
+    }
+  }
+  .pr-#{$space} {
+    padding-right: #{$space * 10}px;
+  }
+  .pr-lg-#{$space} {
+    @include respond-to(desktop) {
+      padding-right: #{$space * 20}px;
+    }
+  }
+  .pl-#{$space} {
+    padding-left: #{$space * 10}px;
+  }
+  .pl-lg-#{$space} {
+    @include respond-to(desktop) {
+      padding-left: #{$space * 20}px;
+    }
+  }
+}
+
+//* Arrows
+.arrow {
+  border: solid $c-green-3;
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 3px;
+
+  @include respond-to(phone) {
+    margin-left: 5px;
+  }
+
+  &--right {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+  }
+  &--left {
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+  }
+  &--up {
+    transform: rotate(-135deg);
+    -webkit-transform: rotate(-135deg);
+  }
+  &--down {
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+  }
+}
+
+//* Font size
+.fs-1 {
+  font-size: 32px !important;
+
+  @include respond-to(tablet) {
+    font-size: 36px !important;
+  }
+
+  @include respond-to(laptop) {
+    font-size: 42px !important;
+  }
+}
+.fs-2 {
+  font-size: 28px !important;
+
+  @include respond-to(tablet) {
+    font-size: 32px !important;
+  }
+
+  @include respond-to(laptop) {
+    font-size: 36px !important;
+  }
+}
+.fs-3 {
+  font-size: 24px !important;
+
+  @include respond-to(laptop) {
+    font-size: 32px !important;
+  }
+}
+.fs-4 {
+  font-size: 20px !important;
+}
+.fs-5 {
+  font-size: 16px !important;
+}
+.fs-6 {
+  font-size: 14px !important;
+}
+
+//* Layout
+.l-container {
+  padding: 100px 20px 0;
+
+  @include respond-to(wide) {
+    padding: 100px 20px 0;
+    max-width: 1440px;
+    margin: auto;
+  }
+}
+.l-relative {
+  position: relative;
+}
+.l-absolute {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
 }
