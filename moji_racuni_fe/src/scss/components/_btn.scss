@@ -2,7 +2,7 @@
   display: inline-block;
   color: $c-green-4;
   border: 2px solid $c-green-4;
-  padding: 12px 22px;
+  padding: 13px 22px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -10,7 +10,7 @@
   transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
     border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 
-  @include respond-to(desktop) {
+  @include respond-to(tablet) {
     font-size: 16px;
   }
 

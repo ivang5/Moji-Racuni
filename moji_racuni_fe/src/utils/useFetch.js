@@ -12,7 +12,12 @@ const useFetch = () => {
   const originalRequest = async (url, config) => {
     url = `${baseURL}${url}`;
     const response = await fetch(url, config);
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (error) {
+      data = null;
+    }
     return { response, data };
   };
 

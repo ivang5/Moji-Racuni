@@ -12,6 +12,42 @@
     padding-top: 60px;
   }
 
+  &--simple {
+    align-items: flex-start;
+    padding-top: 10px;
+
+    @include respond-to(tablet) {
+      flex-direction: row;
+    }
+
+    .form__group {
+      width: 100%;
+      margin-bottom: 0;
+
+      @include respond-to(tablet) {
+        width: unset;
+      }
+    }
+
+    .form__input {
+      width: 100%;
+
+      @include respond-to(phone) {
+        width: 400px;
+      }
+
+      @include respond-to(laptop) {
+        width: 500px;
+      }
+    }
+
+    .btn {
+      @include respond-to(tablet) {
+        margin: 0 0 0 20px !important;
+      }
+    }
+  }
+
   &__group-wrapper {
     @include respond-to(tablet) {
       display: flex;
@@ -93,7 +129,9 @@
     cursor: text;
   }
 
-  &__error {
+  &__error,
+  &__success {
+    display: inline-block;
     padding-left: 10px;
     color: $c-red-4;
     font-size: 14px;
@@ -102,6 +140,10 @@
       font-size: 16px;
       padding-bottom: 20px;
     }
+  }
+
+  &__success {
+    color: $c-green-3;
   }
 
   .btn {

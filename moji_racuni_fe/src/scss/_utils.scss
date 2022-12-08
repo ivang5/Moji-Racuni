@@ -132,116 +132,116 @@ $spaceamounts: (1, 2, 3, 4, 5);
 
 @each $space in $spaceamounts {
   .m-#{$space} {
-    margin: #{$space * 10}px;
+    margin: #{$space * 10}px !important;
   }
   .m-lg-#{$space} {
     @include respond-to(desktop) {
-      margin: #{$space * 20}px;
+      margin: #{$space * 20}px !important;
     }
   }
   .mx-#{$space} {
-    margin: 0 #{$space * 10}px;
+    margin: 0 #{$space * 10}px !important;
   }
   .mx-lg-#{$space} {
     @include respond-to(desktop) {
-      margin: 0 #{$space * 20}px;
+      margin: 0 #{$space * 20}px !important;
     }
   }
   .my-#{$space} {
-    margin: #{$space * 10}px 0;
+    margin: #{$space * 10}px 0 !important;
   }
   .my-lg-#{$space} {
     @include respond-to(desktop) {
-      margin: #{$space * 20}px 0;
+      margin: #{$space * 20}px 0 !important;
     }
   }
   .mt-#{$space} {
-    margin-top: #{$space * 10}px;
+    margin-top: #{$space * 10}px !important;
   }
   .mt-lg-#{$space} {
     @include respond-to(desktop) {
-      margin-top: #{$space * 20}px;
+      margin-top: #{$space * 20}px !important;
     }
   }
   .mb-#{$space} {
-    margin-bottom: #{$space * 10}px;
+    margin-bottom: #{$space * 10}px !important;
   }
   .mb-lg-#{$space} {
     @include respond-to(desktop) {
-      margin-bottom: #{$space * 20}px;
+      margin-bottom: #{$space * 20}px !important;
     }
   }
   .mr-#{$space} {
-    margin-right: #{$space * 10}px;
+    margin-right: #{$space * 10}px !important;
   }
   .mr-lg-#{$space} {
     @include respond-to(desktop) {
-      margin-right: #{$space * 20}px;
+      margin-right: #{$space * 20}px !important;
     }
   }
   .ml-#{$space} {
-    margin-left: #{$space * 10}px;
+    margin-left: #{$space * 10}px !important;
   }
   .ml-lg-#{$space} {
     @include respond-to(desktop) {
-      margin-left: #{$space * 20}px;
+      margin-left: #{$space * 20}px !important;
     }
   }
 
   .p-#{$space} {
-    padding: #{$space * 10}px;
+    padding: #{$space * 10}px !important;
   }
   .p-lg-#{$space} {
     @include respond-to(desktop) {
-      padding: #{$space * 20}px;
+      padding: #{$space * 20}px !important;
     }
   }
   .px-#{$space} {
-    padding: 0 #{$space * 10}px;
+    padding: 0 #{$space * 10}px !important;
   }
   .px-lg-#{$space} {
     @include respond-to(desktop) {
-      padding: 0 #{$space * 20}px;
+      padding: 0 #{$space * 20}px !important;
     }
   }
   .py-#{$space} {
-    padding: #{$space * 10}px 0;
+    padding: #{$space * 10}px 0 !important;
   }
   .py-lg-#{$space} {
     @include respond-to(desktop) {
-      padding: #{$space * 20}px 0;
+      padding: #{$space * 20}px 0 !important;
     }
   }
   .pt-#{$space} {
-    padding-top: #{$space * 10}px;
+    padding-top: #{$space * 10}px !important;
   }
   .pt-lg-#{$space} {
     @include respond-to(desktop) {
-      padding-top: #{$space * 20}px;
+      padding-top: #{$space * 20}px !important;
     }
   }
   .pb-#{$space} {
-    padding-bottom: #{$space * 10}px;
+    padding-bottom: #{$space * 10}px !important;
   }
   .pb-lg-#{$space} {
     @include respond-to(desktop) {
-      padding-bottom: #{$space * 20}px;
+      padding-bottom: #{$space * 20}px !important;
     }
   }
   .pr-#{$space} {
-    padding-right: #{$space * 10}px;
+    padding-right: #{$space * 10}px !important;
   }
   .pr-lg-#{$space} {
     @include respond-to(desktop) {
-      padding-right: #{$space * 20}px;
+      padding-right: #{$space * 20}px !important;
     }
   }
   .pl-#{$space} {
-    padding-left: #{$space * 10}px;
+    padding-left: #{$space * 10}px !important;
   }
   .pl-lg-#{$space} {
     @include respond-to(desktop) {
-      padding-left: #{$space * 20}px;
+      padding-left: #{$space * 20}px !important;
     }
   }
 }

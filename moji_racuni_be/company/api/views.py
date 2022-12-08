@@ -43,13 +43,15 @@ class CompanyViewSet(viewsets.ViewSet):
     def create(self, request):
         companies = Company.objects.all()
         company = utils.retrieve_company(request.data.get('url'))
+        if not company:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         company_tin = company['tin']
         for c in companies:
             if c.tin == company_tin:
                 serializer = CompanySerializer(c, data=company)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(serializer.data, status=status.HTTP_200_OK)
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                     
         serializer = CompanySerializer(data=company)
@@ -112,7 +114,7 @@ class CompanyUnitViewSet(viewsets.ViewSet):
                 serializer = CompanyUnitSerializer(unit, data=companyUnit)
                 if serializer.is_valid():
                     serializer.save()
-                    return Response(serializer.data, status=status.HTTP_200_OK)
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
         serializer = CompanyUnitSerializer(data=companyUnit)
