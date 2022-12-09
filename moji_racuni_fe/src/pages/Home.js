@@ -11,6 +11,7 @@ import {
 } from "../utils/utils";
 import { TypeAnimation } from "react-type-animation";
 import FormGroup from "../components/FormGroup";
+import InfoIcon from "../icons/info-icon.png";
 
 const Home = () => {
   const [lastReceiptInfo, setLastReceiptInfo] = useState({});
@@ -64,7 +65,7 @@ const Home = () => {
     let validation = "";
 
     if (e.target.receiptLink.value.trim() === "") {
-      validation = "Polje za unos ne sme biti prazno!";
+      validation = "Polje za unos računa ne sme biti prazno!";
       valid = false;
     } else if (
       !e.target.receiptLink.value.trim().startsWith("https://suf.purs.gov.rs/")
@@ -102,7 +103,25 @@ const Home = () => {
         speed={20}
         cursor={false}
       />
-      <h2 className="pt-4 pt-lg-4">Dodajte novi račun</h2>
+      <h2 className="pt-4 pt-lg-4">
+        Dodajte račun{" "}
+        <div className="info">
+          <img className="info__icon" src={InfoIcon} alt="info" />
+          <div className="info__body">
+            <ul className="info__list">
+              <li>
+                Za dodavanje novog računa unesite link koji dobijete skeniranjem
+                QR koda sa fiskalnog računa.
+              </li>
+              <br />
+              <li>
+                Ukoliko unesete validan link, a dobijete grešku, izdavalac
+                računa verovatno još uvek nije uneo račun u sistem.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </h2>
       <form className="form form--simple pb-2" onSubmit={addReceipt}>
         <FormGroup
           name="receiptLink"

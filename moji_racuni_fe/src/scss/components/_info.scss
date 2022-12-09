@@ -1,0 +1,44 @@
+.info {
+  display: inline-block;
+  position: relative;
+  transform: translateY(3px);
+  z-index: 5;
+  height: 25px;
+
+  @include respond-to(tablet) {
+    transform: translateY(1px);
+  }
+
+  &__body {
+    display: none;
+  }
+
+  &__list {
+    list-style: circle;
+    font-size: 14px;
+    padding-left: 15px;
+  }
+
+  &__icon {
+    height: inherit;
+    cursor: pointer;
+  }
+
+  &__body-display,
+  &__icon:hover + .info__body {
+    display: block;
+    position: absolute;
+    top: 40px;
+    right: -65px;
+    width: 260px;
+    background-color: $c-white-1;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid $c-green-4;
+
+    @include respond-to(tablet) {
+      top: -75px;
+      left: 35px;
+    }
+  }
+}
