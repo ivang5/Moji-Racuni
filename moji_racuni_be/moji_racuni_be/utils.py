@@ -189,11 +189,12 @@ def get_measure_prefix(item_part):
     """
     Vraća prefiks merne jedinice
     """
-    if (item_part.find("[") != -1 and item_part.find("]") != -1):
+    item_part_end = item_part.rstrip()[-5:]
+    if (item_part_end.find("[") != -1 and item_part_end.find("]") != -1):
         return "["
-    elif (item_part.find("(") != -1 and item_part.find(")") != -1):
+    elif (item_part_end.find("(") != -1 and item_part_end.find(")") != -1):
         return "("
-    elif (item_part.find("/") != -1):
+    elif (item_part_end.find("/") != -1):
         return "/"
     else:
         return "{"
