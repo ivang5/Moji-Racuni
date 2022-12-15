@@ -375,7 +375,46 @@ def dictfetchall(cursor):
         dict(zip(columns, row))
         for row in cursor.fetchall()
     ]
+    
+def fill_empty_hours(receipts_by_hours):
+    new_receipts_by_hours = receipts_by_hours
+    for i in range(24):
+        found = False
+        for hour in receipts_by_hours:
+            if i == hour["hourNum"]:
+                found = True
+                break
+        if not found:
+            new_hour_info = {"hourNum": i, "count": 0}
+            new_receipts_by_hours.append(new_hour_info)
+    return new_receipts_by_hours
 
+def fill_empty_weekdays(receipts_by_weekdays):
+    new_receipts_by_weekdays = receipts_by_weekdays
+    for i in range(1, 8):
+        found = False
+        for weekday in receipts_by_weekdays:
+            if i == weekday["dayofweek"]:
+                found = True
+                break
+        if not found:
+            new_weekday_info = {"dayofweek": i, "count": 0}
+            new_receipts_by_weekdays.append(new_weekday_info)
+    return new_receipts_by_weekdays
+    
+def fill_empty_months(receipts_by_months):
+    new_receipts_by_months = receipts_by_months
+    for i in range(1, 13):
+        found = False
+        for month in receipts_by_months:
+            if i == month["monthNum"]:
+                found = True
+                break
+        if not found:
+            new_month_info = {"monthNum": i, "count": 0}
+            new_receipts_by_months.append(new_month_info)
+    return new_receipts_by_months
+    
 def get_last_receipt(user):
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM receipt_receipt WHERE user = %s ORDER BY date DESC LIMIT 1", [user.id])
@@ -426,7 +465,7 @@ def get_receipts_sum_by_hours(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT HOUR(date) monthNum, count(*) count
+                SELECT HOUR(date) hourNum, count(*) count
                     FROM receipt_receipt
                     WHERE date BETWEEN %s AND %s
                     GROUP BY HOUR(date)
@@ -437,13 +476,14 @@ def get_receipts_sum_by_hours(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT HOUR(date) monthNum, count(*) count
+                SELECT HOUR(date) hourNum, count(*) count
                     FROM receipt_receipt
                     WHERE user = %s AND date BETWEEN %s AND %s
                     GROUP BY HOUR(date)
                 ''',
                 [user.id, dateFrom, dateTo])
             receipts_by_hours = dictfetchall(cursor)
+    receipts_by_hours = fill_empty_hours(receipts_by_hours)
     return receipts_by_hours
 
 def get_receipts_sum_by_weekdays(user, dateFrom, dateTo):
@@ -469,6 +509,7 @@ def get_receipts_sum_by_weekdays(user, dateFrom, dateTo):
                 ''',
                 [user.id, dateFrom, dateTo])
             receipts_by_weekdays = dictfetchall(cursor)
+    receipts_by_weekdays = fill_empty_weekdays(receipts_by_weekdays)
     return receipts_by_weekdays
 
 def get_receipts_sum_by_months(user, dateFrom, dateTo):
@@ -494,6 +535,7 @@ def get_receipts_sum_by_months(user, dateFrom, dateTo):
                 ''',
                 [user.id, dateFrom, dateTo])
             receipts_by_months = dictfetchall(cursor)
+    receipts_by_months = fill_empty_months(receipts_by_months)
     return receipts_by_months
 
 def get_most_valuable_items(user, dateFrom, dateTo, limit):
