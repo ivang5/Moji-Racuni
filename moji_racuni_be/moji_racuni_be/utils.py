@@ -175,6 +175,9 @@ def get_measure_type(item_part, measure_prefix):
     elif (item_part.find(measure_prefix + "pce") != -1 or
         item_part.find(measure_prefix + " pce") != -1):
         return "pce"
+    elif (item_part.find(measure_prefix + "m") != -1 or
+        item_part.find(measure_prefix + " m") != -1):
+        return "m"
     else:
         if (measure_prefix == "{"):
             if (item_part.strip().endswith(" kom")):

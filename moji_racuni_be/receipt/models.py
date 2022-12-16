@@ -18,6 +18,7 @@ class Item(models.Model):
         KUT = "KUT"
         KG = "KG"
         L = "L"
+        M = "M"
     class VatType(models.IntegerChoices):
         OPSTI = 20
         POSEBNI = 10
