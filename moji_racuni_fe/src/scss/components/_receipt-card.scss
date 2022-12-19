@@ -1,0 +1,54 @@
+.receipt-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+  padding: 15px;
+  margin-bottom: 10px;
+  border: 1px solid $c-green-4;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 5px 5px 10px $c-white-3;
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+
+  @include respond-to(tablet) {
+    width: calc(50% - 6px);
+  }
+
+  @include respond-to(laptop) {
+    width: calc(33.33% - 8px);
+  }
+
+  &:hover {
+    box-shadow: none;
+    background-color: rgba($color: $c-green-1, $alpha: 0.2);
+  }
+
+  &:nth-child(2n) {
+    @include respond-to(tablet) {
+      margin-left: 12px;
+    }
+
+    @include respond-to(laptop) {
+      margin-left: 0;
+    }
+  }
+
+  &:nth-child(3n + 2) {
+    @include respond-to(laptop) {
+      margin-right: 12px;
+      margin-left: 12px;
+    }
+  }
+
+  &__head-wrapper {
+    padding-bottom: 15px;
+  }
+
+  &__price {
+    display: flex;
+    justify-content: space-between;
+    width: 180px;
+  }
+}

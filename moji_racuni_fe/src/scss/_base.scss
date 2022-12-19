@@ -73,6 +73,18 @@ h4 {
   }
 }
 
+h5 {
+  font-size: 16px;
+
+  @include respond-to(tablet) {
+    font-size: 18px;
+  }
+
+  @include respond-to(laptop) {
+    font-size: 22px;
+  }
+}
+
 h6 {
   font-size: 11px;
 

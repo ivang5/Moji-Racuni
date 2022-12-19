@@ -12,8 +12,13 @@ const useApi = () => {
     return toReturn;
   };
 
-  const getReceipt = async (url) => {
-    const { response, data } = await api(url);
+  const getReceipts = async () => {
+    const { response, data } = await api("/api/receipts/");
+    return getResponse(response, data, 200);
+  };
+
+  const getReceipt = async (id) => {
+    const { response, data } = await api(`/api/receipts/${id}/`);
     return getResponse(response, data, 200);
   };
 
@@ -152,6 +157,7 @@ const useApi = () => {
   };
 
   return {
+    getReceipts,
     getReceipt,
     getLastReceipt,
     getItems,

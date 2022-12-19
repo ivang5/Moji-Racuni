@@ -1,8 +1,8 @@
 import React from "react";
 
-const FormGroup = ({ name, text, type, error, success }) => {
+const FormGroup = ({ name, text, type, error, success, inline }) => {
   return (
-    <div className="form__group">
+    <div className={inline ? "form__group form__group--inline" : "form__group"}>
       <label className="form__label" htmlFor={name}>
         <input
           className="form__input"

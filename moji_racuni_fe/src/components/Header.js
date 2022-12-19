@@ -13,7 +13,7 @@ const Header = () => {
 
   return (
     <>
-      {currentPath !== "/login" && user !== null && (
+      {currentPath !== "/prijava" && user !== null && (
         <div>
           <header className={mobileNav ? "header header--active" : "header"}>
             <div className="nav__wrapper p-2">
@@ -51,6 +51,20 @@ const Header = () => {
                     </Link>
                   </li>
                   <li className="nav__list-item">
+                    <Link
+                      className="nav__link"
+                      data-content="Računi"
+                      to="/racuni"
+                    >
+                      Računi
+                    </Link>
+                  </li>
+                  <li className="nav__list-item">
+                    <Link className="nav__link" data-content="Preduzeća" to="/">
+                      Preduzeća
+                    </Link>
+                  </li>
+                  <li className="nav__list-item">
                     <Link className="nav__link" data-content="Profil" to="/">
                       Profil
                     </Link>
@@ -62,7 +76,6 @@ const Header = () => {
                   </span>
                 </div>
               </nav>
-              {/* {user && <span className="pl-1">Hello {user.username}</span>} */}
             </div>
           </header>
           <div
@@ -72,21 +85,50 @@ const Header = () => {
           >
             <ul className="mobile-nav__list">
               <li className="nav__list-item">
-                <Link className="nav__link" to="/">
+                <Link
+                  className="nav__link"
+                  to="/"
+                  onClick={() => toggleMobileNav()}
+                >
                   Početna
                 </Link>
               </li>
               <li className="nav__list-item">
                 <Link
-                  className="nav__link nav__link-active"
+                  className="nav__link nav__link--active"
                   data-content="About"
                   to="/"
+                  onClick={() => toggleMobileNav()}
                 >
                   Statistike
                 </Link>
               </li>
               <li className="nav__list-item">
-                <Link className="nav__link" to="/">
+                <Link
+                  className="nav__link"
+                  data-content="Računi"
+                  to="/racuni"
+                  onClick={() => toggleMobileNav()}
+                >
+                  Računi
+                </Link>
+              </li>
+              <li className="nav__list-item">
+                <Link
+                  className="nav__link"
+                  data-content="Preduzeća"
+                  to="/"
+                  onClick={() => toggleMobileNav()}
+                >
+                  Preduzeća
+                </Link>
+              </li>
+              <li className="nav__list-item">
+                <Link
+                  className="nav__link"
+                  to="/"
+                  onClick={() => toggleMobileNav()}
+                >
                   Profil
                 </Link>
               </li>

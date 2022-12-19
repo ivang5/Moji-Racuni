@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Header from "./components/Header";
+import Receipts from "./pages/Receipts";
 
 function App() {
   return (
@@ -15,7 +16,10 @@ function App() {
           <Route element={<PrivateRoute />} exact path="/">
             <Route element={<Home />} exact path="/" />
           </Route>
-          <Route element={<Login />} path="/login" />
+          <Route element={<PrivateRoute />} exact path="/racuni">
+            <Route element={<Receipts />} exact path="/racuni" />
+          </Route>
+          <Route element={<Login />} path="/prijava" />
         </Routes>
       </AuthProvider>
     </Router>

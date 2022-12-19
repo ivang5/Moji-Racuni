@@ -150,3 +150,20 @@
     margin-top: 10px;
   }
 }
+
+.form__group--inline {
+  display: inline-block;
+  margin-bottom: 0;
+
+  input {
+    width: 250px;
+
+    @include respond-to(phone) {
+      width: 250px;
+    }
+  }
+
+  @include respond-to(laptop) {
+    margin-left: 15px;
+  }
+}

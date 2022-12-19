@@ -5,6 +5,10 @@
   animation: cursor 4.7s step-start;
 }
 
+.text-animator--fast::after {
+  animation: cursor 3.7s step-start;
+}
+
 @keyframes cursor {
   10% {
     opacity: 1;
