@@ -3,14 +3,19 @@ import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
 import useApi from "../utils/useApi";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
+import { useRef } from "react";
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
   const [searchOpen, setSearchOpen] = useState(false);
+  const [sortBy, setSortBy] = useState("Datum");
+  const [sortType, setSortType] = useState("Opadajuće");
+  const sortByOptions = ["Datum", "Prodavnica", "PIB", "Cena", "PDV"];
+  const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
 
   useEffect(() => {
@@ -37,7 +42,7 @@ const Receipts = () => {
           speed={10}
           cursor={false}
         />
-        <div className="receipts__search mb-3">
+        <div className="receipts__search mb-1">
           <div
             className={
               searchOpen
@@ -96,10 +101,30 @@ const Receipts = () => {
                   />
                 </div>
               </div>
-              <button className="btn btn-primary btn-round mb-2" type="submit">
+              <button
+                className="btn btn-primary btn-primary--black btn-round mb-2"
+                type="submit"
+              >
                 Pretraži
               </button>
             </form>
+          </div>
+        </div>
+        <div className="receipts__sort mb-3">
+          <h4 className="receipts__sort-title">Sortiraj po: </h4>
+          <div className="receipts__sort-wrapper">
+            <Dropdown
+              options={sortByOptions}
+              onChange={(value) => setSortBy(value.value)}
+              value={sortBy}
+              placeholder="Izaberite opciju"
+            />
+            <Dropdown
+              options={sortTypeOptions}
+              onChange={(value) => setSortType(value.value)}
+              value={sortType}
+              placeholder="Izaberite opciju"
+            />
           </div>
         </div>
         <div className="receipts__items">

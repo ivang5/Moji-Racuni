@@ -101,3 +101,7 @@
 .react-datepicker__navigation:hover *::before {
   border-color: $c-green-2;
 }
+
+.react-datepicker-popper {
+  z-index: 2;
+}

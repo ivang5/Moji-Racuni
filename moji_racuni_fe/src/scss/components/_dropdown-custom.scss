@@ -1,0 +1,39 @@
+.Dropdown-root {
+  width: 120px;
+
+  @include respond-to(tablet) {
+    width: 150px;
+  }
+
+  & + .Dropdown-root {
+    margin-left: 10px;
+
+    @include respond-to(tablet) {
+      margin-left: 15px;
+    }
+  }
+
+  .Dropdown-control {
+    border-color: $c-dark-1;
+    border-radius: 4px;
+  }
+
+  .Dropdown-menu {
+    border-color: $c-dark-1;
+    border-radius: 4px;
+  }
+
+  .Dropdown-option:hover,
+  .Dropdown-option.is-selected {
+    background-color: rgba($color: $c-green-1, $alpha: 0.1);
+    color: $c-dark-1;
+  }
+
+  .Dropdown-arrow {
+    border: solid $c-dark-1;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 3px;
+    transform: rotate(45deg);
+  }
+}
