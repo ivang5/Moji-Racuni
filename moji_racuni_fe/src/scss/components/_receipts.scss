@@ -24,9 +24,8 @@
     padding-right: 10px;
     cursor: pointer;
 
-    @include respond-to(laptop) {
-      padding-right: 0;
-      cursor: unset;
+    @include respond-to(desktop) {
+      display: none;
     }
 
     .arrow {
@@ -46,14 +45,39 @@
       transform: translate(60%, 5%) rotate(-135deg);
     }
 
-    .receipts__search-fields {
+    .receipts__search-fields,
+    .receipts__search-fields-wrapper {
       display: flex;
       flex-direction: column;
+    }
+
+    @include respond-to(laptop) {
+      .receipts__search-fields {
+        display: block;
+        text-align: center;
+        padding-right: 20px;
+      }
+
+      .receipts__search-fields-wrapper {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .form__group:nth-child(3),
+      .form__group:nth-child(4) {
+        input {
+          width: 170px;
+        }
+      }
     }
   }
 
   &__search-wrapper {
-    @include respond-to(laptop) {
+    @include respond-to(desktop) {
+      padding-right: 15px;
+
       .arrow {
         display: none;
       }
@@ -61,13 +85,57 @@
       .receipts__search-fields {
         display: flex;
         flex-direction: row;
+        text-align: center;
+
+        button {
+          margin-left: 15px;
+        }
+      }
+
+      .receipts__search-fields-wrapper {
+        display: flex;
+        flex-direction: row;
         justify-content: center;
         flex-wrap: wrap;
+      }
 
-        div:nth-child(3),
-        div:nth-child(4) {
-          input {
-            width: 150px;
+      .form__group:nth-child(1) {
+        input {
+          width: 190px;
+
+          @include respond-to(wide) {
+            width: 250px;
+          }
+        }
+      }
+
+      .form__group:nth-child(2) {
+        input {
+          width: 130px;
+
+          @include respond-to(wide) {
+            width: 180px;
+          }
+        }
+      }
+
+      .receipts__search-date-wrapper {
+        input {
+          width: 160px;
+
+          @include respond-to(wide) {
+            width: 200px;
+          }
+        }
+      }
+
+      .form__group:nth-child(3),
+      .form__group:nth-child(4) {
+        input {
+          width: 110px;
+
+          @include respond-to(wide) {
+            width: 130px;
           }
         }
       }

@@ -52,47 +52,49 @@ const Receipts = () => {
               Pretraga <i className="arrow arrow--down"></i>
             </h2>
             <form className="receipts__search-fields" onSubmit={searchReceipts}>
-              <FormGroup
-                name="unit"
-                text="Prodajno mesto"
-                type="text"
-                inline={true}
-              />
-              <FormGroup name="tin" text="PIB" type="text" inline={true} />
-              <FormGroup
-                name="priceFrom"
-                text="Cena od"
-                type="number"
-                inline={true}
-              />
-              <FormGroup
-                name="priceTo"
-                text="Cena do"
-                type="number"
-                inline={true}
-              />
-              <div className="receipts__search-date-wrapper">
-                <span className="receipts__search-lbl">Datum od</span>
-                <DatePicker
-                  selected={fromDate}
-                  onChange={(date) => setFromDate(date)}
-                  selectsStart
-                  startDate={fromDate}
-                  endDate={toDate}
-                  dateFormat="d/MM/yyyy"
+              <div className="receipts__search-fields-wrapper">
+                <FormGroup
+                  name="unit"
+                  text="Prodajno mesto"
+                  type="text"
+                  inline={true}
                 />
-              </div>
-              <div className="receipts__search-date-wrapper">
-                <span className="receipts__search-lbl">Datum do</span>
-                <DatePicker
-                  selected={toDate}
-                  onChange={(date) => setToDate(date)}
-                  selectsEnd
-                  startDate={fromDate}
-                  endDate={toDate}
-                  minDate={fromDate}
-                  dateFormat="d/MM/yyyy"
+                <FormGroup name="tin" text="PIB" type="text" inline={true} />
+                <FormGroup
+                  name="priceFrom"
+                  text="Cena od"
+                  type="number"
+                  inline={true}
                 />
+                <FormGroup
+                  name="priceTo"
+                  text="Cena do"
+                  type="number"
+                  inline={true}
+                />
+                <div className="receipts__search-date-wrapper">
+                  <span className="receipts__search-lbl">Datum od</span>
+                  <DatePicker
+                    selected={fromDate}
+                    onChange={(date) => setFromDate(date)}
+                    selectsStart
+                    startDate={fromDate}
+                    endDate={toDate}
+                    dateFormat="d/MM/yyyy"
+                  />
+                </div>
+                <div className="receipts__search-date-wrapper">
+                  <span className="receipts__search-lbl">Datum do</span>
+                  <DatePicker
+                    selected={toDate}
+                    onChange={(date) => setToDate(date)}
+                    selectsEnd
+                    startDate={fromDate}
+                    endDate={toDate}
+                    minDate={fromDate}
+                    dateFormat="d/MM/yyyy"
+                  />
+                </div>
               </div>
               <button className="btn btn-primary btn-round mb-2" type="submit">
                 Pretraži

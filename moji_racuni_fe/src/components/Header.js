@@ -5,6 +5,7 @@ import AuthContext from "../context/AuthContext";
 const Header = () => {
   const { user, logoutUser } = useContext(AuthContext);
   const [mobileNav, setMobileNav] = useState(false);
+  const [activePage, setActivePage] = useState("Home");
   const currentPath = window.location.pathname;
 
   const toggleMobileNav = () => {
@@ -19,7 +20,11 @@ const Header = () => {
             <div className="nav__wrapper p-2">
               <nav className="nav">
                 <div className="nav__brand d-inline">
-                  <Link className="nav__logo" to="/">
+                  <Link
+                    className="nav__logo"
+                    to="/"
+                    onClick={() => setActivePage("Home")}
+                  >
                     <img
                       className="nav__logo-img"
                       src="https://upload.wikimedia.org/wikipedia/commons/a/ac/Approve_icon.svg"
@@ -37,35 +42,72 @@ const Header = () => {
                 </div>
                 <ul className="nav__list">
                   <li className="nav__list-item">
-                    <Link className="nav__link" data-content="Početna" to="/">
+                    <Link
+                      className={
+                        activePage === "Home"
+                          ? "nav__link nav__link--active"
+                          : "nav__link"
+                      }
+                      data-content="Početna"
+                      to="/"
+                      onClick={() => setActivePage("Home")}
+                    >
                       Početna
                     </Link>
                   </li>
                   <li className="nav__list-item">
                     <Link
-                      className="nav__link nav__link--active"
+                      className={
+                        activePage === "Stats"
+                          ? "nav__link nav__link--active"
+                          : "nav__link"
+                      }
                       data-content="Statistike"
                       to="/"
+                      onClick={() => setActivePage("Stats")}
                     >
                       Statistike
                     </Link>
                   </li>
                   <li className="nav__list-item">
                     <Link
-                      className="nav__link"
+                      className={
+                        activePage === "Receipts"
+                          ? "nav__link nav__link--active"
+                          : "nav__link"
+                      }
                       data-content="Računi"
                       to="/racuni"
+                      onClick={() => setActivePage("Receipts")}
                     >
                       Računi
                     </Link>
                   </li>
                   <li className="nav__list-item">
-                    <Link className="nav__link" data-content="Preduzeća" to="/">
+                    <Link
+                      className={
+                        activePage === "Companies"
+                          ? "nav__link nav__link--active"
+                          : "nav__link"
+                      }
+                      data-content="Preduzeća"
+                      to="/"
+                      onClick={() => setActivePage("Companies")}
+                    >
                       Preduzeća
                     </Link>
                   </li>
                   <li className="nav__list-item">
-                    <Link className="nav__link" data-content="Profil" to="/">
+                    <Link
+                      className={
+                        activePage === "Profile"
+                          ? "nav__link nav__link--active"
+                          : "nav__link"
+                      }
+                      data-content="Profil"
+                      to="/"
+                      onClick={() => setActivePage("Profile")}
+                    >
                       Profil
                     </Link>
                   </li>
@@ -86,48 +128,85 @@ const Header = () => {
             <ul className="mobile-nav__list">
               <li className="nav__list-item">
                 <Link
-                  className="nav__link"
+                  className={
+                    activePage === "Home"
+                      ? "nav__link nav__link--active"
+                      : "nav__link"
+                  }
+                  data-content="Početna"
                   to="/"
-                  onClick={() => toggleMobileNav()}
+                  onClick={() => {
+                    setActivePage("Home");
+                    toggleMobileNav();
+                  }}
                 >
                   Početna
                 </Link>
               </li>
               <li className="nav__list-item">
                 <Link
-                  className="nav__link nav__link--active"
-                  data-content="About"
+                  className={
+                    activePage === "Stats"
+                      ? "nav__link nav__link--active"
+                      : "nav__link"
+                  }
+                  data-content="Statistike"
                   to="/"
-                  onClick={() => toggleMobileNav()}
+                  onClick={() => {
+                    setActivePage("Stats");
+                    toggleMobileNav();
+                  }}
                 >
                   Statistike
                 </Link>
               </li>
               <li className="nav__list-item">
                 <Link
-                  className="nav__link"
+                  className={
+                    activePage === "Receipts"
+                      ? "nav__link nav__link--active"
+                      : "nav__link"
+                  }
                   data-content="Računi"
                   to="/racuni"
-                  onClick={() => toggleMobileNav()}
+                  onClick={() => {
+                    setActivePage("Receipts");
+                    toggleMobileNav();
+                  }}
                 >
                   Računi
                 </Link>
               </li>
               <li className="nav__list-item">
                 <Link
-                  className="nav__link"
+                  className={
+                    activePage === "Companies"
+                      ? "nav__link nav__link--active"
+                      : "nav__link"
+                  }
                   data-content="Preduzeća"
                   to="/"
-                  onClick={() => toggleMobileNav()}
+                  onClick={() => {
+                    setActivePage("Companies");
+                    toggleMobileNav();
+                  }}
                 >
                   Preduzeća
                 </Link>
               </li>
               <li className="nav__list-item">
                 <Link
-                  className="nav__link"
+                  className={
+                    activePage === "Profile"
+                      ? "nav__link nav__link--active"
+                      : "nav__link"
+                  }
+                  data-content="Profil"
                   to="/"
-                  onClick={() => toggleMobileNav()}
+                  onClick={() => {
+                    setActivePage("Profile");
+                    toggleMobileNav();
+                  }}
                 >
                   Profil
                 </Link>
