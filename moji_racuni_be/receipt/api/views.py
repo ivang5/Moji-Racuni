@@ -59,6 +59,22 @@ class ReceiptViewSet(viewsets.ViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         receipts_count_by_months = utils.get_receipts_sum_by_months(user, dateFrom, dateTo)
         return Response(receipts_count_by_months)
+    
+    @action(detail=False, url_path='filter', url_name='filter')
+    def filter_receipts(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        unitName = self.request.query_params.get('unitName')
+        tin = self.request.query_params.get('tin')
+        priceFrom = self.request.query_params.get('priceFrom')
+        priceTo = self.request.query_params.get('priceTo')
+        orderBy = self.request.query_params.get('orderBy')
+        ascendingOrder = self.request.query_params.get('ascendingOrder')
+        if (not dateFrom or not dateTo or not unitName or not tin or not priceFrom or not priceTo or not orderBy or not ascendingOrder):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        filtered_receipts = utils.filter_receipts(user, dateFrom, dateTo, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder)
+        return Response(filtered_receipts)
 
     def create(self, request):
         user = request.user

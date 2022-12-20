@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
 import useApi from "../utils/useApi";
+import { getTenYearsAgo, dateBEFormatter } from "../utils/utils";
 import DatePicker from "react-datepicker";
 import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
-import { useRef } from "react";
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
-  const [fromDate, setFromDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(new Date());
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortBy, setSortBy] = useState("Datum");
@@ -27,8 +27,61 @@ const Receipts = () => {
     setReceipts(receipts);
   };
 
-  const searchReceipts = async () => {
-    const receipts = await api.getReceipts();
+  const applyFilters = async (e) => {
+    e.preventDefault();
+    const dateFrom = dateBEFormatter(fromDate);
+    const dateTo = dateBEFormatter(toDate);
+    let unit = "%";
+    let tin = "%";
+    let priceFrom = 0;
+    let priceTo = 9999999;
+    let orderBy;
+    switch (sortBy) {
+      case "Datum":
+        orderBy = "r.date";
+        break;
+      case "Prodavnica":
+        orderBy = "u.name";
+        break;
+      case "PIB":
+        orderBy = "u.company";
+        break;
+      case "Cena":
+        orderBy = "r.totalPrice";
+        break;
+      case "PDV":
+        orderBy = "r.totalVat";
+        break;
+      default:
+        orderBy = "r.date";
+        break;
+    }
+    const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
+
+    if (e.target.unit.value.trim() !== "") {
+      unit = e.target.unit.value.trim();
+    }
+    if (e.target.tin.value.trim() !== "") {
+      tin = e.target.tin.value.trim();
+    }
+    if (e.target.priceFrom.value !== "") {
+      priceFrom = e.target.priceFrom.value;
+    }
+    if (e.target.priceTo.value !== "") {
+      priceTo = e.target.priceTo.value;
+    }
+
+    const receipts = await api.filterReceipts(
+      dateFrom,
+      dateTo,
+      unit,
+      tin,
+      priceFrom,
+      priceTo,
+      orderBy,
+      ascendingOrder
+    );
+
     setReceipts(receipts);
   };
 
@@ -56,7 +109,7 @@ const Receipts = () => {
             >
               Pretraga <i className="arrow arrow--down"></i>
             </h2>
-            <form className="receipts__search-fields" onSubmit={searchReceipts}>
+            <form className="receipts__search-fields" onSubmit={applyFilters}>
               <div className="receipts__search-fields-wrapper">
                 <FormGroup
                   name="unit"

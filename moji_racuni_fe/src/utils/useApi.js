@@ -3,7 +3,7 @@ import useFetch from "./useFetch";
 const useApi = () => {
   const api = useFetch();
 
-  const getResponse = (response, data, status) => {
+  const getResponse = (response, data, status = 200) => {
     let toReturn;
     if (response.status === 409) {
       return 409;
@@ -14,60 +14,76 @@ const useApi = () => {
 
   const getReceipts = async () => {
     const { response, data } = await api("/api/receipts/");
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
   };
 
   const getReceipt = async (id) => {
     const { response, data } = await api(`/api/receipts/${id}/`);
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
   };
 
   const getLastReceipt = async () => {
     const { response, data } = await api("/api/receipts/last/");
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
   };
 
   const getItems = async (receiptId) => {
     const { response, data } = await api(`/api/items/${receiptId}/receipt/`);
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
   };
 
   const getUnit = async (id) => {
     const { response, data } = await api(`/api/company/units/${id}/`);
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
   };
 
   const getCompany = async (tin) => {
     const { response, data } = await api(`/api/companies/${tin}/`);
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
   };
 
   const getTotalSpent = async (dateFrom, dateTo) => {
     const { response, data } = await api(
       `/api/receipts/total-spent?dateFrom=${dateFrom}&dateTo=${dateTo}`
     );
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
   };
 
   const getVisitedCompaniesInfo = async (dateFrom, dateTo) => {
     const { response, data } = await api(
       `/api/companies/visited?dateFrom=${dateFrom}&dateTo=${dateTo}`
     );
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
   };
 
   const getValuableItems = async (dateFrom, dateTo, limit) => {
     const { response, data } = await api(
       `/api/items/most-valuable?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
     );
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
   };
 
   const getMostVisitedCompaniesInfo = async (dateFrom, dateTo, limit) => {
     const { response, data } = await api(
       `/api/companies/most-visited?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
     );
-    return getResponse(response, data, 200);
+    return getResponse(response, data);
+  };
+
+  const filterReceipts = async (
+    dateFrom,
+    dateTo,
+    unitName,
+    tin,
+    priceFrom,
+    priceTo,
+    orderBy,
+    ascendingOrder
+  ) => {
+    const { response, data } = await api(
+      `/api/receipts/filter?dateFrom=${dateFrom}&dateTo=${dateTo}&unitName=${unitName}&tin=${tin}&priceFrom=${priceFrom}&priceTo=${priceTo}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}`
+    );
+    return getResponse(response, data);
   };
 
   const createCompany = async (url) => {
@@ -165,6 +181,7 @@ const useApi = () => {
     getCompany,
     getLastReceiptFull,
     getBaseStats,
+    filterReceipts,
     addFullReceipt,
   };
 };

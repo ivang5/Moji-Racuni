@@ -33,10 +33,15 @@ export const getThisYear = () => {
 export const getAllTime = () => {
   const date = new Date();
   const dateFrom = dateBEFormatter(
-    new Date(date.getFullYear() - 5, date.getMonth())
+    new Date(date.getFullYear() - 10, date.getMonth())
   );
   const dateTo = dateBEFormatter(new Date(date.getFullYear() + 1, 0, 1));
   return { dateFrom: dateFrom, dateTo: dateTo };
+};
+
+export const getTenYearsAgo = () => {
+  const date = new Date();
+  return new Date(date.getFullYear() - 10, date.getMonth(), date.getDate());
 };
 
 export const noDecimalNum = (number) => {
