@@ -55,3 +55,30 @@ export const twoDecimalNum = (number) => {
 export const capitalize = (text) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
+
+export const getReceiptOrderCode = (orderBy) => {
+  let orderByCode;
+
+  switch (orderBy) {
+    case "Datum":
+      orderByCode = "r.date";
+      break;
+    case "Prodavnica":
+      orderByCode = "u.name";
+      break;
+    case "PIB":
+      orderByCode = "u.company";
+      break;
+    case "Cena":
+      orderByCode = "r.totalPrice";
+      break;
+    case "PDV":
+      orderByCode = "r.totalVat";
+      break;
+    default:
+      orderByCode = "r.date";
+      break;
+  }
+
+  return orderByCode;
+};

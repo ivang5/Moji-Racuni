@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
 import useApi from "../utils/useApi";
-import { getTenYearsAgo, dateBEFormatter } from "../utils/utils";
+import {
+  getTenYearsAgo,
+  dateBEFormatter,
+  getReceiptOrderCode,
+} from "../utils/utils";
 import DatePicker from "react-datepicker";
 import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
@@ -14,6 +18,14 @@ const Receipts = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortBy, setSortBy] = useState("Datum");
   const [sortType, setSortType] = useState("Opadajuće");
+  const [searchObj, setSearchObj] = useState({
+    dateFrom: dateBEFormatter(fromDate),
+    dateTo: dateBEFormatter(toDate),
+    unit: "%",
+    tin: "%",
+    priceFrom: 0,
+    priceTo: 9999999,
+  });
   const sortByOptions = ["Datum", "Prodavnica", "PIB", "Cena", "PDV"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
@@ -21,6 +33,10 @@ const Receipts = () => {
   useEffect(() => {
     getReceipts();
   }, []);
+
+  useEffect(() => {
+    applySortingFilters();
+  }, [sortBy, sortType]);
 
   const getReceipts = async () => {
     const receipts = await api.getReceipts();
@@ -35,27 +51,7 @@ const Receipts = () => {
     let tin = "%";
     let priceFrom = 0;
     let priceTo = 9999999;
-    let orderBy;
-    switch (sortBy) {
-      case "Datum":
-        orderBy = "r.date";
-        break;
-      case "Prodavnica":
-        orderBy = "u.name";
-        break;
-      case "PIB":
-        orderBy = "u.company";
-        break;
-      case "Cena":
-        orderBy = "r.totalPrice";
-        break;
-      case "PDV":
-        orderBy = "r.totalVat";
-        break;
-      default:
-        orderBy = "r.date";
-        break;
-    }
+    let orderBy = getReceiptOrderCode(sortBy);
     const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
     if (e.target.unit.value.trim() !== "") {
@@ -82,7 +78,38 @@ const Receipts = () => {
       ascendingOrder
     );
 
-    setReceipts(receipts);
+    setSearchObj({
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      unit: unit,
+      tin: tin,
+      priceFrom: priceFrom,
+      priceTo: priceTo,
+    });
+
+    if (receipts) {
+      setReceipts(receipts);
+    }
+  };
+
+  const applySortingFilters = async () => {
+    let orderBy = getReceiptOrderCode(sortBy);
+    const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
+
+    const receipts = await api.filterReceipts(
+      searchObj.dateFrom,
+      searchObj.dateTo,
+      searchObj.unit,
+      searchObj.tin,
+      searchObj.priceFrom,
+      searchObj.priceTo,
+      orderBy,
+      ascendingOrder
+    );
+
+    if (receipts) {
+      setReceipts(receipts);
+    }
   };
 
   return (
