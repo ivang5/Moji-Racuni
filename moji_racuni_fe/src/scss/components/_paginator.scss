@@ -1,0 +1,70 @@
+.paginator {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+
+  &__step,
+  &__page {
+    padding: 6px 8px;
+
+    @include respond-to(tablet) {
+      padding: 6px 12px;
+    }
+    border: 1px solid $c-green-2;
+    border-radius: 7px;
+    color: $c-dark-4;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+      @include respond-to(tablet) {
+        background-color: $c-green-2;
+        border-color: $c-green-2;
+      }
+    }
+  }
+
+  &__step {
+    display: none;
+    margin: 0 5px;
+
+    @include respond-to(tablet) {
+      display: block;
+    }
+
+    .arrow {
+      border-color: $c-dark-4;
+    }
+
+    &--inactive {
+      background-color: $c-white-2;
+      color: $c-white-5;
+      border-color: $c-white-5;
+      cursor: default;
+
+      &:hover {
+        background-color: $c-white-2;
+        border-color: $c-white-5;
+      }
+
+      .arrow {
+        border-color: $c-white-5;
+      }
+    }
+  }
+
+  &__page {
+    margin: 0 2px;
+
+    @include respond-to(tablet) {
+      margin: 0 5px;
+    }
+
+    &--active {
+      color: $c-white-1;
+      background-color: $c-green-4;
+      border-color: $c-green-4;
+      font-weight: 700;
+    }
+  }
+}

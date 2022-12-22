@@ -6,13 +6,18 @@ import {
   getTenYearsAgo,
   dateBEFormatter,
   getReceiptOrderCode,
+  getPageNumberList,
 } from "../utils/utils";
 import DatePicker from "react-datepicker";
 import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
+import Paginator from "../components/Paginator";
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
+  const [activePage, setActivePage] = useState(1);
+  const [pageNumbers, setPageNumbers] = useState([]);
+  const [pageCount, setPageCount] = useState(1);
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(new Date());
   const [searchOpen, setSearchOpen] = useState(false);
@@ -31,17 +36,20 @@ const Receipts = () => {
   const api = useApi();
 
   useEffect(() => {
-    getReceipts();
-  }, []);
-
-  useEffect(() => {
     applySortingFilters();
   }, [sortBy, sortType]);
 
-  const getReceipts = async () => {
-    const receipts = await api.getReceipts();
-    setReceipts(receipts);
-  };
+  useEffect(() => {
+    const pageNumbers = getPageNumberList(pageCount, activePage);
+    setPageNumbers(pageNumbers, activePage);
+    applySortingFilters();
+    window.scrollTo(0, 0);
+  }, [activePage]);
+
+  useEffect(() => {
+    const pageNumbers = getPageNumberList(pageCount, activePage);
+    setPageNumbers(pageNumbers, activePage);
+  }, [pageCount]);
 
   const applyFilters = async (e) => {
     e.preventDefault();
@@ -75,7 +83,8 @@ const Receipts = () => {
       priceFrom,
       priceTo,
       orderBy,
-      ascendingOrder
+      ascendingOrder,
+      activePage
     );
 
     setSearchObj({
@@ -88,7 +97,9 @@ const Receipts = () => {
     });
 
     if (receipts) {
-      setReceipts(receipts);
+      setPageCount(receipts.pageCount);
+      setActivePage(receipts.pageNum);
+      setReceipts(receipts.receipts);
     }
   };
 
@@ -104,11 +115,14 @@ const Receipts = () => {
       searchObj.priceFrom,
       searchObj.priceTo,
       orderBy,
-      ascendingOrder
+      ascendingOrder,
+      activePage
     );
 
     if (receipts) {
-      setReceipts(receipts);
+      setPageCount(receipts.pageCount);
+      setActivePage(receipts.pageNum);
+      setReceipts(receipts.receipts);
     }
   };
 
@@ -208,20 +222,28 @@ const Receipts = () => {
           </div>
         </div>
         <div className="receipts__items">
-          {receipts.map((receipt) => {
-            return (
-              <ReceiptCard
-                key={receipt.id}
-                id={receipt.id}
-                date={receipt.date}
-                link={receipt.link}
-                totalPrice={receipt.totalPrice}
-                totalVat={receipt.totalVat}
-                companyUnitId={receipt.companyUnit}
-              />
-            );
-          })}
+          {receipts &&
+            receipts.map((receipt) => {
+              return (
+                <ReceiptCard
+                  key={receipt.id}
+                  id={receipt.id}
+                  date={receipt.date}
+                  link={receipt.link}
+                  totalPrice={receipt.totalPrice}
+                  totalVat={receipt.totalVat}
+                  companyUnitId={receipt.companyUnit}
+                />
+              );
+            })}
         </div>
+        {pageNumbers && (
+          <Paginator
+            pageNumbers={pageNumbers}
+            activePage={activePage}
+            setActivePage={setActivePage}
+          />
+        )}
       </div>
     </div>
   );

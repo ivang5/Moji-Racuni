@@ -12,8 +12,8 @@ const useApi = () => {
     return toReturn;
   };
 
-  const getReceipts = async () => {
-    const { response, data } = await api("/api/receipts/");
+  const getReceipts = async (page) => {
+    const { response, data } = await api(`/api/receipts/?page=${page}/`);
     return getResponse(response, data);
   };
 
@@ -78,10 +78,11 @@ const useApi = () => {
     priceFrom,
     priceTo,
     orderBy,
-    ascendingOrder
+    ascendingOrder,
+    page
   ) => {
     const { response, data } = await api(
-      `/api/receipts/filter?dateFrom=${dateFrom}&dateTo=${dateTo}&unitName=${unitName}&tin=${tin}&priceFrom=${priceFrom}&priceTo=${priceTo}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}`
+      `/api/receipts/filter?dateFrom=${dateFrom}&dateTo=${dateTo}&unitName=${unitName}&tin=${tin}&priceFrom=${priceFrom}&priceTo=${priceTo}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
     );
     return getResponse(response, data);
   };

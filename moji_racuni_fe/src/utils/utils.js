@@ -82,3 +82,73 @@ export const getReceiptOrderCode = (orderBy) => {
 
   return orderByCode;
 };
+
+export const getPageNumberList = (pageCount, activePage) => {
+  if (pageCount < 9) {
+    const pages = [];
+
+    for (let i = 1; i < pageCount + 1; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  const pages = [1];
+
+  if (activePage < 5) {
+    pages.push(2);
+    pages.push(3);
+    pages.push(4);
+    pages.push(5);
+    pages.push(6);
+    pages.push(0);
+    pages.push(pageCount);
+  } else {
+    pages.push(-1);
+    if (activePage < pageCount - 4) {
+      pages.push(activePage - 1);
+      pages.push(activePage);
+      pages.push(activePage + 1);
+      pages.push(activePage + 2);
+      pages.push(-2);
+      pages.push(pageCount);
+    } else if (activePage === pageCount - 4) {
+      pages.push(activePage - 1);
+      pages.push(activePage);
+      pages.push(activePage + 1);
+      pages.push(activePage + 2);
+      pages.push(activePage + 3);
+      pages.push(activePage + 4);
+    } else if (activePage === pageCount - 3) {
+      pages.push(activePage - 2);
+      pages.push(activePage - 1);
+      pages.push(activePage);
+      pages.push(activePage + 1);
+      pages.push(activePage + 2);
+      pages.push(activePage + 3);
+    } else if (activePage === pageCount - 2) {
+      pages.push(activePage - 3);
+      pages.push(activePage - 2);
+      pages.push(activePage - 1);
+      pages.push(activePage);
+      pages.push(activePage + 1);
+      pages.push(activePage + 2);
+    } else if (activePage === pageCount - 1) {
+      pages.push(activePage - 4);
+      pages.push(activePage - 3);
+      pages.push(activePage - 2);
+      pages.push(activePage - 1);
+      pages.push(activePage);
+      pages.push(activePage + 1);
+    } else if (activePage === pageCount) {
+      pages.push(activePage - 5);
+      pages.push(activePage - 4);
+      pages.push(activePage - 3);
+      pages.push(activePage - 2);
+      pages.push(activePage - 1);
+      pages.push(activePage);
+    }
+  }
+
+  return pages;
+};

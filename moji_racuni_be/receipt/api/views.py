@@ -4,6 +4,7 @@ from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import get_object_or_404
 from .serializers import ReceiptSerializer, ItemSerializer
 from receipt.models import Receipt, Item
@@ -17,8 +18,18 @@ class ReceiptViewSet(viewsets.ViewSet):
             receipts = Receipt.objects.all()
         else:
             receipts = user.receipt_set.all()
-        serializer = ReceiptSerializer(receipts, many=True)
-        return Response(serializer.data)
+        p = Paginator(receipts, 18)
+        try:
+            page = p.page(self.request.query_params.get('page'))
+        except (EmptyPage, PageNotAnInteger):
+            page = p.page(1)
+        serializer = ReceiptSerializer(page, many=True)
+        res = {
+            "pageCount": p.num_pages,
+            "pageNum": page.number,
+            "receipts": serializer.data
+        }
+        return Response(res)
     
     @action(detail=False, url_path='total-spent', url_name='total-spent')
     def total_spent(self, request):
@@ -74,7 +85,17 @@ class ReceiptViewSet(viewsets.ViewSet):
         if (not dateFrom or not dateTo or not unitName or not tin or not priceFrom or not priceTo or not orderBy or not ascendingOrder):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         filtered_receipts = utils.filter_receipts(user, dateFrom, dateTo, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder)
-        return Response(filtered_receipts)
+        p = Paginator(filtered_receipts, 18)
+        try:
+            page = p.page(self.request.query_params.get('page'))
+        except (EmptyPage, PageNotAnInteger):
+            page = p.page(1)
+        res = {
+            "pageCount": p.num_pages,
+            "pageNum": page.number,
+            "receipts": page.object_list
+        }
+        return Response(res)
 
     def create(self, request):
         user = request.user
