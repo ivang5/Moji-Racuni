@@ -1,12 +1,20 @@
 import React, { useContext, useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getPageFromPathname } from "../utils/utils";
 import AuthContext from "../context/AuthContext";
 
 const Header = () => {
   const { user, logoutUser } = useContext(AuthContext);
   const [mobileNav, setMobileNav] = useState(false);
-  const [activePage, setActivePage] = useState("Home");
+  const [activePage, setActivePage] = useState();
   const currentPath = window.location.pathname;
+
+  useEffect(() => {
+    const pathname = window.location.pathname;
+    const page = getPageFromPathname(pathname);
+    setActivePage(page);
+  }, []);
 
   const toggleMobileNav = () => {
     setMobileNav(!mobileNav);

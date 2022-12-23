@@ -56,6 +56,30 @@ export const capitalize = (text) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
+export const getPageFromPathname = (pathname) => {
+  let page;
+
+  switch (pathname) {
+    case "/":
+      page = "Home";
+      break;
+    case "/statistike":
+      page = "Stats";
+      break;
+    case "/racuni":
+      page = "Receipts";
+      break;
+    case "/preduzeca":
+      page = "Companies";
+      break;
+    case "/profil":
+      page = "Profile";
+      break;
+  }
+
+  return page;
+};
+
 export const getReceiptOrderCode = (orderBy) => {
   let orderByCode;
 
