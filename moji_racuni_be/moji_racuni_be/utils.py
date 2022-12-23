@@ -126,6 +126,9 @@ def get_vat(item_part):
         new_part = new_part.replace("(đ)", "")
     return {"new_part": new_part, "vat": vat}
 
+def remove_replacement_char(item_part):
+    return item_part.replace(u"\ufffd", "")
+
 def get_name(item_part, measure_type, measure_prefix):
     """
     Vraća naziv stavke bez merne jedinice i šifre
@@ -264,12 +267,13 @@ def get_items(receipt, receipt_id):
             item_part_latin = cyrillic_to_latin(item_part_lower)
             item_part_filtered = get_vat(item_part_latin)
             item_vats.append(item_part_filtered["vat"])
+            item_part_normalized = remove_replacement_char(item_part_filtered["new_part"])
             
-            measure_prefix = get_measure_prefix(item_part_filtered["new_part"])
-            measure_type = get_measure_type(item_part_filtered["new_part"], measure_prefix)
+            measure_prefix = get_measure_prefix(item_part_normalized)
+            measure_type = get_measure_type(item_part_normalized, measure_prefix)
             item_measures.append(measure_type)
 
-            item_name = get_name(item_part_filtered["new_part"], measure_type, measure_prefix)
+            item_name = get_name(item_part_normalized, measure_type, measure_prefix)
             item_names.append(item_name)
 
             to_analyze = "price_quantity"
