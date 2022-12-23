@@ -18,6 +18,7 @@ const Home = () => {
   const [receiptLoading, setReceiptLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [statsLoading, setStatsLoading] = useState(true);
+  const [addingReceipt, setAddingReceipt] = useState(false);
   const [date, setDate] = useState(getThisMonth());
   const [timeSpan, setTimeSpan] = useState("month");
   const [receiptLinkValid, setReceiptLinkValid] = useState("");
@@ -79,9 +80,13 @@ const Home = () => {
       return;
     }
 
+    setAddingReceipt(true);
+
     const response = await api.addFullReceipt(
       e.target.receiptLink.value.trim()
     );
+
+    setAddingReceipt(false);
 
     if (response === null) {
       setReceiptLinkValid("Došlo je do greške, pokušajte ponovo malo kasnije!");
@@ -130,9 +135,20 @@ const Home = () => {
           error={receiptLinkValid}
           success={successText}
         />
-        <button className="btn btn-primary btn-round" type="submit">
-          Dodaj račun
-        </button>
+        {!addingReceipt ? (
+          <button className="btn btn-primary btn-round" type="submit">
+            Dodaj račun
+          </button>
+        ) : (
+          <div className="btn btn-primary btn-round btn-spinner">
+            <div className="spinner spinner--sm">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        )}
       </form>
       {stats.totalSpent ? (
         <StatPanel

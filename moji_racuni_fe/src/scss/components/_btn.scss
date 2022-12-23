@@ -91,4 +91,16 @@
   &-circle {
     border-radius: 50%;
   }
+
+  &-spinner {
+    height: 48px;
+    width: 140px;
+    cursor: default;
+
+    &:hover {
+      background-color: $c-green-4;
+      border-color: $c-green-4;
+      box-shadow: 0 12px 24px rgb(34 51 49 / 13%);
+    }
+  }
 }
