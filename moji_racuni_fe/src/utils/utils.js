@@ -52,6 +52,21 @@ export const twoDecimalNum = (number) => {
   return number.toFixed(2);
 };
 
+export const formatPrice = (number) => {
+  const twoDecimalNum = number.toFixed(2);
+  let strNum = twoDecimalNum.toString();
+  strNum = strNum.replace(".", ",");
+
+  if (strNum.slice(0, -3).length > 3) {
+    strNum = strNum.slice(0, -6) + "." + strNum.slice(-6);
+  }
+  if (strNum.slice(0, -7).length > 3) {
+    strNum = strNum.slice(0, -10) + "." + strNum.slice(-10);
+  }
+
+  return strNum;
+};
+
 export const capitalize = (text) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
@@ -71,6 +86,12 @@ export const getPageFromPathname = (pathname) => {
       break;
     case "/preduzeca":
       page = "Companies";
+      break;
+    case "/korisnici":
+      page = "Users";
+      break;
+    case "/prijave":
+      page = "Reports";
       break;
     case "/profil":
       page = "Profile";

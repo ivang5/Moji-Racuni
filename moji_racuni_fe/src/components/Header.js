@@ -71,7 +71,7 @@ const Header = () => {
                           : "nav__link"
                       }
                       data-content="Statistike"
-                      to="/"
+                      to="/statistike"
                       onClick={() => setActivePage("Stats")}
                     >
                       Statistike
@@ -99,12 +99,44 @@ const Header = () => {
                           : "nav__link"
                       }
                       data-content="Preduzeća"
-                      to="/"
+                      to="/preduzeca"
                       onClick={() => setActivePage("Companies")}
                     >
                       Preduzeća
                     </Link>
                   </li>
+                  {user.role === "ADMIN" && (
+                    <li className="nav__list-item">
+                      <Link
+                        className={
+                          activePage === "Users"
+                            ? "nav__link nav__link--active"
+                            : "nav__link"
+                        }
+                        data-content="Korisnici"
+                        to="/korisnici"
+                        onClick={() => setActivePage("Users")}
+                      >
+                        Korisnici
+                      </Link>
+                    </li>
+                  )}
+                  {user.role === "ADMIN" && (
+                    <li className="nav__list-item">
+                      <Link
+                        className={
+                          activePage === "Reports"
+                            ? "nav__link nav__link--active"
+                            : "nav__link"
+                        }
+                        data-content="Prijave"
+                        to="/prijave"
+                        onClick={() => setActivePage("Reports")}
+                      >
+                        Prijave
+                      </Link>
+                    </li>
+                  )}
                   <li className="nav__list-item">
                     <Link
                       className={
@@ -113,7 +145,7 @@ const Header = () => {
                           : "nav__link"
                       }
                       data-content="Profil"
-                      to="/"
+                      to="/profil"
                       onClick={() => setActivePage("Profile")}
                     >
                       Profil
@@ -159,7 +191,7 @@ const Header = () => {
                       : "nav__link"
                   }
                   data-content="Statistike"
-                  to="/"
+                  to="/statistike"
                   onClick={() => {
                     setActivePage("Stats");
                     toggleMobileNav();
@@ -193,7 +225,7 @@ const Header = () => {
                       : "nav__link"
                   }
                   data-content="Preduzeća"
-                  to="/"
+                  to="/preduzeca"
                   onClick={() => {
                     setActivePage("Companies");
                     toggleMobileNav();
@@ -202,6 +234,44 @@ const Header = () => {
                   Preduzeća
                 </Link>
               </li>
+              {user.role === "ADMIN" && (
+                <li className="nav__list-item">
+                  <Link
+                    className={
+                      activePage === "Users"
+                        ? "nav__link nav__link--active"
+                        : "nav__link"
+                    }
+                    data-content="Korisnici"
+                    to="/korisnici"
+                    onClick={() => {
+                      setActivePage("Users");
+                      toggleMobileNav();
+                    }}
+                  >
+                    Korisnici
+                  </Link>
+                </li>
+              )}
+              {user.role === "ADMIN" && (
+                <li className="nav__list-item">
+                  <Link
+                    className={
+                      activePage === "Reports"
+                        ? "nav__link nav__link--active"
+                        : "nav__link"
+                    }
+                    data-content="Prijave"
+                    to="/prijave"
+                    onClick={() => {
+                      setActivePage("Reports");
+                      toggleMobileNav();
+                    }}
+                  >
+                    Prijave
+                  </Link>
+                </li>
+              )}
               <li className="nav__list-item">
                 <Link
                   className={
@@ -210,7 +280,7 @@ const Header = () => {
                       : "nav__link"
                   }
                   data-content="Profil"
-                  to="/"
+                  to="/profil"
                   onClick={() => {
                     setActivePage("Profile");
                     toggleMobileNav();

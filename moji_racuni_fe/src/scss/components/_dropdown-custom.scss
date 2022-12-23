@@ -14,13 +14,19 @@
   }
 
   .Dropdown-control {
-    border-color: $c-dark-1;
-    border-radius: 4px;
+    @include respond-to(laptop) {
+      margin-top: 4px;
+    }
   }
 
   .Dropdown-menu {
-    border-color: $c-dark-1;
-    border-radius: 4px;
+    margin-top: 3px;
+  }
+
+  .Dropdown-control,
+  .Dropdown-menu {
+    border: none;
+    border-radius: 6px;
   }
 
   .Dropdown-option:hover,

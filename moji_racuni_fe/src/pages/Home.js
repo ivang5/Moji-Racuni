@@ -89,7 +89,9 @@ const Home = () => {
     setAddingReceipt(false);
 
     if (response === null) {
-      setReceiptLinkValid("Došlo je do greške, pokušajte ponovo malo kasnije!");
+      setReceiptLinkValid(
+        "Došlo je do greške, proverite da li ste uneli validan link i pokušajte ponovo!"
+      );
     } else if (response === 409) {
       setReceiptLinkValid("Ovaj račun ste već uneli!");
     } else {
@@ -108,48 +110,52 @@ const Home = () => {
         speed={20}
         cursor={false}
       />
-      <h2 className="pt-4 pt-lg-4">
-        Dodajte račun{" "}
-        <div className="info">
-          <img className="info__icon" src={InfoIcon} alt="info" />
-          <div className="info__body">
-            <ul className="info__list">
-              <li>
-                Za dodavanje novog računa unesite link koji dobijete skeniranjem
-                QR koda sa fiskalnog računa.
-              </li>
-              <br />
-              <li>
-                Ukoliko unesete validan link, a dobijete grešku, izdavalac
-                računa verovatno još uvek nije uneo račun u sistem.
-              </li>
-            </ul>
-          </div>
-        </div>
-      </h2>
-      <form className="form form--simple pb-2" onSubmit={addReceipt}>
-        <FormGroup
-          name="receiptLink"
-          text="Link fiskalnog računa"
-          type="text"
-          error={receiptLinkValid}
-          success={successText}
-        />
-        {!addingReceipt ? (
-          <button className="btn btn-primary btn-round" type="submit">
-            Dodaj račun
-          </button>
-        ) : (
-          <div className="btn btn-primary btn-round btn-spinner">
-            <div className="spinner spinner--sm">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
+      {user.role === "REGULAR" && (
+        <>
+          <h2 className="pt-4 pt-lg-4">
+            Dodajte račun{" "}
+            <div className="info">
+              <img className="info__icon" src={InfoIcon} alt="info" />
+              <div className="info__body">
+                <ul className="info__list">
+                  <li>
+                    Za dodavanje novog računa unesite link koji dobijete
+                    skeniranjem QR koda sa fiskalnog računa.
+                  </li>
+                  <br />
+                  <li>
+                    Ukoliko unesete validan link, a dobijete grešku, izdavalac
+                    računa verovatno još uvek nije uneo račun u sistem.
+                  </li>
+                </ul>
+              </div>
             </div>
-          </div>
-        )}
-      </form>
+          </h2>
+          <form className="form form--simple pb-2" onSubmit={addReceipt}>
+            <FormGroup
+              name="receiptLink"
+              text="Link fiskalnog računa"
+              type="text"
+              error={receiptLinkValid}
+              success={successText}
+            />
+            {!addingReceipt ? (
+              <button className="btn btn-primary btn-round" type="submit">
+                Dodaj račun
+              </button>
+            ) : (
+              <div className="btn btn-primary btn-round btn-spinner">
+                <div className="spinner spinner--sm">
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </div>
+              </div>
+            )}
+          </form>
+        </>
+      )}
       {stats.totalSpent ? (
         <StatPanel
           stats={stats}
@@ -170,32 +176,34 @@ const Home = () => {
           </div>
         </>
       )}
-      <div className="py-1 py-lg-1">
-        <h2>Poslednji račun</h2>
-        {receiptLoading ? (
-          <div className="receipt-empty">
-            <div className="spinner">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {lastReceiptInfo.receipt ? (
-              <Receipt receiptInfo={lastReceiptInfo} />
-            ) : (
-              <div className="receipt-empty">
-                <h3 className="pb-2">Nije pronađen nijedan račun...</h3>
-                <p>
-                  Dodajte barem jedan račun da bi se prikazao u ovoj sekciji.
-                </p>
+      {user.role === "REGULAR" && (
+        <div className="py-1 py-lg-1">
+          <h2>Poslednji račun</h2>
+          {receiptLoading ? (
+            <div className="receipt-empty">
+              <div className="spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
               </div>
-            )}
-          </>
-        )}
-      </div>
+            </div>
+          ) : (
+            <>
+              {lastReceiptInfo.receipt ? (
+                <Receipt receiptInfo={lastReceiptInfo} />
+              ) : (
+                <div className="receipt-empty">
+                  <h3 className="pb-2">Nije pronađen nijedan račun...</h3>
+                  <p>
+                    Dodajte barem jedan račun da bi se prikazao u ovoj sekciji.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };

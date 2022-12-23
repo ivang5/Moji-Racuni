@@ -1,4 +1,5 @@
 import React from "react";
+import { formatPrice } from "../utils/utils";
 
 const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
   return (
@@ -60,15 +61,15 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
                 <h6 className="stat-panel__item-title c-gray">
                   Ukupno potrošeno
                 </h6>
-                <span className="stat-panel__item-val fs-1 fw-bold">
-                  {stats.totalSpent.totalSpent} RSD
+                <span className="stat-panel__item-val fs-2 fw-bold">
+                  {formatPrice(stats.totalSpent.totalSpent)} RSD
                 </span>
               </div>
               <div className="stat-panel__item stat-panel__item--two">
                 <h6 className="stat-panel__item-title c-gray">
                   Broj posećenih prodavnica
                 </h6>
-                <span className="stat-panel__item-val fs-1 fw-bold">
+                <span className="stat-panel__item-val fs-2 fw-bold">
                   {stats.visitedCompaniesInfo.unitCount}
                 </span>
               </div>
@@ -88,7 +89,8 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
                   </div>
                   <div>
                     <span className="stat-panel__item-val fs-3 fw-bold">
-                      {stats.MostVisitedCompaniesInfo[0].priceSum} RSD
+                      {formatPrice(stats.MostVisitedCompaniesInfo[0].priceSum)}{" "}
+                      RSD
                     </span>
                     <h6 className="stat-panel__item-title c-gray">Potrošeno</h6>
                   </div>
@@ -102,7 +104,7 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
                   {stats.mostValuableItems[0].name}
                 </h3>
                 <span className="stat-panel__item-val fs-2 fw-bold">
-                  {stats.mostValuableItems[0].price} RSD
+                  {formatPrice(stats.mostValuableItems[0].price)} RSD
                 </span>
               </div>
             </div>
