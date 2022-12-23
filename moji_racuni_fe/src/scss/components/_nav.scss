@@ -109,6 +109,10 @@
 
   &__list-item + &__list-item {
     @include respond-to(tablet) {
+      padding-left: 25px;
+    }
+
+    @include respond-to(laptop) {
       padding-left: 40px;
     }
   }
@@ -173,17 +177,69 @@
 
       @include respond-to(tablet) {
         color: $c-dark-6;
+        font-weight: 700;
       }
     }
   }
 
-  &__logout {
+  &__dropdown {
     display: none;
 
     @include respond-to(tablet) {
       display: flex;
       align-items: center;
+      position: relative;
       cursor: pointer;
+    }
+
+    .nav__link {
+      padding-right: 8px;
+    }
+
+    .arrow {
+      border-color: $c-dark-4;
+      transform: rotate(45deg) translate(-7px, -2px);
+    }
+
+    &-items {
+      display: none;
+    }
+
+    &--open {
+      .nav__dropdown-items {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 40px;
+        left: -35px;
+        width: 100px;
+        border: 1px solid $c-dark-1;
+        border-radius: 6px;
+        background-color: $c-white-2;
+      }
+
+      .nav__dropdown-item {
+        color: $c-dark-4;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: rgba($color: $c-green-1, $alpha: 0.1);
+        }
+
+        &:first-child {
+          padding: 8px 16px;
+          border-radius: 6px 6px 0 0;
+        }
+
+        &:nth-child(2) {
+          padding: 8px 16px;
+          border-radius: 0 0 6px 6px;
+        }
+
+        a {
+          color: $c-dark-4;
+        }
+      }
     }
   }
 
@@ -206,6 +262,11 @@
     display: none;
   }
 
+  .nav__link {
+    padding: 10px 0;
+    font-size: 22px;
+  }
+
   &__list {
     opacity: 0;
     transition: opacity 0.2s ease;
@@ -218,6 +279,42 @@
     .mobile-nav__list {
       opacity: 1;
       transition: opacity 0.8s ease;
+    }
+  }
+
+  &__dropdown {
+    cursor: pointer;
+
+    &-items {
+      display: none;
+    }
+
+    &--open {
+      .mobile-nav__dropdown-items {
+        display: block;
+      }
+
+      .mobile-nav__dropdown-item {
+        display: block;
+        color: $c-dark-4;
+        padding-bottom: 14px;
+        padding-left: 10px;
+        font-size: 20px;
+      }
+    }
+
+    .nav__link {
+      padding-right: 8px;
+    }
+
+    .arrow {
+      border-color: $c-dark-1;
+      transform: rotate(45deg) translate(-12px, -16px);
+      padding: 4px;
+    }
+
+    .nav__link--active + .arrow {
+      border-color: $c-green-3;
     }
   }
 }

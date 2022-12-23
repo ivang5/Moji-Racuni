@@ -1,13 +1,14 @@
 import React, { useContext, useState } from "react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getPageFromPathname } from "../utils/utils";
+import { capitalize, getPageFromPathname } from "../utils/utils";
 import AuthContext from "../context/AuthContext";
 
 const Header = () => {
   const { user, logoutUser } = useContext(AuthContext);
   const [mobileNav, setMobileNav] = useState(false);
   const [activePage, setActivePage] = useState();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const currentPath = window.location.pathname;
 
   useEffect(() => {
@@ -31,7 +32,10 @@ const Header = () => {
                   <Link
                     className="nav__logo"
                     to="/"
-                    onClick={() => setActivePage("Home")}
+                    onClick={() => {
+                      setActivePage("Home");
+                      setDropdownOpen(false);
+                    }}
                   >
                     <img
                       className="nav__logo-img"
@@ -58,7 +62,10 @@ const Header = () => {
                       }
                       data-content="Početna"
                       to="/"
-                      onClick={() => setActivePage("Home")}
+                      onClick={() => {
+                        setActivePage("Home");
+                        setDropdownOpen(false);
+                      }}
                     >
                       Početna
                     </Link>
@@ -72,7 +79,10 @@ const Header = () => {
                       }
                       data-content="Statistike"
                       to="/statistike"
-                      onClick={() => setActivePage("Stats")}
+                      onClick={() => {
+                        setActivePage("Stats");
+                        setDropdownOpen(false);
+                      }}
                     >
                       Statistike
                     </Link>
@@ -86,7 +96,10 @@ const Header = () => {
                       }
                       data-content="Računi"
                       to="/racuni"
-                      onClick={() => setActivePage("Receipts")}
+                      onClick={() => {
+                        setActivePage("Receipts");
+                        setDropdownOpen(false);
+                      }}
                     >
                       Računi
                     </Link>
@@ -100,7 +113,10 @@ const Header = () => {
                       }
                       data-content="Preduzeća"
                       to="/preduzeca"
-                      onClick={() => setActivePage("Companies")}
+                      onClick={() => {
+                        setActivePage("Companies");
+                        setDropdownOpen(false);
+                      }}
                     >
                       Preduzeća
                     </Link>
@@ -115,7 +131,10 @@ const Header = () => {
                         }
                         data-content="Korisnici"
                         to="/korisnici"
-                        onClick={() => setActivePage("Users")}
+                        onClick={() => {
+                          setActivePage("Users");
+                          setDropdownOpen(false);
+                        }}
                       >
                         Korisnici
                       </Link>
@@ -131,31 +150,52 @@ const Header = () => {
                         }
                         data-content="Prijave"
                         to="/prijave"
-                        onClick={() => setActivePage("Reports")}
+                        onClick={() => {
+                          setActivePage("Reports");
+                          setDropdownOpen(false);
+                        }}
                       >
                         Prijave
                       </Link>
                     </li>
                   )}
-                  <li className="nav__list-item">
-                    <Link
+                </ul>
+                <div
+                  className={
+                    dropdownOpen
+                      ? "nav__dropdown nav__dropdown--open"
+                      : "nav__dropdown"
+                  }
+                >
+                  <div onClick={() => setDropdownOpen(!dropdownOpen)}>
+                    <span
                       className={
                         activePage === "Profile"
                           ? "nav__link nav__link--active"
                           : "nav__link"
                       }
-                      data-content="Profil"
-                      to="/profil"
-                      onClick={() => setActivePage("Profile")}
+                      data-content={capitalize(user.username)}
                     >
+                      {capitalize(user.username)}{" "}
+                    </span>
+                    <i className="arrow arrow--down"></i>
+                  </div>
+                  <div className="nav__dropdown-items">
+                    <Link
+                      className="nav__dropdown-item"
+                      to="/profil"
+                      onClick={() => {
+                        setActivePage("Profile");
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      {" "}
                       Profil
                     </Link>
-                  </li>
-                </ul>
-                <div className="nav__logout" onClick={logoutUser}>
-                  <span className="nav__link" data-content="Izloguj se">
-                    Izloguj se
-                  </span>
+                    <div className="nav__dropdown-item" onClick={logoutUser}>
+                      Odjavi se
+                    </div>
+                  </div>
                 </div>
               </nav>
             </div>
@@ -272,26 +312,43 @@ const Header = () => {
                   </Link>
                 </li>
               )}
-              <li className="nav__list-item">
-                <Link
-                  className={
-                    activePage === "Profile"
-                      ? "nav__link nav__link--active"
-                      : "nav__link"
-                  }
-                  data-content="Profil"
-                  to="/profil"
-                  onClick={() => {
-                    setActivePage("Profile");
-                    toggleMobileNav();
-                  }}
-                >
-                  Profil
-                </Link>
-              </li>
               <li>
-                <div className="mobile-nav__logout" onClick={logoutUser}>
-                  <span className="nav__link">Izloguj se</span>
+                <div
+                  className={
+                    dropdownOpen
+                      ? "mobile-nav__dropdown mobile-nav__dropdown--open"
+                      : "mobile-nav__dropdown"
+                  }
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                >
+                  <span
+                    className={
+                      activePage === "Profile"
+                        ? "nav__link nav__link--active"
+                        : "nav__link"
+                    }
+                  >
+                    {capitalize(user.username)}{" "}
+                  </span>
+                  <i className="arrow arrow--down"></i>
+                  <div className="mobile-nav__dropdown-items">
+                    <Link
+                      className="mobile-nav__dropdown-item"
+                      onClick={() => {
+                        setActivePage("Profile");
+                        toggleMobileNav();
+                      }}
+                      to="/profil"
+                    >
+                      Profil
+                    </Link>
+                    <div
+                      className="mobile-nav__dropdown-item"
+                      onClick={logoutUser}
+                    >
+                      Odjavi se
+                    </div>
+                  </div>
                 </div>
               </li>
             </ul>

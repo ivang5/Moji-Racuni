@@ -237,7 +237,7 @@ const Receipts = () => {
               );
             })}
         </div>
-        {pageNumbers && (
+        {pageNumbers && pageCount > 1 && (
           <Paginator
             pageNumbers={pageNumbers}
             activePage={activePage}
