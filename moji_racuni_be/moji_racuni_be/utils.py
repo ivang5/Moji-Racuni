@@ -645,10 +645,10 @@ def get_most_visited_companies(user, dateFrom, dateTo, limit):
 def filter_receipts(user, dateFrom, dateTo, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder):
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "{unitName}" AND u.company LIKE "{tin}" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} ORDER BY {orderBy} {ascendingOrder}')
             most_visited_companies = dictfetchall(cursor)
     else:
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "{unitName}" AND u.company LIKE "{tin}" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
             most_visited_companies = dictfetchall(cursor)
     return most_visited_companies
