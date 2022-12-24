@@ -140,19 +140,23 @@ $spaceamounts: (1, 2, 3, 4, 5);
     }
   }
   .mx-#{$space} {
-    margin: 0 #{$space * 10}px !important;
+    margin-right: #{$space * 10}px !important;
+    margin-left: #{$space * 10}px !important;
   }
   .mx-lg-#{$space} {
     @include respond-to(desktop) {
-      margin: 0 #{$space * 20}px !important;
+      margin-right: #{$space * 20}px !important;
+      margin-left: #{$space * 20}px !important;
     }
   }
   .my-#{$space} {
-    margin: #{$space * 10}px 0 !important;
+    margin-top: #{$space * 10}px !important;
+    margin-bottom: #{$space * 10}px !important;
   }
   .my-lg-#{$space} {
     @include respond-to(desktop) {
-      margin: #{$space * 20}px 0 !important;
+      margin-top: #{$space * 20}px !important;
+      margin-bottom: #{$space * 20}px !important;
     }
   }
   .mt-#{$space} {
@@ -197,19 +201,23 @@ $spaceamounts: (1, 2, 3, 4, 5);
     }
   }
   .px-#{$space} {
-    padding: 0 #{$space * 10}px !important;
+    padding-right: #{$space * 10}px !important;
+    padding-left: #{$space * 10}px !important;
   }
   .px-lg-#{$space} {
     @include respond-to(desktop) {
-      padding: 0 #{$space * 20}px !important;
+      padding-right: #{$space * 20}px !important;
+      padding-left: #{$space * 20}px !important;
     }
   }
   .py-#{$space} {
-    padding: #{$space * 10}px 0 !important;
+    padding-top: #{$space * 10}px !important;
+    padding-bottom: #{$space * 10}px !important;
   }
   .py-lg-#{$space} {
     @include respond-to(desktop) {
-      padding: #{$space * 20}px 0 !important;
+      padding-top: #{$space * 20}px 0 !important;
+      padding-bottom: #{$space * 20}px !important;
     }
   }
   .pt-#{$space} {

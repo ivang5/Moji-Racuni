@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { capitalize, getPageFromPathname } from "../utils/utils";
 import AuthContext from "../context/AuthContext";
+import Logo from "../icons/logo/Logo_bg_color.svg";
 
 const Header = () => {
   const { user, logoutUser } = useContext(AuthContext);
@@ -26,7 +27,7 @@ const Header = () => {
       {currentPath !== "/prijava" && user !== null && (
         <div>
           <header className={mobileNav ? "header header--active" : "header"}>
-            <div className="nav__wrapper p-2">
+            <div className="nav__wrapper py-1 px-2">
               <nav className="nav">
                 <div className="nav__brand d-inline">
                   <Link
@@ -37,11 +38,7 @@ const Header = () => {
                       setDropdownOpen(false);
                     }}
                   >
-                    <img
-                      className="nav__logo-img"
-                      src="https://upload.wikimedia.org/wikipedia/commons/a/ac/Approve_icon.svg"
-                      alt="logo"
-                    />
+                    <img className="nav__logo-img" src={Logo} alt="logo" />
                   </Link>
                   <span
                     className={

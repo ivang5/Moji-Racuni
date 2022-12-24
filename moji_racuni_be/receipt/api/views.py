@@ -18,7 +18,7 @@ class ReceiptViewSet(viewsets.ViewSet):
             receipts = Receipt.objects.all()
         else:
             receipts = user.receipt_set.all()
-        p = Paginator(receipts, 18)
+        p = Paginator(receipts, 12)
         try:
             page = p.page(self.request.query_params.get('page'))
         except (EmptyPage, PageNotAnInteger):
@@ -85,7 +85,7 @@ class ReceiptViewSet(viewsets.ViewSet):
         if (not dateFrom or not dateTo or not unitName or not tin or not priceFrom or not priceTo or not orderBy or not ascendingOrder):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         filtered_receipts = utils.filter_receipts(user, dateFrom, dateTo, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder)
-        p = Paginator(filtered_receipts, 18)
+        p = Paginator(filtered_receipts, 12)
         try:
             page = p.page(self.request.query_params.get('page'))
         except (EmptyPage, PageNotAnInteger):

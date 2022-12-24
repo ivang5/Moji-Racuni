@@ -60,7 +60,7 @@
 
     &:before,
     &:after {
-      background: $c-gray-1;
+      background: $c-dark-6;
       backface-visibility: hidden;
       content: "";
       height: 2px;
@@ -70,7 +70,7 @@
     }
 
     &:before {
-      box-shadow: $c-gray-1 0 9px 0 0;
+      box-shadow: $c-dark-6 0 9px 0 0;
       position: absolute;
       top: 0;
     }
@@ -243,8 +243,11 @@
     }
   }
 
-  &__logo-img {
-    height: 30px;
+  &__logo {
+    display: flex;
+    &-img {
+      height: 45px;
+    }
   }
 }
 
