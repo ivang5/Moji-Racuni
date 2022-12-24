@@ -7,6 +7,14 @@
       flex-direction: row;
       flex-wrap: wrap;
     }
+
+    &-empty,
+    &-no-results {
+      display: flex;
+      justify-content: center;
+      text-align: center;
+      padding-top: 50px;
+    }
   }
 
   &__sort {

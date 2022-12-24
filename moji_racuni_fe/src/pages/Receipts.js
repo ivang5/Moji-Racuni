@@ -15,6 +15,7 @@ import Paginator from "../components/Paginator";
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
+  const [receiptsLoading, setReceiptsLoading] = useState(true);
   const [activePage, setActivePage] = useState(1);
   const [pageNumbers, setPageNumbers] = useState([]);
   const [pageCount, setPageCount] = useState(1);
@@ -75,6 +76,9 @@ const Receipts = () => {
       priceTo = e.target.priceTo.value;
     }
 
+    setReceiptsLoading(true);
+    setSearchOpen(false);
+
     const receipts = await api.filterReceipts(
       dateFrom,
       dateTo,
@@ -96,6 +100,8 @@ const Receipts = () => {
       priceTo: priceTo,
     });
 
+    setReceiptsLoading(false);
+
     if (receipts) {
       setPageCount(receipts.pageCount);
       setActivePage(receipts.pageNum);
@@ -106,6 +112,8 @@ const Receipts = () => {
   const applySortingFilters = async () => {
     let orderBy = getReceiptOrderCode(sortBy);
     const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
+
+    setReceiptsLoading(true);
 
     const receipts = await api.filterReceipts(
       searchObj.dateFrom,
@@ -118,6 +126,8 @@ const Receipts = () => {
       ascendingOrder,
       activePage
     );
+
+    setReceiptsLoading(false);
 
     if (receipts) {
       setPageCount(receipts.pageCount);
@@ -221,23 +231,38 @@ const Receipts = () => {
             />
           </div>
         </div>
-        <div className="receipts__items">
-          {receipts &&
-            receipts.map((receipt) => {
-              return (
-                <ReceiptCard
-                  key={receipt.id}
-                  id={receipt.id}
-                  date={receipt.date}
-                  link={receipt.link}
-                  totalPrice={receipt.totalPrice}
-                  totalVat={receipt.totalVat}
-                  companyUnitId={receipt.companyUnit}
-                />
-              );
-            })}
-        </div>
-        {pageNumbers && pageCount > 1 && (
+        {receiptsLoading ? (
+          <div className="receipts__items-empty">
+            <div className="spinner">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        ) : receipts.length === 0 ? (
+          <div className="receipts__items-no-results">
+            <h4>Nije pronađen nijedan račun.</h4>
+          </div>
+        ) : (
+          <div className="receipts__items">
+            {receipts &&
+              receipts.map((receipt) => {
+                return (
+                  <ReceiptCard
+                    key={receipt.id}
+                    id={receipt.id}
+                    date={receipt.date}
+                    link={receipt.link}
+                    totalPrice={receipt.totalPrice}
+                    totalVat={receipt.totalVat}
+                    companyUnitId={receipt.companyUnit}
+                  />
+                );
+              })}
+          </div>
+        )}
+        {pageNumbers && !receiptsLoading && pageCount > 1 && (
           <Paginator
             pageNumbers={pageNumbers}
             activePage={activePage}
