@@ -197,8 +197,12 @@
     }
 
     .arrow {
-      border-color: $c-dark-4;
+      border-color: $c-gray-1;
       transform: rotate(45deg) translate(-7px, -2px);
+    }
+
+    .nav__link--active + .arrow {
+      border-color: $c-dark-4;
     }
 
     &-items {
@@ -311,7 +315,7 @@
     }
 
     .arrow {
-      border-color: $c-dark-1;
+      border-color: $c-gray-1;
       transform: rotate(45deg) translate(-12px, -16px);
       padding: 4px;
     }
