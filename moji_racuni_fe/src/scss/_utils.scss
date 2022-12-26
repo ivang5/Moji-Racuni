@@ -283,6 +283,44 @@ $spaceamounts: (1, 2, 3, 4, 5);
   }
 }
 
+//* Cross
+.close {
+  position: absolute;
+  right: 28px;
+  top: 25px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+
+  @include respond-to(laptop) {
+    right: 50px;
+    top: 40px;
+  }
+
+  &:before,
+  &:after {
+    position: absolute;
+    left: 15px;
+    content: " ";
+    height: 40px;
+    width: 3px;
+    background-color: $c-white-1;
+    transition: background-color 0.3s ease;
+  }
+  &:before {
+    transform: rotate(45deg);
+  }
+  &:after {
+    transform: rotate(-45deg);
+  }
+  &:hover {
+    &:before,
+    &:after {
+      background-color: $c-green-4;
+    }
+  }
+}
+
 //* Font size
 .fs-1 {
   font-size: 32px !important;

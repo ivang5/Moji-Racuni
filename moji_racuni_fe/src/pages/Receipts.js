@@ -12,11 +12,15 @@ import DatePicker from "react-datepicker";
 import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
+import Receipt from "../components/Receipt";
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
   const [receiptsLoading, setReceiptsLoading] = useState(true);
-  const [activePage, setActivePage] = useState(1);
+  const [activePage, setActivePage] = useState(1000);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalReceipt, setModalReceipt] = useState({});
+  const [documentHeight, setDocumentHeight] = useState(0);
   const [pageNumbers, setPageNumbers] = useState([]);
   const [pageCount, setPageCount] = useState(1);
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
@@ -51,6 +55,12 @@ const Receipts = () => {
     const pageNumbers = getPageNumberList(pageCount, activePage);
     setPageNumbers(pageNumbers, activePage);
   }, [pageCount]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setDocumentHeight(window.document.body.offsetHeight);
+    }, 800);
+  }, [receipts]);
 
   const applyFilters = async (e) => {
     e.preventDefault();
@@ -136,140 +146,178 @@ const Receipts = () => {
     }
   };
 
+  const openModal = async (receiptId) => {
+    setModalOpen(true);
+
+    const receipt = await api.getFullReceiptInfo(receiptId);
+
+    if (receipt) {
+      setModalReceipt(receipt);
+    }
+  };
+
   return (
-    <div className="l-container">
-      <div className="receipts">
-        <TypeAnimation
-          className="text-animator text-animator--fast pt-1 pb-3"
-          sequence={[`Pregled računa:`]}
-          wrapper="h1"
-          speed={10}
-          cursor={false}
-        />
-        <div className="receipts__search mb-1">
-          <div
-            className={
-              searchOpen
-                ? "receipts__search-wrapper receipts__search-wrapper--open"
-                : "receipts__search-wrapper"
-            }
-          >
-            <h2
-              className="receipts__search-title pb-2"
-              onClick={() => setSearchOpen(!searchOpen)}
+    <div>
+      <div className="l-container">
+        <div className="receipts">
+          <TypeAnimation
+            className="text-animator text-animator--fast pt-1 pb-3"
+            sequence={[`Pregled računa:`]}
+            wrapper="h1"
+            speed={10}
+            cursor={false}
+          />
+          <div className="receipts__search mb-1">
+            <div
+              className={
+                searchOpen
+                  ? "receipts__search-wrapper receipts__search-wrapper--open"
+                  : "receipts__search-wrapper"
+              }
             >
-              Pretraga <i className="arrow arrow--down"></i>
-            </h2>
-            <form className="receipts__search-fields" onSubmit={applyFilters}>
-              <div className="receipts__search-fields-wrapper">
-                <FormGroup
-                  name="unit"
-                  text="Prodajno mesto"
-                  type="text"
-                  inline={true}
-                />
-                <FormGroup name="tin" text="PIB" type="text" inline={true} />
-                <FormGroup
-                  name="priceFrom"
-                  text="Cena od"
-                  type="number"
-                  inline={true}
-                />
-                <FormGroup
-                  name="priceTo"
-                  text="Cena do"
-                  type="number"
-                  inline={true}
-                />
-                <div className="receipts__search-date-wrapper">
-                  <span className="receipts__search-lbl">Datum od</span>
-                  <DatePicker
-                    selected={fromDate}
-                    onChange={(date) => setFromDate(date)}
-                    selectsStart
-                    startDate={fromDate}
-                    endDate={toDate}
-                    dateFormat="d/MM/yyyy"
-                  />
-                </div>
-                <div className="receipts__search-date-wrapper">
-                  <span className="receipts__search-lbl">Datum do</span>
-                  <DatePicker
-                    selected={toDate}
-                    onChange={(date) => setToDate(date)}
-                    selectsEnd
-                    startDate={fromDate}
-                    endDate={toDate}
-                    minDate={fromDate}
-                    dateFormat="d/MM/yyyy"
-                  />
-                </div>
-              </div>
-              <button
-                className="btn btn-primary btn-primary--black btn-round mb-2"
-                type="submit"
+              <h2
+                className="receipts__search-title pb-2"
+                onClick={() => setSearchOpen(!searchOpen)}
               >
-                Pretraži
-              </button>
-            </form>
-          </div>
-        </div>
-        <div className="receipts__sort mb-3">
-          <h4 className="receipts__sort-title">Sortiraj po: </h4>
-          <div className="receipts__sort-wrapper">
-            <Dropdown
-              options={sortByOptions}
-              onChange={(value) => setSortBy(value.value)}
-              value={sortBy}
-              placeholder="Izaberite opciju"
-            />
-            <Dropdown
-              options={sortTypeOptions}
-              onChange={(value) => setSortType(value.value)}
-              value={sortType}
-              placeholder="Izaberite opciju"
-            />
-          </div>
-        </div>
-        {receiptsLoading ? (
-          <div className="receipts__items-empty">
-            <div className="spinner">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
+                Pretraga <i className="arrow arrow--down"></i>
+              </h2>
+              <form className="receipts__search-fields" onSubmit={applyFilters}>
+                <div className="receipts__search-fields-wrapper">
+                  <FormGroup
+                    name="unit"
+                    text="Prodajno mesto"
+                    type="text"
+                    inline={true}
+                  />
+                  <FormGroup name="tin" text="PIB" type="text" inline={true} />
+                  <FormGroup
+                    name="priceFrom"
+                    text="Cena od"
+                    type="number"
+                    inline={true}
+                  />
+                  <FormGroup
+                    name="priceTo"
+                    text="Cena do"
+                    type="number"
+                    inline={true}
+                  />
+                  <div className="receipts__search-date-wrapper">
+                    <span className="receipts__search-lbl">Datum od</span>
+                    <DatePicker
+                      selected={fromDate}
+                      onChange={(date) => setFromDate(date)}
+                      selectsStart
+                      startDate={fromDate}
+                      endDate={toDate}
+                      dateFormat="d/MM/yyyy"
+                    />
+                  </div>
+                  <div className="receipts__search-date-wrapper">
+                    <span className="receipts__search-lbl">Datum do</span>
+                    <DatePicker
+                      selected={toDate}
+                      onChange={(date) => setToDate(date)}
+                      selectsEnd
+                      startDate={fromDate}
+                      endDate={toDate}
+                      minDate={fromDate}
+                      dateFormat="d/MM/yyyy"
+                    />
+                  </div>
+                </div>
+                <button
+                  className="btn btn-primary btn-primary--black btn-round mb-2"
+                  type="submit"
+                >
+                  Pretraži
+                </button>
+              </form>
             </div>
           </div>
-        ) : receipts.length === 0 ? (
-          <div className="receipts__items-no-results">
-            <h4>Nije pronađen nijedan račun.</h4>
+          <div className="receipts__sort mb-3">
+            <h4 className="receipts__sort-title">Sortiraj po: </h4>
+            <div className="receipts__sort-wrapper">
+              <Dropdown
+                options={sortByOptions}
+                onChange={(value) => setSortBy(value.value)}
+                value={sortBy}
+                placeholder="Izaberite opciju"
+              />
+              <Dropdown
+                options={sortTypeOptions}
+                onChange={(value) => setSortType(value.value)}
+                value={sortType}
+                placeholder="Izaberite opciju"
+              />
+            </div>
           </div>
-        ) : (
-          <div className="receipts__items">
-            {receipts &&
-              receipts.map((receipt) => {
-                return (
-                  <ReceiptCard
-                    key={receipt.id}
-                    id={receipt.id}
-                    date={receipt.date}
-                    link={receipt.link}
-                    totalPrice={receipt.totalPrice}
-                    totalVat={receipt.totalVat}
-                    companyUnitId={receipt.companyUnit}
-                  />
-                );
-              })}
-          </div>
-        )}
-        {pageNumbers && !receiptsLoading && pageCount > 1 && (
-          <Paginator
-            pageNumbers={pageNumbers}
-            activePage={activePage}
-            setActivePage={setActivePage}
-          />
-        )}
+          {receiptsLoading ? (
+            <div className="receipts__items-empty">
+              <div className="spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+          ) : receipts.length === 0 ? (
+            <div className="receipts__items-no-results">
+              <h4>Nije pronađen nijedan račun.</h4>
+            </div>
+          ) : (
+            <div className="receipts__items">
+              {receipts &&
+                receipts.map((receipt) => {
+                  return (
+                    <ReceiptCard
+                      key={receipt.id}
+                      id={receipt.id}
+                      date={receipt.date}
+                      link={receipt.link}
+                      totalPrice={receipt.totalPrice}
+                      totalVat={receipt.totalVat}
+                      companyUnitId={receipt.companyUnit}
+                      openModal={openModal}
+                    />
+                  );
+                })}
+            </div>
+          )}
+          {pageNumbers && !receiptsLoading && pageCount > 1 && (
+            <Paginator
+              pageNumbers={pageNumbers}
+              activePage={activePage}
+              setActivePage={setActivePage}
+            />
+          )}
+        </div>
       </div>
+      {modalOpen && (
+        <div className="modal" style={{ minHeight: `${documentHeight}px` }}>
+          {modalReceipt.receipt ? (
+            <div className="modal__content">
+              <Receipt receiptInfo={modalReceipt} />
+            </div>
+          ) : (
+            <div className="modal-empty">
+              <div className="spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+          )}
+          <span
+            className="close"
+            onClick={() => {
+              setModalOpen(false);
+              setModalReceipt({});
+            }}
+          ></span>
+        </div>
+      )}
     </div>
   );
 };

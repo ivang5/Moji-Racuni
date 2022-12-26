@@ -133,6 +133,20 @@ const useApi = () => {
     return receiptFull;
   };
 
+  const getFullReceiptInfo = async (id) => {
+    const receipt = await getReceipt(id);
+    const items = await getItems(receipt.id);
+    const unit = await getUnit(receipt.companyUnit);
+    const company = await getCompany(unit.company);
+    const receiptFull = {
+      receipt: receipt,
+      items: items,
+      unit: unit,
+      company: company,
+    };
+    return receiptFull;
+  };
+
   const getBaseStats = async (dateFrom, dateTo, limit) => {
     const totalSpent = await getTotalSpent(dateFrom, dateTo);
     const visitedCompaniesInfo = await getVisitedCompaniesInfo(
@@ -181,6 +195,7 @@ const useApi = () => {
     getUnit,
     getCompany,
     getLastReceiptFull,
+    getFullReceiptInfo,
     getBaseStats,
     filterReceipts,
     addFullReceipt,

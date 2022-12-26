@@ -49,11 +49,11 @@ export const noDecimalNum = (number) => {
 };
 
 export const twoDecimalNum = (number) => {
-  return number.toFixed(2);
+  return parseFloat(number).toFixed(2);
 };
 
 export const formatPrice = (number) => {
-  const twoDecimalNum = number.toFixed(2);
+  const twoDecimalNum = parseFloat(number).toFixed(2);
   let strNum = twoDecimalNum.toString();
   strNum = strNum.replace(".", ",");
 

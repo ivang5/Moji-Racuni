@@ -1,0 +1,44 @@
+.modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+  background-color: rgba($color: $c-dark-3, $alpha: 0.9);
+  padding: 90px 20px;
+
+  @include respond-to(tablet) {
+    padding: 100px 70px;
+  }
+
+  @include respond-to(laptop) {
+    padding: 120px 100px;
+  }
+
+  &__content {
+    @include respond-to(tablet) {
+      width: 85%;
+      max-width: 1400px;
+    }
+  }
+
+  .receipt {
+    background-color: $c-white-2;
+    padding: 30px 20px;
+
+    @include respond-to(tablet) {
+      padding: 50px 20px;
+    }
+  }
+
+  &-empty {
+    padding-top: 200px;
+
+    @include respond-to(laptop) {
+      padding-top: 250px;
+    }
+  }
+}

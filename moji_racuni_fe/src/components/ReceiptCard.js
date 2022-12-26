@@ -9,6 +9,7 @@ const ReceiptCard = ({
   totalPrice,
   totalVat,
   companyUnitId,
+  openModal,
 }) => {
   const [companyUnit, setCompanyUnit] = useState({});
   const api = useApi();
@@ -25,7 +26,13 @@ const ReceiptCard = ({
   return (
     <>
       {companyUnit && (
-        <div className="receipt-card">
+        <div
+          className="receipt-card"
+          onClick={() => {
+            openModal(id);
+            window.scrollTo(0, 0);
+          }}
+        >
           <div className="receipt-card__head-wrapper">
             <span className="receipt-card__date">
               {dateTimeFormatter(date)}
