@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
-const Paginator = ({ pageNumbers, activePage, setActivePage }) => {
+const Paginator = ({ pageNumbers, activePage }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="paginator">
       <div
@@ -9,7 +12,9 @@ const Paginator = ({ pageNumbers, activePage, setActivePage }) => {
             ? "paginator__step paginator__step--inactive"
             : "paginator__step"
         }
-        onClick={() => activePage !== 1 && setActivePage(activePage - 1)}
+        onClick={() =>
+          activePage !== 1 && navigate(`/racuni/strana/${activePage - 1}`)
+        }
       >
         <i className="arrow arrow--left"></i> Prethodna
       </div>
@@ -23,7 +28,7 @@ const Paginator = ({ pageNumbers, activePage, setActivePage }) => {
                   ? "paginator__page paginator__page--active"
                   : "paginator__page"
               }
-              onClick={() => setActivePage(pageNumber)}
+              onClick={() => navigate(`/racuni/strana/${pageNumber}`)}
             >
               {pageNumber}
             </div>
@@ -38,7 +43,8 @@ const Paginator = ({ pageNumbers, activePage, setActivePage }) => {
             : "paginator__step"
         }
         onClick={() =>
-          activePage !== pageNumbers.at(-1) && setActivePage(activePage + 1)
+          activePage !== pageNumbers.at(-1) &&
+          navigate(`/racuni/strana/${activePage + 1}`)
         }
       >
         Sledeća <i className="arrow arrow--right"></i>

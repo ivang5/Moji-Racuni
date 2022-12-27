@@ -15,11 +15,13 @@ import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
 import Receipt from "../components/Receipt";
 import Toast from "../components/Toast";
+import { useParams } from "react-router-dom";
 
 const Receipts = () => {
+  const { page } = useParams();
+  const [pageNum, setPageNum] = useState(parseInt(page));
   const [receipts, setReceipts] = useState([]);
   const [receiptsLoading, setReceiptsLoading] = useState(true);
-  const [activePage, setActivePage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalReceipt, setModalReceipt] = useState({});
   const [reportOpen, setReportOpen] = useState(false);
@@ -52,15 +54,19 @@ const Receipts = () => {
   }, [sortBy, sortType]);
 
   useEffect(() => {
-    const pageNumbers = getPageNumberList(pageCount, activePage);
-    setPageNumbers(pageNumbers, activePage);
-    applySortingFilters();
-    window.scrollTo(0, 0);
-  }, [activePage]);
+    setPageNum(parseInt(page));
+  }, [page]);
 
   useEffect(() => {
-    const pageNumbers = getPageNumberList(pageCount, activePage);
-    setPageNumbers(pageNumbers, activePage);
+    const pageNumbers = getPageNumberList(pageCount, pageNum);
+    setPageNumbers(pageNumbers, pageNum);
+    applySortingFilters();
+    window.scrollTo(0, 0);
+  }, [pageNum]);
+
+  useEffect(() => {
+    const pageNumbers = getPageNumberList(pageCount, pageNum);
+    setPageNumbers(pageNumbers, pageNum);
   }, [pageCount]);
 
   useEffect(() => {
@@ -109,7 +115,7 @@ const Receipts = () => {
       priceTo,
       orderBy,
       ascendingOrder,
-      activePage
+      pageNum
     );
 
     setSearchObj({
@@ -125,7 +131,6 @@ const Receipts = () => {
 
     if (receipts) {
       setPageCount(receipts.pageCount);
-      setActivePage(receipts.pageNum);
       setReceipts(receipts.receipts);
     }
   };
@@ -145,14 +150,13 @@ const Receipts = () => {
       searchObj.priceTo,
       orderBy,
       ascendingOrder,
-      activePage
+      pageNum
     );
 
     setReceiptsLoading(false);
 
     if (receipts) {
       setPageCount(receipts.pageCount);
-      setActivePage(receipts.pageNum);
       setReceipts(receipts.receipts);
     }
   };
@@ -348,11 +352,7 @@ const Receipts = () => {
             </div>
           )}
           {pageNumbers && !receiptsLoading && pageCount > 1 && (
-            <Paginator
-              pageNumbers={pageNumbers}
-              activePage={activePage}
-              setActivePage={setActivePage}
-            />
+            <Paginator pageNumbers={pageNumbers} activePage={pageNum} />
           )}
         </div>
       </div>

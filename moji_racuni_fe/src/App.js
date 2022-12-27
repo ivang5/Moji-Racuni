@@ -16,8 +16,8 @@ function App() {
           <Route element={<PrivateRoute />} exact path="/">
             <Route element={<Home />} exact path="/" />
           </Route>
-          <Route element={<PrivateRoute />} exact path="/racuni">
-            <Route element={<Receipts />} exact path="/racuni" />
+          <Route element={<PrivateRoute />} exact path="/racuni/strana/:page">
+            <Route element={<Receipts />} exact path="/racuni/strana/:page" />
           </Route>
           <Route element={<Login />} path="/prijava" />
         </Routes>
