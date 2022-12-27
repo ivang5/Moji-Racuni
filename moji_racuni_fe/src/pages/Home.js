@@ -12,6 +12,7 @@ import {
 import { TypeAnimation } from "react-type-animation";
 import FormGroup from "../components/FormGroup";
 import InfoIcon from "../icons/info-icon.png";
+import Toast from "../components/Toast";
 
 const Home = () => {
   const [lastReceiptInfo, setLastReceiptInfo] = useState({});
@@ -23,6 +24,8 @@ const Home = () => {
   const [timeSpan, setTimeSpan] = useState("month");
   const [receiptLinkValid, setReceiptLinkValid] = useState("");
   const [successText, setSuccessText] = useState("");
+  const [toast, setToast] = useState({});
+  const [toastOpen, setToastOpen] = useState(false);
   const api = useApi();
   const { user } = useContext(AuthContext);
 
@@ -98,89 +101,90 @@ const Home = () => {
       setSuccessText("Račun je uspešno dodat!");
       getStats();
       getLastReceipt();
+      setToast({
+        title: "Uspešno",
+        text: "Račun je uspešno dodat.",
+      });
+      openToast();
     }
   };
 
+  const openToast = () => {
+    setToastOpen(true);
+    setTimeout(() => setToastOpen(false), 7000);
+  };
+
+  const closeToast = () => {
+    setToastOpen(false);
+  };
+
   return (
-    <div className="l-container">
-      <TypeAnimation
-        className="text-animator py-1"
-        sequence={[`${capitalize(user.username)}, dobrodošli nazad!`]}
-        wrapper="h1"
-        speed={20}
-        cursor={false}
-      />
-      {user.role === "REGULAR" && (
-        <>
-          <h2 className="pt-4 pt-lg-4">
-            Dodajte račun{" "}
-            <div className="info">
-              <img className="info__icon" src={InfoIcon} alt="info" />
-              <div className="info__body">
-                <ul className="info__list">
-                  <li>
-                    Za dodavanje novog računa unesite link koji dobijete
-                    skeniranjem QR koda sa fiskalnog računa.
-                  </li>
-                  <br />
-                  <li>
-                    Ukoliko unesete validan link, a dobijete grešku, izdavalac
-                    računa verovatno još uvek nije uneo račun u sistem.
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </h2>
-          <form className="form form--simple pb-2" onSubmit={addReceipt}>
-            <FormGroup
-              name="receiptLink"
-              text="Link fiskalnog računa"
-              type="text"
-              error={receiptLinkValid}
-              success={successText}
-            />
-            {!addingReceipt ? (
-              <button className="btn btn-primary btn-round" type="submit">
-                Dodaj račun
-              </button>
-            ) : (
-              <div className="btn btn-primary btn-round btn-spinner">
-                <div className="spinner spinner--sm">
-                  <div></div>
-                  <div></div>
-                  <div></div>
-                  <div></div>
+    <>
+      <div className="l-container">
+        <TypeAnimation
+          className="text-animator py-1"
+          sequence={[`${capitalize(user.username)}, dobrodošli nazad!`]}
+          wrapper="h1"
+          speed={20}
+          cursor={false}
+        />
+        {user.role === "REGULAR" && (
+          <>
+            <h2 className="pt-4 pt-lg-4">
+              Dodajte račun{" "}
+              <div className="info">
+                <img className="info__icon" src={InfoIcon} alt="info" />
+                <div className="info__body">
+                  <ul className="info__list">
+                    <li>
+                      Za dodavanje novog računa unesite link koji dobijete
+                      skeniranjem QR koda sa fiskalnog računa.
+                    </li>
+                    <br />
+                    <li>
+                      Ukoliko unesete validan link, a dobijete grešku, izdavalac
+                      računa verovatno još uvek nije uneo račun u sistem.
+                    </li>
+                  </ul>
                 </div>
               </div>
-            )}
-          </form>
-        </>
-      )}
-      {stats.totalSpent ? (
-        <StatPanel
-          stats={stats}
-          timeSpan={timeSpan}
-          setTimeSpan={setTimeSpan}
-          statsLoading={statsLoading}
-        />
-      ) : (
-        <>
-          <h2 className="mt-4">Statistika</h2>
-          <div className="stat-panel-empty mb-4">
-            <div className="spinner">
-              <div></div>
-              <div></div>
-              <div></div>
-              <div></div>
-            </div>
-          </div>
-        </>
-      )}
-      {user.role === "REGULAR" && (
-        <div className="py-1 py-lg-1">
-          <h2>Poslednji račun</h2>
-          {receiptLoading ? (
-            <div className="receipt-empty">
+            </h2>
+            <form className="form form--simple pb-2" onSubmit={addReceipt}>
+              <FormGroup
+                name="receiptLink"
+                text="Link fiskalnog računa"
+                type="text"
+                error={receiptLinkValid}
+                success={successText}
+              />
+              {!addingReceipt ? (
+                <button className="btn btn-primary btn-round" type="submit">
+                  Dodaj račun
+                </button>
+              ) : (
+                <div className="btn btn-primary btn-round btn-spinner">
+                  <div className="spinner spinner--sm">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                  </div>
+                </div>
+              )}
+            </form>
+          </>
+        )}
+        {stats.totalSpent ? (
+          <StatPanel
+            stats={stats}
+            timeSpan={timeSpan}
+            setTimeSpan={setTimeSpan}
+            statsLoading={statsLoading}
+          />
+        ) : (
+          <>
+            <h2 className="mt-4">Statistika</h2>
+            <div className="stat-panel-empty mb-4">
               <div className="spinner">
                 <div></div>
                 <div></div>
@@ -188,23 +192,42 @@ const Home = () => {
                 <div></div>
               </div>
             </div>
-          ) : (
-            <>
-              {lastReceiptInfo.receipt ? (
-                <Receipt receiptInfo={lastReceiptInfo} />
-              ) : (
-                <div className="receipt-empty">
-                  <h3 className="pb-2">Nije pronađen nijedan račun...</h3>
-                  <p>
-                    Dodajte barem jedan račun da bi se prikazao u ovoj sekciji.
-                  </p>
+          </>
+        )}
+        {user.role === "REGULAR" && (
+          <div className="py-1 py-lg-1">
+            <h2>Poslednji račun</h2>
+            {receiptLoading ? (
+              <div className="receipt-empty">
+                <div className="spinner">
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-    </div>
+              </div>
+            ) : (
+              <>
+                {lastReceiptInfo.receipt ? (
+                  <Receipt receiptInfo={lastReceiptInfo} />
+                ) : (
+                  <div className="receipt-empty">
+                    <h3 className="pb-2">Nije pronađen nijedan račun...</h3>
+                    <p>
+                      Dodajte barem jedan račun da bi se prikazao u ovoj
+                      sekciji.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+      {/* {toastOpen && ( */}
+      <Toast title={toast.title} text={toast.text} close={closeToast} />
+      {/* // )} */}
+    </>
   );
 };
 

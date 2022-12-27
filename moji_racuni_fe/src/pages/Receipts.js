@@ -14,6 +14,7 @@ import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
 import Receipt from "../components/Receipt";
+import Toast from "../components/Toast";
 
 const Receipts = () => {
   const [receipts, setReceipts] = useState([]);
@@ -24,6 +25,8 @@ const Receipts = () => {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportValidation, setReportValidation] = useState("");
   const [deletionOpen, setDeletionOpen] = useState(false);
+  const [toast, setToast] = useState({});
+  const [toastOpen, setToastOpen] = useState(false);
   const [documentHeight, setDocumentHeight] = useState(0);
   const [pageNumbers, setPageNumbers] = useState([]);
   const [pageCount, setPageCount] = useState(1);
@@ -188,6 +191,11 @@ const Receipts = () => {
     setReportOpen(false);
     setModalOpen(false);
     setReportValidation("");
+    setToast({
+      title: "Uspešno",
+      text: "Prijava je uspešno poslata.",
+    });
+    openToast();
   };
 
   const deleteReceipt = async (id) => {
@@ -195,6 +203,20 @@ const Receipts = () => {
     applySortingFilters();
     setDeletionOpen(false);
     setModalOpen(false);
+    setToast({
+      title: "Uspešno",
+      text: "Račun je uspešno obrisan.",
+    });
+    openToast();
+  };
+
+  const openToast = () => {
+    setToastOpen(true);
+    setTimeout(() => setToastOpen(false), 7000);
+  };
+
+  const closeToast = () => {
+    setToastOpen(false);
   };
 
   return (
@@ -445,6 +467,9 @@ const Receipts = () => {
             }}
           ></span>
         </div>
+      )}
+      {toastOpen && (
+        <Toast title={toast.title} text={toast.text} close={closeToast} />
       )}
     </div>
   );

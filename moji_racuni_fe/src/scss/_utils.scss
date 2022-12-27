@@ -319,6 +319,27 @@ $spaceamounts: (1, 2, 3, 4, 5);
       background-color: $c-green-4;
     }
   }
+
+  &--sm {
+    right: 8px;
+    top: 10px;
+    width: 25px;
+    height: 18px;
+
+    &:before,
+    &:after {
+      height: 16px;
+      width: 2px;
+      background-color: $c-dark-1;
+    }
+
+    &:hover {
+      &:before,
+      &:after {
+        background-color: $c-gray-1;
+      }
+    }
+  }
 }
 
 //* Font size
