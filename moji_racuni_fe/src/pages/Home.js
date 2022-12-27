@@ -224,9 +224,9 @@ const Home = () => {
           </div>
         )}
       </div>
-      {/* {toastOpen && ( */}
-      <Toast title={toast.title} text={toast.text} close={closeToast} />
-      {/* // )} */}
+      {toastOpen && (
+        <Toast title={toast.title} text={toast.text} close={closeToast} />
+      )}
     </>
   );
 };
