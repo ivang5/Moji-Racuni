@@ -5,9 +5,10 @@ $c-white-3: #e5ebe5;
 $c-white-4: #cddbcd;
 $c-white-5: #c1cec1;
 
-$c-gray-0: #7a7979;
+$c-gray-0: #979595;
 $c-gray-1: #565656;
 $c-gray-2: #354235;
+$c-gray-pale: #a3a0a0;
 
 $c-dark-0: #313a31;
 $c-dark-1: #282f28;
@@ -23,11 +24,18 @@ $c-green-3: #23c363;
 $c-green-4: #0cb44f;
 $c-green-5: #089e4b;
 $c-green-6: #006c31;
+$c-green-pale: #7fe7a7;
 
-$c-red-1: #e65454;
-$c-red-2: #e23535;
+$c-red-0: #e65454;
+$c-red-1: #d84949;
+$c-red-2: #cc3e3e;
 $c-red-3: #da2a2a;
 $c-red-4: #ff0505;
+
+$c-yellow-1: #f3f578;
+$c-yellow-2: #dee04d;
+$c-yellow-3: #f0ad4e;
+$c-yellow-4: #eba33e;
 
 //* Font Families
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap");

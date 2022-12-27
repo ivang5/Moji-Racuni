@@ -37,3 +37,13 @@ class Item(models.Model):
     price = models.DecimalField(max_digits=9, decimal_places=2)
     quantity = models.DecimalField(max_digits=9, decimal_places=3)
     receipt = models.ForeignKey(Receipt, db_column='receipt', on_delete=models.CASCADE, null=False)
+
+class Report(models.Model):
+    date = models.DateTimeField()
+    receipt = models.ForeignKey(Receipt, db_column='receipt', on_delete=models.CASCADE, null=False)
+    user = models.ForeignKey(User, db_column='user', on_delete=models.CASCADE, null=False)
+    request = models.TextField()
+    response = models.TextField(null=True)
+    closed = models.BooleanField(default=False)
+    seen = models.BooleanField(default=False)
+    

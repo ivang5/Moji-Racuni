@@ -54,6 +54,36 @@
         border-color: $c-dark-0;
       }
     }
+
+    &--gray {
+      background-color: $c-gray-pale;
+      border-color: $c-gray-pale;
+
+      &:hover {
+        background-color: $c-gray-0;
+        border-color: $c-gray-0;
+      }
+    }
+
+    &--red {
+      background-color: $c-red-1;
+      border-color: $c-red-1;
+
+      &:hover {
+        background-color: $c-red-2;
+        border-color: $c-red-2;
+      }
+    }
+
+    &--yellow {
+      background-color: $c-yellow-3;
+      border-color: $c-yellow-3;
+
+      &:hover {
+        background-color: $c-yellow-4;
+        border-color: $c-yellow-4;
+      }
+    }
   }
 
   &-secondary {

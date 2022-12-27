@@ -1,0 +1,67 @@
+.report {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background-color: $c-white-2;
+  border: 2px solid $c-green-3;
+  border-radius: 20px;
+  text-align: center;
+
+  &__title {
+    width: fit-content;
+    border-bottom: 1px solid $c-green-3;
+    margin-bottom: 20px;
+  }
+
+  &__text {
+    padding: 10px 0;
+  }
+
+  &__form {
+    position: relative;
+
+    &-field {
+      width: 90%;
+      height: 150px;
+      resize: none;
+      border-radius: 10px;
+      padding: 6px;
+      margin-bottom: 20px;
+      font-size: 14px;
+
+      @include respond-to(tablet) {
+        font-size: 16px;
+      }
+
+      @include respond-to(desktop) {
+        width: 100%;
+        height: 200px;
+      }
+    }
+
+    &-btn {
+      width: 42%;
+    }
+
+    &-error {
+      position: absolute;
+      bottom: 60px;
+      left: 10px;
+
+      @include respond-to(tablet) {
+        left: 15px;
+      }
+
+      @include respond-to(laptop) {
+        bottom: 72px;
+      }
+
+      @include respond-to(desktop) {
+        left: -5px;
+      }
+    }
+  }
+}

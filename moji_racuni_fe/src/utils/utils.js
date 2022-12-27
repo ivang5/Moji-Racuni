@@ -12,6 +12,10 @@ export const dateTimeFormatter = (date) => {
   return dayjs(date).format("DD/MM/YYYY - HH:mm:ss");
 };
 
+export const dateTimeBEFormatter = (date) => {
+  return dayjs(date).format("YYYY-MM-DD HH:mm:ss");
+};
+
 export const getThisMonth = () => {
   const date = new Date();
   const dateFrom = dateBEFormatter(

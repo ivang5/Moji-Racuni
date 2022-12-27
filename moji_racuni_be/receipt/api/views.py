@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import get_object_or_404
-from .serializers import ReceiptSerializer, ItemSerializer
-from receipt.models import Receipt, Item
+from .serializers import ReceiptSerializer, ItemSerializer, ReportSerializer
+from receipt.models import Receipt, Item, Report
 from moji_racuni_be import utils
 
 @permission_classes([IsAuthenticated])
@@ -211,4 +211,81 @@ class ItemViewSet(viewsets.ViewSet):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         item = get_object_or_404(Item, pk=pk)
         item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+@permission_classes([IsAuthenticated])
+class ReportViewSet(viewsets.ViewSet):
+    def list(self, request):
+        user = request.user
+        if (user.role == "ADMIN"):
+            reports = Report.objects.all()
+        else:
+            reports = user.report_set.all()
+        p = Paginator(reports, 12)
+        try:
+            page = p.page(self.request.query_params.get('page'))
+        except (EmptyPage, PageNotAnInteger):
+            page = p.page(1)
+        serializer = ReportSerializer(page, many=True)
+        res = {
+            "pageCount": p.num_pages,
+            "pageNum": page.number,
+            "reports": serializer.data
+        }
+        return Response(res)
+
+    def create(self, request):
+        user = request.user
+        if (user.role == "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        req_data = request.data
+        req_data["user"] = user.id
+        serializer = ReportSerializer(data=req_data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, pk=None):
+        queryset = Report.objects.all()
+        report = get_object_or_404(queryset, pk=pk)
+        serializer = ReportSerializer(report)
+        return Response(serializer.data)
+    
+    def update(self, request, pk=None):
+        user = request.user
+        if (user.role == "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        report = get_object_or_404(Report, pk=pk)
+        serializer = ReportSerializer(report, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['put'], url_path='set-seen', url_name='set_seen')
+    def set_seen(self, request, pk=None):
+        user = request.user
+        if (user.role == "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        report_queryset = Report.objects.all()
+        report = get_object_or_404(report_queryset, pk=pk)
+        report.seen = True
+        report.save()
+        serializer = ReportSerializer(report)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def destroy(self, request, pk=None):
+        user = request.user
+        report = get_object_or_404(Report, pk=pk)
+        if (user.role != "ADMIN"):
+            reports = user.report_set.all()
+            found = False
+            for rep in reports:
+                if (rep.id == int(pk)):
+                    found = True
+                    break
+            if (not found):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        report.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

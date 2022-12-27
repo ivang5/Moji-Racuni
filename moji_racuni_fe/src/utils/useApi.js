@@ -119,6 +119,28 @@ const useApi = () => {
     return getResponse(response, data, 201);
   };
 
+  const createReport = async (report) => {
+    const { response, data } = await api("/api/reports/", {
+      method: "POST",
+      body: JSON.stringify(report),
+    });
+    return getResponse(response, data, 201);
+  };
+
+  const deleteReceipt = async (id) => {
+    const { response, data } = await api(`/api/receipts/${id}/`, {
+      method: "DELETE",
+    });
+    return getResponse(response, data, 204);
+  };
+
+  const deleteReport = async (id) => {
+    const { response, data } = await api(`/api/reports/${id}/`, {
+      method: "DELETE",
+    });
+    return getResponse(response, data, 204);
+  };
+
   const getLastReceiptFull = async () => {
     const receipt = await getLastReceipt();
     const items = await getItems(receipt.id);
@@ -199,6 +221,9 @@ const useApi = () => {
     getBaseStats,
     filterReceipts,
     addFullReceipt,
+    createReport,
+    deleteReceipt,
+    deleteReport,
   };
 };
 
