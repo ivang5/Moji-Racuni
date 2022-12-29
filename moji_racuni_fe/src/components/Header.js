@@ -92,7 +92,7 @@ const Header = () => {
                           : "nav__link"
                       }
                       data-content="Računi"
-                      to="/racuni/strana/1"
+                      to="/racuni"
                       onClick={() => {
                         setActivePage("Receipts");
                         setDropdownOpen(false);
@@ -245,7 +245,7 @@ const Header = () => {
                       : "nav__link"
                   }
                   data-content="Računi"
-                  to="/racuni/strana/1"
+                  to="/racuni"
                   onClick={() => {
                     setActivePage("Receipts");
                     toggleMobileNav();

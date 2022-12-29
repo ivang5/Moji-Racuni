@@ -15,11 +15,11 @@ import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
 import Receipt from "../components/Receipt";
 import Toast from "../components/Toast";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const Receipts = () => {
   const { page } = useParams();
-  const [pageNum, setPageNum] = useState(parseInt(page));
+  const [pageNum, setPageNum] = useState(1);
   const [receipts, setReceipts] = useState([]);
   const [receiptsLoading, setReceiptsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,7 +31,7 @@ const Receipts = () => {
   const [toastOpen, setToastOpen] = useState(false);
   const [documentHeight, setDocumentHeight] = useState(0);
   const [pageNumbers, setPageNumbers] = useState([]);
-  const [pageCount, setPageCount] = useState(1);
+  const [pageCount, setPageCount] = useState(10000);
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(new Date());
   const [searchOpen, setSearchOpen] = useState(false);
@@ -48,13 +48,20 @@ const Receipts = () => {
   const sortByOptions = ["Datum", "Prodavnica", "PIB", "Cena", "PDV"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
+  const navigate = useNavigate();
 
   useEffect(() => {
     applySortingFilters();
   }, [sortBy, sortType]);
 
   useEffect(() => {
-    setPageNum(parseInt(page));
+    if (parseInt(page)) {
+      Math.sign(page) !== -1
+        ? setPageNum(parseInt(page))
+        : navigate("/not-found");
+    } else {
+      page === undefined ? navigate("/racuni") : navigate("/not-found");
+    }
   }, [page]);
 
   useEffect(() => {
@@ -62,7 +69,7 @@ const Receipts = () => {
     setPageNumbers(pageNumbers, pageNum);
     applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum]);
+  }, [pageNum, pageCount]);
 
   useEffect(() => {
     const pageNumbers = getPageNumberList(pageCount, pageNum);
@@ -352,7 +359,11 @@ const Receipts = () => {
             </div>
           )}
           {pageNumbers && !receiptsLoading && pageCount > 1 && (
-            <Paginator pageNumbers={pageNumbers} activePage={pageNum} />
+            <Paginator
+              pageNumbers={pageNumbers}
+              activePage={pageNum}
+              path="/racuni"
+            />
           )}
         </div>
       </div>

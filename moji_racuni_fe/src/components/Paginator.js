@@ -1,8 +1,16 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-const Paginator = ({ pageNumbers, activePage }) => {
+const Paginator = ({ pageNumbers, activePage, path }) => {
   const navigate = useNavigate();
+  const { page } = useParams();
+
+  useEffect(() => {
+    if (parseInt(page) > pageNumbers.at(-1)) {
+      navigate("/not-found");
+    }
+  }, []);
 
   return (
     <div className="paginator">
@@ -13,7 +21,7 @@ const Paginator = ({ pageNumbers, activePage }) => {
             : "paginator__step"
         }
         onClick={() =>
-          activePage !== 1 && navigate(`/racuni/strana/${activePage - 1}`)
+          activePage !== 1 && navigate(`${path}/strana/${activePage - 1}`)
         }
       >
         <i className="arrow arrow--left"></i> Prethodna
@@ -28,7 +36,7 @@ const Paginator = ({ pageNumbers, activePage }) => {
                   ? "paginator__page paginator__page--active"
                   : "paginator__page"
               }
-              onClick={() => navigate(`/racuni/strana/${pageNumber}`)}
+              onClick={() => navigate(`${path}/strana/${pageNumber}`)}
             >
               {pageNumber}
             </div>
@@ -44,7 +52,7 @@ const Paginator = ({ pageNumbers, activePage }) => {
         }
         onClick={() =>
           activePage !== pageNumbers.at(-1) &&
-          navigate(`/racuni/strana/${activePage + 1}`)
+          navigate(`${path}/strana/${activePage + 1}`)
         }
       >
         Sledeća <i className="arrow arrow--right"></i>
