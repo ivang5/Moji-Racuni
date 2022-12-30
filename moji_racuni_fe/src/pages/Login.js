@@ -266,7 +266,7 @@ const Login = () => {
                 <FormGroup
                   name="regEmail"
                   text="Email"
-                  type="text"
+                  type="email"
                   error={registrationValid.email}
                 />
                 <FormGroup

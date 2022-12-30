@@ -42,6 +42,11 @@ const useApi = () => {
     return getResponse(response, data);
   };
 
+  const getUser = async (id) => {
+    const { response, data } = await api(`/api/users/${id}/`);
+    return getResponse(response, data);
+  };
+
   const getTotalSpent = async (dateFrom, dateTo) => {
     const { response, data } = await api(
       `/api/receipts/total-spent?dateFrom=${dateFrom}&dateTo=${dateTo}`
@@ -216,6 +221,7 @@ const useApi = () => {
     getItems,
     getUnit,
     getCompany,
+    getUser,
     getLastReceiptFull,
     getFullReceiptInfo,
     getBaseStats,

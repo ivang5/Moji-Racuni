@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Header from "./components/Header";
 import Receipts from "./pages/Receipts";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -22,6 +23,9 @@ function App() {
           </Route>
           <Route element={<PrivateRoute />} exact path="/racuni/strana/:page">
             <Route element={<Receipts />} exact path="/racuni/strana/:page" />
+          </Route>
+          <Route element={<PrivateRoute />} exact path="/profil">
+            <Route element={<Profile />} exact path="/profil" />
           </Route>
           <Route element={<Login />} path="/prijava" />
           <Route path="*" element={<PrivateRoute />}>

@@ -236,7 +236,7 @@ const Receipts = () => {
         <div className="receipts">
           <TypeAnimation
             className="text-animator text-animator--fast pt-1 pb-3"
-            sequence={[`Pregled računa:`]}
+            sequence={[`Pregled računa`]}
             wrapper="h1"
             speed={10}
             cursor={false}
