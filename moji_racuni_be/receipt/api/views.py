@@ -15,7 +15,7 @@ class ReceiptViewSet(viewsets.ViewSet):
     def list(self, request):
         user = request.user
         if (user.role == "ADMIN"):
-            receipts = Receipt.objects.all()
+            receipts = utils.get_distinct_receipts()
         else:
             receipts = user.receipt_set.all()
         p = Paginator(receipts, 12)
@@ -23,12 +23,19 @@ class ReceiptViewSet(viewsets.ViewSet):
             page = p.page(self.request.query_params.get('page'))
         except (EmptyPage, PageNotAnInteger):
             page = p.page(1)
-        serializer = ReceiptSerializer(page, many=True)
-        res = {
-            "pageCount": p.num_pages,
-            "pageNum": page.number,
-            "receipts": serializer.data
-        }
+        if (user.role == "ADMIN"):
+            res = {
+                "pageCount": p.num_pages,
+                "pageNum": page.number,
+                "receipts": receipts
+            }
+        else:
+            serializer = ReceiptSerializer(page, many=True)
+            res = {
+                "pageCount": p.num_pages,
+                "pageNum": page.number,
+                "receipts": serializer.data
+            }
         return Response(res)
     
     @action(detail=False, url_path='total-spent', url_name='total-spent')

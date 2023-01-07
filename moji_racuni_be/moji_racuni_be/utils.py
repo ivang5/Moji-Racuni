@@ -423,6 +423,12 @@ def fill_empty_months(receipts_by_months):
             new_receipts_by_months.append(new_month_info)
     return new_receipts_by_months
     
+def get_distinct_receipts():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM receipt_receipt GROUP BY link")
+        receipts = dictfetchall(cursor)
+    return receipts
+    
 def get_last_receipt(user):
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM receipt_receipt WHERE user = %s ORDER BY date DESC LIMIT 1", [user.id])
