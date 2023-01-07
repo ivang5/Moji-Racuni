@@ -9,6 +9,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import get_object_or_404
 from .serializers import UserSerializer, AdminSerializer
 from account.models import User
+from django.contrib.auth.hashers import make_password
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -84,14 +85,37 @@ class UserViewSet(viewsets.ViewSet):
         try:
             if (request.user.role != "ADMIN" and pk != request.user.id):
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
+            users = User.objects.all()
+            for u in users:
+                if (u.username == request.data["username"] and request.user.username != request.data["username"]):
+                    return Response(status=status.HTTP_409_CONFLICT)
             user = get_object_or_404(User, pk=pk)
-            serializer = UserSerializer(user, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            user.username = request.data["username"]
+            user.first_name = request.data["first_name"]
+            user.last_name = request.data["last_name"]
+            user.email = request.data["email"]
+            user.save()
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except AttributeError:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except KeyError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=True, methods=['put'])
+    def update_password(self, request, pk=None):
+        try:
+            if (request.user.role != "ADMIN" and pk != request.user.id):
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+            user = get_object_or_404(User, pk=pk)
+            user.password = make_password(request.data["password"])
+            user.save()
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except AttributeError:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except KeyError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         
     def destroy(self, request, pk=None):
         try:

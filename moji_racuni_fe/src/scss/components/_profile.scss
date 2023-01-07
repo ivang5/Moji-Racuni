@@ -28,8 +28,28 @@
       }
     }
 
+    &-footer {
+      display: flex;
+      flex-direction: column;
+
+      @include respond-to(tablet) {
+        flex-direction: row;
+      }
+    }
+
     &-btn {
-      margin-top: 20px;
+      margin-top: 10px;
+      width: 205px;
+
+      @include respond-to(tablet) {
+        margin-top: 20px;
+      }
+
+      &:first-child {
+        @include respond-to(tablet) {
+          margin-right: 20px;
+        }
+      }
     }
   }
 
@@ -37,7 +57,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 470px;
+    height: 498px;
     background-color: $c-white-2;
     padding: 30px 20px;
     margin-top: 30px;
@@ -48,7 +68,7 @@
     }
 
     @include respond-to(tablet) {
-      height: 490px;
+      height: 518px;
       padding: 40px;
       margin-top: 50px;
     }
@@ -68,7 +88,7 @@
     }
 
     .form__group {
-      margin-bottom: 5px;
+      margin-bottom: 12px;
     }
 
     &-footer {
@@ -78,6 +98,25 @@
 
       .btn {
         width: calc(50% - 10px);
+      }
+    }
+
+    &--password {
+      height: 348px;
+      margin-top: 60px;
+      border-radius: 20px;
+
+      @include respond-to(phone) {
+        min-width: 345px;
+      }
+
+      @include respond-to(tablet) {
+        height: 378px;
+        margin-top: 80px;
+      }
+
+      @include respond-to(laptop) {
+        margin-top: 110px;
       }
     }
   }

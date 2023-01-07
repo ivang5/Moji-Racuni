@@ -8,6 +8,9 @@ const useApi = () => {
     if (response.status === 409) {
       return 409;
     }
+    if (response.status === 404) {
+      return 404;
+    }
     response.status === status ? (toReturn = data) : (toReturn = null);
     return toReturn;
   };
@@ -132,6 +135,22 @@ const useApi = () => {
     return getResponse(response, data, 201);
   };
 
+  const updateUser = async (id, userInfo) => {
+    const { response, data } = await api(`/api/users/${id}/`, {
+      method: "PUT",
+      body: JSON.stringify(userInfo),
+    });
+    return getResponse(response, data, 200);
+  };
+
+  const updateUserPassword = async (id, passInfo) => {
+    const { response, data } = await api(`/api/users/update-password/${id}/`, {
+      method: "PUT",
+      body: JSON.stringify(passInfo),
+    });
+    return getResponse(response, data, 200);
+  };
+
   const deleteReceipt = async (id) => {
     const { response, data } = await api(`/api/receipts/${id}/`, {
       method: "DELETE",
@@ -148,6 +167,9 @@ const useApi = () => {
 
   const getLastReceiptFull = async () => {
     const receipt = await getLastReceipt();
+    if (receipt == 404) {
+      return receipt;
+    }
     const items = await getItems(receipt.id);
     const unit = await getUnit(receipt.companyUnit);
     const company = await getCompany(unit.company);
@@ -162,6 +184,9 @@ const useApi = () => {
 
   const getFullReceiptInfo = async (id) => {
     const receipt = await getReceipt(id);
+    if (receipt == 404) {
+      return receipt;
+    }
     const items = await getItems(receipt.id);
     const unit = await getUnit(receipt.companyUnit);
     const company = await getCompany(unit.company);
@@ -228,6 +253,8 @@ const useApi = () => {
     filterReceipts,
     addFullReceipt,
     createReport,
+    updateUser,
+    updateUserPassword,
     deleteReceipt,
     deleteReport,
   };

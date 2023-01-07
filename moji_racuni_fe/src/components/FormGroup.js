@@ -1,6 +1,14 @@
 import React from "react";
 
-const FormGroup = ({ name, text, type, error, success, inline }) => {
+const FormGroup = ({
+  name,
+  text,
+  type,
+  error,
+  success,
+  inline,
+  defaultVal,
+}) => {
   return (
     <div className={inline ? "form__group form__group--inline" : "form__group"}>
       <label className="form__label" htmlFor={name}>
@@ -10,6 +18,7 @@ const FormGroup = ({ name, text, type, error, success, inline }) => {
           type={type}
           name={name}
           placeholder=" "
+          defaultValue={defaultVal && defaultVal}
         />
         <span className="form__label-text">{text}</span>
       </label>

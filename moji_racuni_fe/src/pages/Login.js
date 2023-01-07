@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import FormGroup from "../components/FormGroup";
 import AuthContext from "../context/AuthContext";
 import receipt from "../rec.svg";
+import { validateEmail } from "../utils/utils";
 
 const Login = () => {
   const { loginUser, registerUser } = useContext(AuthContext);
@@ -152,12 +153,6 @@ const Login = () => {
     }
 
     setRegistrationValid(validationObj);
-  };
-
-  const validateEmail = (email) => {
-    return email.match(
-      /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-    );
   };
 
   return (
