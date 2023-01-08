@@ -453,8 +453,9 @@ def get_total_spent(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT SUM(totalPrice) AS totalSpent, SUM(totalVat) AS totalSpentVat FROM receipt_receipt
-                    WHERE date BETWEEN %s AND %s
+                SELECT SUM(totalPrice), SUM(totalVat)  
+                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r
+                    WHERE r.date BETWEEN %s AND %s
                 ''', 
                 [dateFrom, dateTo])
             row = cursor.fetchone()
@@ -462,7 +463,8 @@ def get_total_spent(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT SUM(totalPrice), SUM(totalVat) FROM receipt_receipt
+                SELECT SUM(totalPrice), SUM(totalVat) 
+                    FROM receipt_receipt
                     WHERE user = %s AND date BETWEEN %s AND %s
                 ''', 
                 [user.id, dateFrom, dateTo])
@@ -480,9 +482,9 @@ def get_receipts_sum_by_hours(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT HOUR(date) hourNum, count(*) count
-                    FROM receipt_receipt
-                    WHERE date BETWEEN %s AND %s
-                    GROUP BY HOUR(date)
+                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r
+                    WHERE r.date BETWEEN %s AND %s
+                    GROUP BY HOUR(r.date)
                 ''',
                 [dateFrom, dateTo])
             receipts_by_hours = dictfetchall(cursor)
@@ -506,9 +508,9 @@ def get_receipts_sum_by_weekdays(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT (DAYOFWEEK(date)+5)%%7+1 dayofweek, count(*) count 
-                    FROM receipt_receipt 
-                    WHERE date BETWEEN %s AND %s 
-                    GROUP BY (DAYOFWEEK(date)+5)%%7+1
+                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r 
+                    WHERE r.date BETWEEN %s AND %s 
+                    GROUP BY (DAYOFWEEK(r.date)+5)%%7+1
                 ''',
                 [dateFrom, dateTo])
             receipts_by_weekdays = dictfetchall(cursor)
@@ -532,9 +534,9 @@ def get_receipts_sum_by_months(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT MONTH(date) monthNum, count(*) count 
-                    FROM receipt_receipt 
-                    WHERE date BETWEEN %s AND %s 
-                    GROUP BY MONTH(date)
+                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r 
+                    WHERE r.date BETWEEN %s AND %s 
+                    GROUP BY MONTH(r.date)
                 ''',
                 [dateFrom, dateTo])
             receipts_by_months = dictfetchall(cursor)
@@ -558,7 +560,7 @@ def get_most_valuable_items(user, dateFrom, dateTo, limit):
             cursor.execute(
                 '''
                 SELECT i.* FROM receipt_item i 
-                    JOIN receipt_receipt r ON i.receipt = r.id 
+                    JOIN (SELECT * FROM receipt_receipt GROUP BY link) r ON i.receipt = r.id 
                     WHERE r.date BETWEEN %s AND %s 
                     ORDER BY price DESC 
                     LIMIT %s
@@ -618,7 +620,7 @@ def get_most_visited_companies(user, dateFrom, dateTo, limit):
                 '''
                 SELECT innerQuery.receiptCount AS receiptCount, innerQuery.priceSum, innerQuery.unitCount, innerQuery.companyTin, innerQuery.companyName FROM (
                     SELECT COUNT(r.id) AS receiptCount, SUM(r.totalPrice) AS priceSum, COUNT(DISTINCT u.id) AS unitCount, c.tin AS companyTin, c.name AS companyName
-                        FROM receipt_receipt r
+                        FROM (SELECT * FROM receipt_receipt GROUP BY link) r
                         JOIN company_companyunit u ON r.companyUnit = u.id
                         JOIN company_company c ON u.company = c.tin
                         WHERE r.date BETWEEN %s AND %s
@@ -651,7 +653,7 @@ def get_most_visited_companies(user, dateFrom, dateTo, limit):
 def filter_receipts(user, dateFrom, dateTo, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder):
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} GROUP BY r.link ORDER BY {orderBy} {ascendingOrder}')
             most_visited_companies = dictfetchall(cursor)
     else:
         with connection.cursor() as cursor:

@@ -55,6 +55,9 @@ const Home = () => {
   };
 
   const getLastReceipt = async () => {
+    if (user.role !== "REGULAR") {
+      return;
+    }
     setReceiptLoading(true);
     const receiptInfo = await api.getLastReceiptFull();
     setLastReceiptInfo(receiptInfo);

@@ -167,7 +167,7 @@ const useApi = () => {
 
   const getLastReceiptFull = async () => {
     const receipt = await getLastReceipt();
-    if (receipt == 404) {
+    if (receipt === 404) {
       return receipt;
     }
     const items = await getItems(receipt.id);
@@ -184,7 +184,7 @@ const useApi = () => {
 
   const getFullReceiptInfo = async (id) => {
     const receipt = await getReceipt(id);
-    if (receipt == 404) {
+    if (receipt === 404) {
       return receipt;
     }
     const items = await getItems(receipt.id);

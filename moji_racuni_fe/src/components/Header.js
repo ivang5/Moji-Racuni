@@ -189,7 +189,13 @@ const Header = () => {
                       {" "}
                       Profil
                     </Link>
-                    <div className="nav__dropdown-item" onClick={logoutUser}>
+                    <div
+                      className="nav__dropdown-item"
+                      onClick={() => {
+                        logoutUser();
+                        setDropdownOpen(false);
+                      }}
+                    >
                       Odjavi se
                     </div>
                   </div>

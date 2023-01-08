@@ -124,7 +124,7 @@ class ReceiptViewSet(viewsets.ViewSet):
         queryset = Receipt.objects.all()
         receipt = get_object_or_404(queryset, pk=pk)
         user = request.user
-        if (receipt.user != user):
+        if (receipt.user != user and user.role != "ADMIN"):
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = ReceiptSerializer(receipt)
         return Response(serializer.data)

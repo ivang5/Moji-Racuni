@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
 import useApi from "../utils/useApi";
@@ -16,6 +16,7 @@ import Paginator from "../components/Paginator";
 import Receipt from "../components/Receipt";
 import Toast from "../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
+import AuthContext from "../context/AuthContext";
 
 const Receipts = () => {
   const { page } = useParams();
@@ -48,6 +49,7 @@ const Receipts = () => {
   const sortByOptions = ["Datum", "Prodavnica", "PIB", "Cena", "PDV"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -372,90 +374,92 @@ const Receipts = () => {
           {modalReceipt.receipt ? (
             <div className="modal__content">
               <Receipt receiptInfo={modalReceipt} />
-              <div className="modal__options">
-                {!reportOpen && !deletionOpen ? (
-                  <>
-                    <button
-                      className="btn btn-primary btn-primary--yellow btn-round"
-                      onClick={() => setReportOpen(true)}
-                    >
-                      Prijavi nepravilnost
-                    </button>
-                    <button
-                      className="btn btn-primary btn-primary--red btn-round"
-                      onClick={() => setDeletionOpen(true)}
-                    >
-                      Obriši račun
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {reportOpen && (
-                      <div className="report">
-                        <h4 className="report__title">Prijava računa</h4>
-                        <form className="report__form" onSubmit={sendReport}>
-                          <textarea
-                            className="report__form-field"
-                            name="repmsg"
-                            id="repmsg"
-                            placeholder="Ukratko opišite nepravilnost na računu..."
-                          ></textarea>
-                          <span
-                            className={
-                              reportValidation === ""
-                                ? "d-none"
-                                : "form__error report__form-error"
-                            }
-                          >
-                            {reportValidation}
-                          </span>
-                          <button
-                            className="btn btn-primary btn-primary--gray btn-round report__form-btn"
-                            onClick={() => {
-                              setReportOpen(false);
-                              setReportValidation("");
-                            }}
-                          >
-                            Odustani
-                          </button>
-                          <button
-                            className="btn btn-primary btn-primary--yellow btn-round report__form-btn"
-                            type="submit"
-                          >
-                            Prijavi
-                          </button>
-                        </form>
-                      </div>
-                    )}
-                    {deletionOpen && (
-                      <div className="modal__deletion">
-                        <h4 className="modal__deletion-title">
-                          Brisanje računa
-                        </h4>
-                        <p className="modal__deletion-text">
-                          Da li ste sigurni da želite da obrišete račun?
-                        </p>
-                        <div className="modal__deletion-btn-group">
-                          <button
-                            className="btn btn-primary btn-primary--gray btn-round"
-                            onClick={() => setDeletionOpen(false)}
-                          >
-                            Odustani
-                          </button>
-                          <button
-                            className="btn btn-primary btn-primary--red btn-round"
-                            onClick={() =>
-                              deleteReceipt(modalReceipt.receipt.id)
-                            }
-                          >
-                            Obriši
-                          </button>
+              {user.role === "REGULAR" && (
+                <div className="modal__options">
+                  {!reportOpen && !deletionOpen ? (
+                    <>
+                      <button
+                        className="btn btn-primary btn-primary--yellow btn-round"
+                        onClick={() => setReportOpen(true)}
+                      >
+                        Prijavi nepravilnost
+                      </button>
+                      <button
+                        className="btn btn-primary btn-primary--red btn-round"
+                        onClick={() => setDeletionOpen(true)}
+                      >
+                        Obriši račun
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {reportOpen && (
+                        <div className="report">
+                          <h4 className="report__title">Prijava računa</h4>
+                          <form className="report__form" onSubmit={sendReport}>
+                            <textarea
+                              className="report__form-field"
+                              name="repmsg"
+                              id="repmsg"
+                              placeholder="Ukratko opišite nepravilnost na računu..."
+                            ></textarea>
+                            <span
+                              className={
+                                reportValidation === ""
+                                  ? "d-none"
+                                  : "form__error report__form-error"
+                              }
+                            >
+                              {reportValidation}
+                            </span>
+                            <button
+                              className="btn btn-primary btn-primary--gray btn-round report__form-btn"
+                              onClick={() => {
+                                setReportOpen(false);
+                                setReportValidation("");
+                              }}
+                            >
+                              Odustani
+                            </button>
+                            <button
+                              className="btn btn-primary btn-primary--yellow btn-round report__form-btn"
+                              type="submit"
+                            >
+                              Prijavi
+                            </button>
+                          </form>
                         </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+                      )}
+                      {deletionOpen && (
+                        <div className="modal__deletion">
+                          <h4 className="modal__deletion-title">
+                            Brisanje računa
+                          </h4>
+                          <p className="modal__deletion-text">
+                            Da li ste sigurni da želite da obrišete račun?
+                          </p>
+                          <div className="modal__deletion-btn-group">
+                            <button
+                              className="btn btn-primary btn-primary--gray btn-round"
+                              onClick={() => setDeletionOpen(false)}
+                            >
+                              Odustani
+                            </button>
+                            <button
+                              className="btn btn-primary btn-primary--red btn-round"
+                              onClick={() =>
+                                deleteReceipt(modalReceipt.receipt.id)
+                              }
+                            >
+                              Obriši
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="modal-empty">
