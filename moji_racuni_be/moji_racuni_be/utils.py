@@ -654,9 +654,20 @@ def filter_receipts(user, dateFrom, dateTo, unitName, tin, priceFrom, priceTo, o
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:
             cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} GROUP BY r.link ORDER BY {orderBy} {ascendingOrder}')
-            most_visited_companies = dictfetchall(cursor)
+            filtered_receipts = dictfetchall(cursor)
     else:
         with connection.cursor() as cursor:
             cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
-            most_visited_companies = dictfetchall(cursor)
-    return most_visited_companies
+            filtered_receipts = dictfetchall(cursor)
+    return filtered_receipts
+
+def filter_reports(user, dateFrom, dateTo, receipt, username, request, orderBy, ascendingOrder):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(f'SELECT r.* FROM receipt_report r JOIN account_user u ON r.user = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.receipt LIKE "{receipt}" AND u.username LIKE "%{username}%" AND r.request LIKE "%{request}%" ORDER BY {orderBy} {ascendingOrder}')
+            filtered_reports = dictfetchall(cursor)
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(f'SELECT r.* FROM receipt_report r WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.receipt LIKE "{receipt}" AND r.request LIKE "%{request}%" AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
+            filtered_reports = dictfetchall(cursor)
+    return filtered_reports

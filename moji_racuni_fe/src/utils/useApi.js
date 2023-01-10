@@ -50,6 +50,11 @@ const useApi = () => {
     return getResponse(response, data);
   };
 
+  const getReport = async (id) => {
+    const { response, data } = await api(`/api/reports/${id}/`);
+    return getResponse(response, data);
+  };
+
   const getTotalSpent = async (dateFrom, dateTo) => {
     const { response, data } = await api(
       `/api/receipts/total-spent?dateFrom=${dateFrom}&dateTo=${dateTo}`
@@ -91,6 +96,22 @@ const useApi = () => {
   ) => {
     const { response, data } = await api(
       `/api/receipts/filter?dateFrom=${dateFrom}&dateTo=${dateTo}&unitName=${unitName}&tin=${tin}&priceFrom=${priceFrom}&priceTo=${priceTo}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
+    );
+    return getResponse(response, data);
+  };
+
+  const filterReports = async (
+    dateFrom,
+    dateTo,
+    receipt,
+    user,
+    request,
+    orderBy,
+    ascendingOrder,
+    page
+  ) => {
+    const { response, data } = await api(
+      `/api/reports/filter?dateFrom=${dateFrom}&dateTo=${dateTo}&receipt=${receipt}&user=${user}&request=${request}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
     );
     return getResponse(response, data);
   };
@@ -147,6 +168,14 @@ const useApi = () => {
     const { response, data } = await api(`/api/users/update-password/${id}/`, {
       method: "PUT",
       body: JSON.stringify(passInfo),
+    });
+    return getResponse(response, data, 200);
+  };
+
+  const updateReport = async (id, reportInfo) => {
+    const { response, data } = await api(`/api/reports/${id}/`, {
+      method: "PUT",
+      body: JSON.stringify(reportInfo),
     });
     return getResponse(response, data, 200);
   };
@@ -247,14 +276,17 @@ const useApi = () => {
     getUnit,
     getCompany,
     getUser,
+    getReport,
     getLastReceiptFull,
     getFullReceiptInfo,
     getBaseStats,
     filterReceipts,
+    filterReports,
     addFullReceipt,
     createReport,
     updateUser,
     updateUserPassword,
+    updateReport,
     deleteReceipt,
     deleteReport,
   };

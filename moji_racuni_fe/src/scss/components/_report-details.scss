@@ -1,0 +1,48 @@
+.report-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 10px;
+  background-color: $c-white-2;
+  border: 2px solid $c-green-3;
+  border-radius: 20px;
+  box-shadow: 0 12px 24px rgb(34 51 49 / 13%);
+  min-width: 300px;
+
+  @include respond-to(phone) {
+    min-width: 440px;
+  }
+
+  &-empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    padding: 20px 10px;
+    border: 2px solid $c-green-3;
+    border-radius: 20px;
+  }
+
+  &__title {
+    width: fit-content;
+    border-bottom: 1px solid $c-green-3;
+    text-align: center;
+  }
+
+  &__date {
+    text-align: center;
+    padding: 10px 0;
+
+    @include respond-to(tablet) {
+      font-size: 18px;
+    }
+  }
+
+  &__status,
+  &__user,
+  &__text-title {
+    text-align: center;
+    padding: 3px 0;
+  }
+}

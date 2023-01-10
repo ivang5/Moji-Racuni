@@ -138,6 +138,24 @@ export const getReceiptOrderCode = (orderBy) => {
   return orderByCode;
 };
 
+export const getReportOrderCode = (orderBy) => {
+  let orderByCode;
+
+  switch (orderBy) {
+    case "Datum":
+      orderByCode = "date";
+      break;
+    case "Status":
+      orderByCode = "closed";
+      break;
+    default:
+      orderByCode = "date";
+      break;
+  }
+
+  return orderByCode;
+};
+
 export const getPageNumberList = (pageCount, activePage) => {
   if (pageCount < 9) {
     const pages = [];

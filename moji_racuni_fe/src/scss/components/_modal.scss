@@ -45,6 +45,18 @@
         width: calc(50% - 10px);
       }
     }
+
+    &--single {
+      @include respond-to(laptop) {
+        justify-content: center;
+
+        .btn {
+          @include respond-to(laptop) {
+            width: calc(40% - 10px);
+          }
+        }
+      }
+    }
   }
 
   .receipt {

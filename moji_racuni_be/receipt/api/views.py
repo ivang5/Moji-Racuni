@@ -240,6 +240,31 @@ class ReportViewSet(viewsets.ViewSet):
             "reports": serializer.data
         }
         return Response(res)
+    
+    @action(detail=False, url_path='filter', url_name='filter')
+    def filter_reports(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        receipt = self.request.query_params.get('receipt')
+        username = self.request.query_params.get('user')
+        request = self.request.query_params.get('request')
+        orderBy = self.request.query_params.get('orderBy')
+        ascendingOrder = self.request.query_params.get('ascendingOrder')
+        if (not dateFrom or not dateTo or not receipt or not username or not request or not orderBy or not ascendingOrder):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        filtered_reports = utils.filter_reports(user, dateFrom, dateTo, receipt, username, request, orderBy, ascendingOrder)
+        p = Paginator(filtered_reports, 12)
+        try:
+            page = p.page(self.request.query_params.get('page'))
+        except (EmptyPage, PageNotAnInteger):
+            page = p.page(1)
+        res = {
+            "pageCount": p.num_pages,
+            "pageNum": page.number,
+            "reports": page.object_list
+        }
+        return Response(res)
 
     def create(self, request):
         user = request.user
@@ -260,9 +285,6 @@ class ReportViewSet(viewsets.ViewSet):
         return Response(serializer.data)
     
     def update(self, request, pk=None):
-        user = request.user
-        if (user.role == "ADMIN"):
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
         report = get_object_or_404(Report, pk=pk)
         serializer = ReportSerializer(report, data=request.data)
         if serializer.is_valid():
