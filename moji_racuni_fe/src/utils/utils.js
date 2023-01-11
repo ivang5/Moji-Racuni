@@ -16,6 +16,13 @@ export const dateTimeBEFormatter = (date) => {
   return dayjs(date).format("YYYY-MM-DD HH:mm:ss");
 };
 
+export const getTomorrow = () => {
+  const today = new Date();
+  let tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+  return tomorrow;
+};
+
 export const getThisMonth = () => {
   const date = new Date();
   const dateFrom = dateBEFormatter(

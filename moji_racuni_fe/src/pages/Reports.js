@@ -4,9 +4,9 @@ import useApi from "../utils/useApi";
 import {
   getTenYearsAgo,
   dateBEFormatter,
-  dateTimeBEFormatter,
   getReportOrderCode,
   getPageNumberList,
+  getTomorrow,
 } from "../utils/utils";
 import DatePicker from "react-datepicker";
 import Dropdown from "react-dropdown";
@@ -34,7 +34,7 @@ const Reports = () => {
   const [pageNumbers, setPageNumbers] = useState([]);
   const [pageCount, setPageCount] = useState(10000);
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
-  const [toDate, setToDate] = useState(new Date());
+  const [toDate, setToDate] = useState(getTomorrow());
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortBy, setSortBy] = useState("Datum");
   const [sortType, setSortType] = useState("Opadajuće");
@@ -47,6 +47,7 @@ const Reports = () => {
   });
   const sortByOptions = ["Datum", "Status"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
+  const reportPlaceholder = "";
   const api = useApi();
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -165,9 +166,13 @@ const Reports = () => {
   const openModal = async (reportId) => {
     setModalOpen(true);
 
-    const report = await api.getReport(reportId);
+    let report = await api.getReport(reportId);
 
     if (report) {
+      if (user.role === "REGULAR" && report.closed && !report.seen) {
+        report = await api.setReportSeen(reportId);
+        applySortingFilters();
+      }
       setModalReport(report);
     }
   };
@@ -193,10 +198,11 @@ const Reports = () => {
       user: modalReport.user,
     };
 
-    await api.updateReport(report);
+    await api.updateReport(modalReport.id, report);
     setResponseOpen(false);
     setModalOpen(false);
     setResponseValidation("");
+    applySortingFilters();
     setToast({
       title: "Uspešno",
       text: "Odgovor na prijavu je uspešno poslat.",
@@ -345,7 +351,6 @@ const Reports = () => {
                       id={report.id}
                       date={report.date}
                       request={report.request}
-                      response={report.response}
                       closed={report.closed}
                       seen={report.seen}
                       receipt={report.receipt}
@@ -370,89 +375,98 @@ const Reports = () => {
           {modalReport.request ? (
             <div className="modal__content">
               <Report reportInfo={modalReport} />
-              {user.role === "REGULAR" ? (
-                <div className="modal__options modal__options--single">
-                  {!deletionOpen ? (
-                    <button
-                      className="btn btn-primary btn-primary--red btn-round"
-                      onClick={() => setDeletionOpen(true)}
-                    >
-                      Obriši prijavu
-                    </button>
-                  ) : (
-                    <div className="modal__deletion">
-                      <h4 className="modal__deletion-title">
-                        Brisanje prijave
-                      </h4>
-                      <p className="modal__deletion-text">
-                        Da li ste sigurni da želite da obrišete prijavu?
-                      </p>
-                      <div className="modal__deletion-btn-group">
-                        <button
-                          className="btn btn-primary btn-primary--gray btn-round"
-                          onClick={() => setDeletionOpen(false)}
-                        >
-                          Odustani
-                        </button>
+              {!modalReport.response && (
+                <>
+                  {user.role === "REGULAR" ? (
+                    <div className="modal__options modal__options--single">
+                      {!deletionOpen ? (
                         <button
                           className="btn btn-primary btn-primary--red btn-round"
-                          onClick={() => deleteReport(modalReport.report.id)}
+                          onClick={() => setDeletionOpen(true)}
                         >
-                          Obriši
+                          Obriši prijavu
                         </button>
-                      </div>
+                      ) : (
+                        <div className="modal__deletion">
+                          <h4 className="modal__deletion-title">
+                            Brisanje prijave
+                          </h4>
+                          <p className="modal__deletion-text">
+                            Da li ste sigurni da želite da obrišete prijavu?
+                          </p>
+                          <div className="modal__deletion-btn-group">
+                            <button
+                              className="btn btn-primary btn-primary--gray btn-round"
+                              onClick={() => setDeletionOpen(false)}
+                            >
+                              Odustani
+                            </button>
+                            <button
+                              className="btn btn-primary btn-primary--red btn-round"
+                              onClick={() =>
+                                deleteReport(modalReport.report.id)
+                              }
+                            >
+                              Obriši
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="modal__options modal__options--single">
-                  {!responseOpen ? (
-                    <button
-                      className="btn btn-primary btn-primary--yellow btn-round"
-                      onClick={() => setResponseOpen(true)}
-                    >
-                      Odgovori na prijavu
-                    </button>
                   ) : (
-                    <div className="modal__deletion">
-                      <h4 className="modal__deletion-title">
-                        Odgovor na prijavu
-                      </h4>
-                      <form className="report__form" onSubmit={sendResponse}>
-                        <textarea
-                          className="report__form-field"
-                          name="repmsg"
-                          id="repmsg"
-                          placeholder="Ukratko odgovorite na prijavu..."
-                        ></textarea>
-                        <span
-                          className={
-                            responseValidation === ""
-                              ? "d-none"
-                              : "form__error report__form-error"
-                          }
-                        >
-                          {responseValidation}
-                        </span>
+                    <div className="modal__options modal__options--single">
+                      {!responseOpen ? (
                         <button
-                          className="btn btn-primary btn-primary--gray btn-round report__form-btn"
-                          onClick={() => {
-                            setResponseOpen(false);
-                            setResponseValidation("");
-                          }}
+                          className="btn btn-primary btn-primary--yellow btn-round"
+                          onClick={() => setResponseOpen(true)}
                         >
-                          Odustani
+                          Odgovori na prijavu
                         </button>
-                        <button
-                          className="btn btn-primary btn-primary--yellow btn-round report__form-btn"
-                          type="submit"
-                        >
-                          Odgovori
-                        </button>
-                      </form>
+                      ) : (
+                        <div className="modal__deletion">
+                          <h4 className="modal__deletion-title">
+                            Odgovor na prijavu
+                          </h4>
+                          <form
+                            className="report__form"
+                            onSubmit={sendResponse}
+                          >
+                            <textarea
+                              className="report__form-field"
+                              name="repmsg"
+                              id="repmsg"
+                              placeholder="Ukratko odgovorite na prijavu..."
+                            ></textarea>
+                            <span
+                              className={
+                                responseValidation === ""
+                                  ? "d-none"
+                                  : "form__error report__form-error"
+                              }
+                            >
+                              {responseValidation}
+                            </span>
+                            <button
+                              className="btn btn-primary btn-primary--gray btn-round report__form-btn"
+                              onClick={() => {
+                                setResponseOpen(false);
+                                setResponseValidation("");
+                              }}
+                            >
+                              Odustani
+                            </button>
+                            <button
+                              className="btn btn-primary btn-primary--yellow btn-round report__form-btn"
+                              type="submit"
+                            >
+                              Odgovori
+                            </button>
+                          </form>
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
+                </>
               )}
             </div>
           ) : (

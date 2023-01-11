@@ -180,6 +180,13 @@ const useApi = () => {
     return getResponse(response, data, 200);
   };
 
+  const setReportSeen = async (id) => {
+    const { response, data } = await api(`/api/reports/${id}/set-seen/`, {
+      method: "PUT",
+    });
+    return getResponse(response, data, 200);
+  };
+
   const deleteReceipt = async (id) => {
     const { response, data } = await api(`/api/receipts/${id}/`, {
       method: "DELETE",
@@ -287,6 +294,7 @@ const useApi = () => {
     updateUser,
     updateUserPassword,
     updateReport,
+    setReportSeen,
     deleteReceipt,
     deleteReport,
   };

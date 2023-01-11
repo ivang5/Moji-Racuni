@@ -7,7 +7,7 @@ import FormGroup from "../components/FormGroup";
 import Toast from "../components/Toast";
 import AuthContext from "../context/AuthContext";
 import useApi from "../utils/useApi";
-import { validateEmail } from "../utils/utils";
+import { dateFormatter, validateEmail } from "../utils/utils";
 
 const Profile = () => {
   const [userInfo, setUserInfo] = useState({});
@@ -211,10 +211,18 @@ const Profile = () => {
                   <span className="profile__info-value">{userInfo.email}</span>
                 </h5>
                 <h5 className="profile__info-title">
-                  <Link className="profile__info-link" to="/prijave">
-                    Moje prijave <span className="arrow arrow--right"></span>
-                  </Link>
+                  Korisnik od:{" "}
+                  <span className="profile__info-value">
+                    {dateFormatter(userInfo.date_joined)}
+                  </span>
                 </h5>
+                {user.role === "REGULAR" && (
+                  <h5 className="profile__info-title">
+                    <Link className="profile__info-link" to="/prijave">
+                      Moje prijave <span className="arrow arrow--right"></span>
+                    </Link>
+                  </h5>
+                )}
                 <div className="profile__info-footer">
                   <button
                     className="btn btn-primary btn-round profile__info-btn"

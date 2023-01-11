@@ -41,8 +41,27 @@
 
   &__status,
   &__user,
-  &__text-title {
+  &__text-title,
+  &__text-content {
     text-align: center;
     padding: 3px 0;
+  }
+
+  &__text-content {
+    @include respond-to(phone) {
+      padding: 3px 20px;
+    }
+
+    @include respond-to(tablet) {
+      padding: 3px 50px;
+    }
+
+    @include respond-to(laptop) {
+      padding: 3px 100px;
+    }
+
+    @include respond-to(desktop) {
+      padding: 3px 120px;
+    }
   }
 }

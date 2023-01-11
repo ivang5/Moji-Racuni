@@ -8,6 +8,7 @@ import {
   dateTimeBEFormatter,
   getReceiptOrderCode,
   getPageNumberList,
+  getTomorrow,
 } from "../utils/utils";
 import DatePicker from "react-datepicker";
 import Dropdown from "react-dropdown";
@@ -34,7 +35,7 @@ const Receipts = () => {
   const [pageNumbers, setPageNumbers] = useState([]);
   const [pageCount, setPageCount] = useState(10000);
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
-  const [toDate, setToDate] = useState(new Date());
+  const [toDate, setToDate] = useState(getTomorrow());
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortBy, setSortBy] = useState("Datum");
   const [sortType, setSortType] = useState("Opadajuće");

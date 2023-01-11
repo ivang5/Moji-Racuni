@@ -1,4 +1,5 @@
 .report-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -18,6 +19,14 @@
 
   @include respond-to(laptop) {
     width: calc(33.33% - 8px);
+  }
+
+  &--closed {
+    background-color: $c-white-3;
+  }
+
+  &--unseen {
+    background-color: rgba($color: $c-green-1, $alpha: 0.3);
   }
 
   &:hover {
@@ -42,7 +51,35 @@
     }
   }
 
+  &__icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    height: 22px;
+    width: 22px;
+
+    @include respond-to(tablet) {
+      height: 30px;
+      width: 30px;
+    }
+  }
+
   &__head-wrapper {
-    padding-bottom: 15px;
+    padding-bottom: 20px;
+
+    @include respond-to(laptop) {
+      padding-bottom: 30px;
+    }
+  }
+
+  &__user {
+    padding-top: 3px;
+  }
+
+  &__request {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }

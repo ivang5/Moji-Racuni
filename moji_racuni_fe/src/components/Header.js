@@ -18,6 +18,36 @@ const Header = () => {
     setActivePage(page);
   }, []);
 
+  useEffect(() => {
+    switch (currentPath) {
+      case "/":
+        setActivePage("Home");
+        break;
+      case "/statistike":
+        setActivePage("Stats");
+        break;
+      case "/racuni":
+        setActivePage("Receipts");
+        break;
+      case "/preduzeca":
+        setActivePage("Companies");
+        break;
+      case "/korisnici":
+        setActivePage("Users");
+        break;
+      case "/prijave":
+        user.role === "REGULAR"
+          ? setActivePage("Profile")
+          : setActivePage("Reports");
+        break;
+      case "/profil":
+        setActivePage("Profile");
+        break;
+      default:
+        setActivePage("Home");
+    }
+  }, [currentPath]);
+
   const toggleMobileNav = () => {
     setMobileNav(!mobileNav);
   };
@@ -194,6 +224,7 @@ const Header = () => {
                       onClick={() => {
                         logoutUser();
                         setDropdownOpen(false);
+                        setActivePage("Home");
                       }}
                     >
                       Odjavi se
@@ -347,7 +378,11 @@ const Header = () => {
                     </Link>
                     <div
                       className="mobile-nav__dropdown-item"
-                      onClick={logoutUser}
+                      onClick={() => {
+                        logoutUser();
+                        setDropdownOpen(false);
+                        setActivePage("Home");
+                      }}
                     >
                       Odjavi se
                     </div>
