@@ -4,6 +4,7 @@ from rest_framework import viewsets
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import get_object_or_404
 from .serializers import CompanySerializer, CompanyUnitSerializer, CompanyTypeSerializer
 from company.models import CompanyType, Company, CompanyUnit
@@ -39,6 +40,29 @@ class CompanyViewSet(viewsets.ViewSet):
             return Response(most_visited_info)
         except ValueError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=False, url_path='filter', url_name='filter')
+    def filter_companies(self, request):
+        user = request.user
+        name = self.request.query_params.get('name')
+        tin = self.request.query_params.get('tin')
+        type = self.request.query_params.get('type')
+        orderBy = self.request.query_params.get('orderBy')
+        ascendingOrder = self.request.query_params.get('ascendingOrder')
+        if (not name or not tin or not type or not orderBy or not ascendingOrder):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        filtered_companies = utils.filter_companies(user, name, tin, type, orderBy, ascendingOrder)
+        p = Paginator(filtered_companies, 12)
+        try:
+            page = p.page(self.request.query_params.get('page'))
+        except (EmptyPage, PageNotAnInteger):
+            page = p.page(1)
+        res = {
+            "pageCount": p.num_pages,
+            "pageNum": page.number,
+            "companies": page.object_list
+        }
+        return Response(res)
 
     def create(self, request):
         companies = Company.objects.all()
@@ -66,14 +90,30 @@ class CompanyViewSet(viewsets.ViewSet):
         serializer = CompanySerializer(company)
         return Response(serializer.data)
     
+    @action(detail=True, url_path='visits', url_name='visits')
+    def visits(self, request, pk=None):
+        user = request.user
+        try:
+            company_visits = utils.get_company_visits(user, pk)
+            return Response(company_visits)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+    
     @action(detail=True, methods=['put'], url_path='change-type', url_name='change_type')
     def change_type(self, request, pk=None):
+        user = request.user
         company_queryset = Company.objects.all()
         company = get_object_or_404(company_queryset, pk=pk)
         type = request.data.get('type')
-        type_queryset = CompanyType.objects.all()
-        company_type = get_object_or_404(type_queryset, pk=type)
-        company.type = company_type
+        type_queryset = user.companytype_set.all()
+        if (type != 'none'):
+            company_type = get_object_or_404(type_queryset, pk=type)
+        for comp_type in company.type.all():
+            for user_type in type_queryset:
+                if (comp_type.id == user_type.id):
+                    company.type.remove(user_type)
+        if (type != 'none'):
+            company.type.add(company_type)
         company.save()
         serializer = CompanySerializer(company)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -102,7 +142,14 @@ class CompanyViewSet(viewsets.ViewSet):
 @permission_classes([IsAuthenticated])
 class CompanyUnitViewSet(viewsets.ViewSet):
     def list(self, request):
-        companyUnits = CompanyUnit.objects.all()
+        allUnits = CompanyUnit.objects.all()
+        companyUnits = []
+        tin = self.request.query_params.get('tin')
+        if (not tin):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        for unit in allUnits:
+            if unit.company.tin == int(tin):
+                companyUnits.append(unit)
         serializer = CompanyUnitSerializer(companyUnits, many=True)
         return Response(serializer.data)
 
@@ -160,6 +207,26 @@ class CompanyTypeViewSet(viewsets.ViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = CompanyTypeSerializer(companyType)
         return Response(serializer.data)
+    
+    @action(detail=False, url_path='company', url_name='company')
+    def get_by_company(self, request):
+        user = request.user
+        companyTypes = user.companytype_set.all()
+        tin = self.request.query_params.get('tin')
+        if (not tin):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        queryset = Company.objects.all()
+        company = get_object_or_404(queryset, pk=int(tin))
+        companyType = None
+        for type in companyTypes:
+            for compType in company.type.all():
+                if (type.id == compType.id):
+                    companyType = type
+                    break
+        if (companyType):
+            serializer = CompanyTypeSerializer(companyType)
+            return Response(serializer.data)
+        return Response(companyType)
 
     def update(self, request, pk=None):
         companyType = get_object_or_404(CompanyType, pk=pk)

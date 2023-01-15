@@ -1,4 +1,4 @@
-.receipts {
+.companies {
   &__items {
     display: flex;
     flex-direction: column;
@@ -84,43 +84,24 @@
       transform: translate(60%, 5%) rotate(-135deg);
     }
 
-    .receipts__search-fields,
-    .receipts__search-fields-wrapper {
+    .companies__search-fields,
+    .companies__search-fields-wrapper {
       display: flex;
       flex-direction: column;
     }
 
     @include respond-to(laptop) {
-      .receipts__search-fields {
+      .companies__search-fields {
         display: block;
         text-align: center;
         padding-right: 20px;
       }
 
-      .receipts__search-fields-wrapper {
+      .companies__search-fields-wrapper {
         display: flex;
         flex-direction: row;
         justify-content: center;
         flex-wrap: wrap;
-      }
-
-      .form__group:nth-child(1) {
-        input {
-          width: 120px;
-        }
-      }
-
-      .form__group:nth-child(3) {
-        input {
-          width: 120px;
-        }
-      }
-
-      .form__group:nth-child(4),
-      .form__group:nth-child(5) {
-        input {
-          width: 150px;
-        }
       }
     }
   }
@@ -133,7 +114,7 @@
         display: none;
       }
 
-      .receipts__search-fields {
+      .companies__search-fields {
         display: flex;
         flex-direction: row;
         text-align: center;
@@ -143,62 +124,11 @@
         }
       }
 
-      .receipts__search-fields-wrapper {
+      .companies__search-fields-wrapper {
         display: flex;
         flex-direction: row;
         justify-content: center;
         flex-wrap: wrap;
-      }
-
-      .form__group:nth-child(1) {
-        input {
-          width: 90px;
-
-          @include respond-to(wide) {
-            width: 110px;
-          }
-        }
-      }
-
-      .form__group:nth-child(2) {
-        input {
-          width: 180px;
-
-          @include respond-to(wide) {
-            width: 230px;
-          }
-        }
-      }
-
-      .form__group:nth-child(3) {
-        input {
-          width: 90px;
-
-          @include respond-to(wide) {
-            width: 110px;
-          }
-        }
-      }
-
-      .receipts__search-date-wrapper {
-        input {
-          width: 160px;
-
-          @include respond-to(wide) {
-            width: 200px;
-          }
-        }
-      }
-
-      .form__group:nth-child(4),
-      .form__group:nth-child(5) {
-        input {
-          width: 100px;
-
-          @include respond-to(wide) {
-            width: 130px;
-          }
-        }
       }
     }
   }

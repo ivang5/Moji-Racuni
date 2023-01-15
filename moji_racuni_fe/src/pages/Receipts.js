@@ -42,6 +42,7 @@ const Receipts = () => {
   const [searchObj, setSearchObj] = useState({
     dateFrom: dateBEFormatter(fromDate),
     dateTo: dateBEFormatter(toDate),
+    id: "%",
     unit: "%",
     tin: "%",
     priceFrom: 0,
@@ -93,6 +94,7 @@ const Receipts = () => {
     e.preventDefault();
     const dateFrom = dateBEFormatter(fromDate);
     const dateTo = dateBEFormatter(toDate);
+    let id = "%";
     let unit = "%";
     let tin = "%";
     let priceFrom = 0;
@@ -100,6 +102,9 @@ const Receipts = () => {
     let orderBy = getReceiptOrderCode(sortBy);
     const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
+    if (e.target.id.value !== "") {
+      id = e.target.id.value;
+    }
     if (e.target.unit.value.trim() !== "") {
       unit = e.target.unit.value.trim();
     }
@@ -119,6 +124,7 @@ const Receipts = () => {
     const receipts = await api.filterReceipts(
       dateFrom,
       dateTo,
+      id,
       unit,
       tin,
       priceFrom,
@@ -131,6 +137,7 @@ const Receipts = () => {
     setSearchObj({
       dateFrom: dateFrom,
       dateTo: dateTo,
+      id: id,
       unit: unit,
       tin: tin,
       priceFrom: priceFrom,
@@ -154,6 +161,7 @@ const Receipts = () => {
     const receipts = await api.filterReceipts(
       searchObj.dateFrom,
       searchObj.dateTo,
+      searchObj.id,
       searchObj.unit,
       searchObj.tin,
       searchObj.priceFrom,
@@ -260,6 +268,7 @@ const Receipts = () => {
               </h2>
               <form className="receipts__search-fields" onSubmit={applyFilters}>
                 <div className="receipts__search-fields-wrapper">
+                  <FormGroup name="id" text="ID" type="number" inline={true} />
                   <FormGroup
                     name="unit"
                     text="Prodajno mesto"
@@ -351,7 +360,6 @@ const Receipts = () => {
                       key={receipt.id}
                       id={receipt.id}
                       date={receipt.date}
-                      link={receipt.link}
                       totalPrice={receipt.totalPrice}
                       totalVat={receipt.totalVat}
                       companyUnitId={receipt.companyUnit}

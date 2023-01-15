@@ -650,24 +650,68 @@ def get_most_visited_companies(user, dateFrom, dateTo, limit):
             most_visited_companies = dictfetchall(cursor)
     return most_visited_companies
 
-def filter_receipts(user, dateFrom, dateTo, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder):
+def get_company_visits(user, tin):
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} GROUP BY r.link ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(
+                '''
+                SELECT count(*) FROM receipt_receipt r
+                    JOIN company_companyunit u ON r.companyUnit = u.id
+                    WHERE u.company = %s
+                ''', 
+                [tin])
+            row = cursor.fetchone()
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT count(*) FROM receipt_receipt r
+                    JOIN company_companyunit u ON r.companyUnit = u.id
+                    WHERE r.user = %s AND u.company = %s
+                ''', 
+                [user.id, tin])
+            row = cursor.fetchone()
+            
+    company_visits = {
+        "visits": row[0],
+    }
+    return company_visits
+
+def filter_receipts(user, dateFrom, dateTo, id, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.id LIKE "{id}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} GROUP BY r.link ORDER BY {orderBy} {ascendingOrder}')
             filtered_receipts = dictfetchall(cursor)
     else:
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.id LIKE "{id}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
             filtered_receipts = dictfetchall(cursor)
     return filtered_receipts
 
-def filter_reports(user, dateFrom, dateTo, receipt, username, request, orderBy, ascendingOrder):
+def filter_reports(user, dateFrom, dateTo, id, receipt, username, request, orderBy, ascendingOrder):
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_report r JOIN account_user u ON r.user = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.receipt LIKE "{receipt}" AND u.username LIKE "%{username}%" AND r.request LIKE "%{request}%" ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(f'SELECT r.* FROM receipt_report r JOIN account_user u ON r.user = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.id LIKE "{id}" AND r.receipt LIKE "{receipt}" AND u.username LIKE "%{username}%" AND r.request LIKE "%{request}%" ORDER BY {orderBy} {ascendingOrder}')
             filtered_reports = dictfetchall(cursor)
     else:
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_report r WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.receipt LIKE "{receipt}" AND r.request LIKE "%{request}%" AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(f'SELECT r.* FROM receipt_report r WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.id LIKE "{id}" AND r.receipt LIKE "{receipt}" AND r.request LIKE "%{request}%" AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
+            filtered_reports = dictfetchall(cursor)
+    return filtered_reports
+
+def filter_companies(user, name, tin, type, orderBy, ascendingOrder):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            if (type == "%"):
+                cursor.execute(f'SELECT c.* FROM company_company c LEFT JOIN company_company_type ct ON c.tin = ct.company_id LEFT JOIN company_companytype t ON ct.companytype_id = t.id WHERE c.name LIKE "%{name}%" AND c.tin LIKE "%{tin}%" AND (t.name LIKE "%" OR t.name IS NULL) GROUP BY c.tin ORDER BY {orderBy} {ascendingOrder}')
+            else:
+                cursor.execute(f'SELECT c.* FROM company_company c LEFT JOIN company_company_type ct ON c.tin = ct.company_id LEFT JOIN company_companytype t ON ct.companytype_id = t.id WHERE c.name LIKE "%{name}%" AND c.tin LIKE "%{tin}%" AND t.name LIKE "%{type}%" GROUP BY c.tin ORDER BY {orderBy} {ascendingOrder}')
+            filtered_reports = dictfetchall(cursor)
+    else:
+        with connection.cursor() as cursor:
+            if (type == "%"):
+                cursor.execute(f'SELECT c.* FROM company_company c LEFT JOIN company_company_type ct ON c.tin = ct.company_id LEFT JOIN company_companytype t ON ct.companytype_id = t.id JOIN company_companyunit u ON c.tin = u.company JOIN receipt_receipt r ON u.id = r.companyUnit WHERE c.name LIKE "%{name}%" AND c.tin LIKE "%{tin}%" AND (t.name LIKE "%" OR t.name IS NULL) AND r.user = {user.id}  GROUP BY c.tin ORDER BY {orderBy} {ascendingOrder}')
+            else:
+                cursor.execute(f'SELECT c.* FROM company_company c LEFT JOIN company_company_type ct ON c.tin = ct.company_id LEFT JOIN company_companytype t ON ct.companytype_id = t.id JOIN company_companyunit u ON c.tin = u.company JOIN receipt_receipt r ON u.id = r.companyUnit WHERE c.name LIKE "%{name}%" AND c.tin LIKE "%{tin}%" AND t.name LIKE "%{type}%" AND r.user = {user.id}  GROUP BY c.tin ORDER BY {orderBy} {ascendingOrder}')
             filtered_reports = dictfetchall(cursor)
     return filtered_reports

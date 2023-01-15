@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../utils/utils";
 
 const AuthContext = createContext();
 
@@ -30,7 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const callLogin = async (username, password) => {
     try {
-      const response = await fetch("http://192.168.1.11:8000/api/token/", {
+      const response = await fetch(`${BASE_URL}/api/token/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,9 +61,7 @@ export const AuthProvider = ({ children }) => {
       if (!isNaN(username)) {
         return 404;
       }
-      const response = await fetch(
-        `http://192.168.1.11:8000/api/users/${username}/`
-      );
+      const response = await fetch(`${BASE_URL}/api/users/${username}/`);
       return response.status;
     } catch (error) {
       return 0;
@@ -88,7 +87,7 @@ export const AuthProvider = ({ children }) => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://192.168.1.11:8000/api/users/", {
+      const response = await fetch(`${BASE_URL}/api/users/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

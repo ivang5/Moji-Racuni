@@ -83,15 +83,16 @@ class ReceiptViewSet(viewsets.ViewSet):
         user = request.user
         dateFrom = self.request.query_params.get('dateFrom')
         dateTo = self.request.query_params.get('dateTo')
+        id = self.request.query_params.get('id')
         unitName = self.request.query_params.get('unitName')
         tin = self.request.query_params.get('tin')
         priceFrom = self.request.query_params.get('priceFrom')
         priceTo = self.request.query_params.get('priceTo')
         orderBy = self.request.query_params.get('orderBy')
         ascendingOrder = self.request.query_params.get('ascendingOrder')
-        if (not dateFrom or not dateTo or not unitName or not tin or not priceFrom or not priceTo or not orderBy or not ascendingOrder):
+        if (not dateFrom or not dateTo or not id or not unitName or not tin or not priceFrom or not priceTo or not orderBy or not ascendingOrder):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        filtered_receipts = utils.filter_receipts(user, dateFrom, dateTo, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder)
+        filtered_receipts = utils.filter_receipts(user, dateFrom, dateTo, id, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder)
         p = Paginator(filtered_receipts, 12)
         try:
             page = p.page(self.request.query_params.get('page'))
@@ -246,14 +247,15 @@ class ReportViewSet(viewsets.ViewSet):
         user = request.user
         dateFrom = self.request.query_params.get('dateFrom')
         dateTo = self.request.query_params.get('dateTo')
+        id = self.request.query_params.get('id')
         receipt = self.request.query_params.get('receipt')
         username = self.request.query_params.get('user')
         request = self.request.query_params.get('request')
         orderBy = self.request.query_params.get('orderBy')
         ascendingOrder = self.request.query_params.get('ascendingOrder')
-        if (not dateFrom or not dateTo or not receipt or not username or not request or not orderBy or not ascendingOrder):
+        if (not dateFrom or not dateTo or not id or not receipt or not username or not request or not orderBy or not ascendingOrder):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        filtered_reports = utils.filter_reports(user, dateFrom, dateTo, receipt, username, request, orderBy, ascendingOrder)
+        filtered_reports = utils.filter_reports(user, dateFrom, dateTo, id, receipt, username, request, orderBy, ascendingOrder)
         p = Paginator(filtered_reports, 12)
         try:
             page = p.page(self.request.query_params.get('page'))

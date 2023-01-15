@@ -1,4 +1,5 @@
-.receipt-card {
+.company-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,22 +43,24 @@
     }
   }
 
-  &__head-wrapper {
-    padding-bottom: 15px;
+  &__type {
+    border: 1px solid $c-green-2;
+    border-radius: 15px;
+    padding: 3px 10px;
+    background-color: $c-green-2;
+    margin-bottom: 10px;
   }
 
-  &__id {
-    font-size: 14px;
-    padding-top: 3px;
+  &__img {
+    max-height: 110px;
 
-    @include respond-to(laptop) {
-      font-size: 15px;
+    &--logo {
+      margin: 15px 0;
     }
   }
 
-  &__price {
-    display: flex;
-    justify-content: space-between;
-    width: 180px;
+  &__tin,
+  &__visits {
+    font-weight: 600;
   }
 }

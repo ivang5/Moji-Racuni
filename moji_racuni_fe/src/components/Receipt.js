@@ -4,10 +4,11 @@ import { dateTimeFormatter, noDecimalNum, twoDecimalNum } from "../utils/utils";
 const Receipt = ({ receiptInfo }) => {
   return (
     <div className="receipt">
-      <h4 className="receipt__title">
-        {receiptInfo.company.name} - {receiptInfo.company.tin}
-      </h4>
+      <h4 className="receipt__title">Račun #{receiptInfo.receipt.id}</h4>
       <div className="receipt__body">
+        <h5 className="pt-1 t-center">
+          {receiptInfo.company.name} - {receiptInfo.company.tin}
+        </h5>
         <p className="receipt__date fw-bold">
           {dateTimeFormatter(receiptInfo.receipt.date)}
         </p>

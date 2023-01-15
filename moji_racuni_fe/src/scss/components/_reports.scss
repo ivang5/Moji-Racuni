@@ -104,7 +104,7 @@
         flex-wrap: wrap;
       }
 
-      .form__group:first-child {
+      .form__group:nth-child(2) {
         input {
           width: 330px;
         }
@@ -139,7 +139,17 @@
 
       .form__group:nth-child(1) {
         input {
-          width: 300px;
+          width: 110px;
+
+          @include respond-to(wide) {
+            width: 130px;
+          }
+        }
+      }
+
+      .form__group:nth-child(2) {
+        input {
+          width: 230px;
 
           @include respond-to(wide) {
             width: 300px;
@@ -147,32 +157,36 @@
         }
       }
 
-      .form__group:nth-child(2) {
+      .form__group:nth-child(3) {
         input {
-          width: 140px;
+          width: 110px;
 
           @include respond-to(wide) {
-            width: 180px;
+            width: 130px;
           }
         }
       }
 
       .reports__search-date-wrapper {
         input {
-          width: 160px;
+          width: 140px;
 
           @include respond-to(wide) {
             width: 200px;
           }
         }
       }
+    }
 
-      .form__group:nth-child(3) {
+    &--special {
+      .form__group:nth-child(4) {
         input {
-          width: 160px;
+          @include respond-to(desktop) {
+            width: 170px;
+          }
 
           @include respond-to(wide) {
-            width: 200px;
+            width: 180px;
           }
         }
       }

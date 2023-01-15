@@ -41,13 +41,13 @@ const Reports = () => {
   const [searchObj, setSearchObj] = useState({
     dateFrom: dateBEFormatter(fromDate),
     dateTo: dateBEFormatter(toDate),
+    id: "%",
     receipt: "%",
     user: "%",
     request: "%",
   });
   const sortByOptions = ["Datum", "Status"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
-  const reportPlaceholder = "";
   const api = useApi();
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -92,16 +92,20 @@ const Reports = () => {
     e.preventDefault();
     const dateFrom = dateBEFormatter(fromDate);
     const dateTo = dateBEFormatter(toDate);
+    let id = "%";
     let receipt = "%";
     let user = "%";
     let request = "%";
     let orderBy = getReportOrderCode(sortBy);
     const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
+    if (e.target.id.value !== "") {
+      id = e.target.id.value;
+    }
     if (e.target.request.value.trim() !== "") {
       request = e.target.request.value.trim();
     }
-    if (e.target.user.value.trim() !== "") {
+    if (e.target.user && e.target.user.value.trim() !== "") {
       user = e.target.user.value.trim();
     }
     if (e.target.receipt.value.trim() !== "") {
@@ -114,6 +118,7 @@ const Reports = () => {
     const reports = await api.filterReports(
       dateFrom,
       dateTo,
+      id,
       receipt,
       user,
       request,
@@ -125,6 +130,7 @@ const Reports = () => {
     setSearchObj({
       dateFrom: dateFrom,
       dateTo: dateTo,
+      id: id,
       receipt: receipt,
       user: user,
       request: request,
@@ -147,6 +153,7 @@ const Reports = () => {
     const reports = await api.filterReports(
       searchObj.dateFrom,
       searchObj.dateTo,
+      searchObj.id,
       searchObj.receipt,
       searchObj.user,
       searchObj.request,
@@ -246,7 +253,11 @@ const Reports = () => {
             <div
               className={
                 searchOpen
-                  ? "reports__search-wrapper reports__search-wrapper--open"
+                  ? user.role !== "REGULAR"
+                    ? "reports__search-wrapper reports__search-wrapper--open reports__search-wrapper--special"
+                    : "reports__search-wrapper reports__search-wrapper--open"
+                  : user.role !== "REGULAR"
+                  ? "reports__search-wrapper reports__search-wrapper--special"
                   : "reports__search-wrapper"
               }
             >
@@ -258,6 +269,7 @@ const Reports = () => {
               </h2>
               <form className="reports__search-fields" onSubmit={applyFilters}>
                 <div className="reports__search-fields-wrapper">
+                  <FormGroup name="id" text="ID" type="number" inline={true} />
                   <FormGroup
                     name="request"
                     text="Tekst prijave"
@@ -266,7 +278,7 @@ const Reports = () => {
                   />
                   <FormGroup
                     name="receipt"
-                    text="Šifra računa"
+                    text="ID računa"
                     type="number"
                     inline={true}
                   />
@@ -403,9 +415,7 @@ const Reports = () => {
                             </button>
                             <button
                               className="btn btn-primary btn-primary--red btn-round"
-                              onClick={() =>
-                                deleteReport(modalReport.report.id)
-                              }
+                              onClick={() => deleteReport(modalReport.id)}
                             >
                               Obriši
                             </button>

@@ -1,5 +1,7 @@
 import dayjs from "dayjs";
 
+export const BASE_URL = "http://192.168.1.11:8000";
+
 export const dateFormatter = (date) => {
   return dayjs(date).format("DD/MM/YYYY");
 };
@@ -157,6 +159,27 @@ export const getReportOrderCode = (orderBy) => {
       break;
     default:
       orderByCode = "date";
+      break;
+  }
+
+  return orderByCode;
+};
+
+export const getCompanyOrderCode = (orderBy) => {
+  let orderByCode;
+
+  switch (orderBy) {
+    case "Naziv":
+      orderByCode = "c.name";
+      break;
+    case "PIB":
+      orderByCode = "c.tin";
+      break;
+    case "Tip":
+      orderByCode = "t.name";
+      break;
+    default:
+      orderByCode = "c.name";
       break;
   }
 

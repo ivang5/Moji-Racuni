@@ -5,7 +5,6 @@ import { dateTimeFormatter } from "../utils/utils";
 const ReceiptCard = ({
   id,
   date,
-  link,
   totalPrice,
   totalVat,
   companyUnitId,
@@ -37,6 +36,7 @@ const ReceiptCard = ({
             <span className="receipt-card__date">
               {dateTimeFormatter(date)}
             </span>
+            <h6 className="receipt-card__id">Račun #{id}</h6>
             <h5 className="receipt-card__unit">{companyUnit.name}</h5>
             <span className="receipt-card__tin">{companyUnit.company}</span>
           </div>

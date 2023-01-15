@@ -2,15 +2,14 @@ import { useContext } from "react";
 import jwt_decode from "jwt-decode";
 import dayjs from "dayjs";
 import AuthContext from "../context/AuthContext";
+import { BASE_URL } from "./utils";
 
 const useFetch = () => {
   const { authTokens, setAuthTokens, setUser, logoutUser } =
     useContext(AuthContext);
 
-  const baseURL = "http://192.168.1.11:8000";
-
   const originalRequest = async (url, config) => {
-    url = `${baseURL}${url}`;
+    url = `${BASE_URL}${url}`;
     const response = await fetch(url, config);
     let data;
     try {
@@ -22,7 +21,7 @@ const useFetch = () => {
   };
 
   const refreshToken = async (authTokens) => {
-    const response = await fetch(`${baseURL}/api/token/refresh/`, {
+    const response = await fetch(`${BASE_URL}/api/token/refresh/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -53,7 +52,7 @@ const useFetch = () => {
       at = await refreshToken(JSON.parse(localStorage.getItem("authTokens")));
     }
 
-    if (config === {}) {
+    if (config === {} || config.headers) {
       config["headers"] = {
         Authorization: `Bearer ${
           JSON.parse(localStorage.getItem("authTokens"))?.access

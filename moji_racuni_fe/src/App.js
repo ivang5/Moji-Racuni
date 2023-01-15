@@ -9,6 +9,7 @@ import Receipts from "./pages/Receipts";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Reports from "./pages/Reports";
+import Companies from "./pages/Companies";
 
 function App() {
   return (
@@ -30,6 +31,20 @@ function App() {
           </Route>
           <Route element={<PrivateRoute />} exact path="/prijave/strana/:page">
             <Route element={<Reports />} exact path="/prijave/strana/:page" />
+          </Route>
+          <Route element={<PrivateRoute />} exact path="/preduzeca">
+            <Route element={<Companies />} exact path="/preduzeca" />
+          </Route>
+          <Route
+            element={<PrivateRoute />}
+            exact
+            path="/preduzeca/strana/:page"
+          >
+            <Route
+              element={<Companies />}
+              exact
+              path="/preduzeca/strana/:page"
+            />
           </Route>
           <Route element={<PrivateRoute />} exact path="/profil">
             <Route element={<Profile />} exact path="/profil" />

@@ -35,6 +35,11 @@ const useApi = () => {
     return getResponse(response, data);
   };
 
+  const getCompanyUnits = async (tin) => {
+    const { response, data } = await api(`/api/company/units/?tin=${tin}`);
+    return getResponse(response, data);
+  };
+
   const getUnit = async (id) => {
     const { response, data } = await api(`/api/company/units/${id}/`);
     return getResponse(response, data);
@@ -42,6 +47,11 @@ const useApi = () => {
 
   const getCompany = async (tin) => {
     const { response, data } = await api(`/api/companies/${tin}/`);
+    return getResponse(response, data);
+  };
+
+  const getCompanyTypes = async () => {
+    const { response, data } = await api("/api/company/types/");
     return getResponse(response, data);
   };
 
@@ -55,10 +65,22 @@ const useApi = () => {
     return getResponse(response, data);
   };
 
+  const getTypeForCompany = async (tin) => {
+    const { response, data } = await api(
+      `/api/company/types/company/?tin=${tin}`
+    );
+    return getResponse(response, data);
+  };
+
   const getTotalSpent = async (dateFrom, dateTo) => {
     const { response, data } = await api(
       `/api/receipts/total-spent?dateFrom=${dateFrom}&dateTo=${dateTo}`
     );
+    return getResponse(response, data);
+  };
+
+  const getCompanyVisits = async (tin) => {
+    const { response, data } = await api(`/api/companies/${tin}/visits/`);
     return getResponse(response, data);
   };
 
@@ -86,6 +108,7 @@ const useApi = () => {
   const filterReceipts = async (
     dateFrom,
     dateTo,
+    id,
     unitName,
     tin,
     priceFrom,
@@ -95,7 +118,7 @@ const useApi = () => {
     page
   ) => {
     const { response, data } = await api(
-      `/api/receipts/filter?dateFrom=${dateFrom}&dateTo=${dateTo}&unitName=${unitName}&tin=${tin}&priceFrom=${priceFrom}&priceTo=${priceTo}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
+      `/api/receipts/filter?dateFrom=${dateFrom}&dateTo=${dateTo}&id=${id}&unitName=${unitName}&tin=${tin}&priceFrom=${priceFrom}&priceTo=${priceTo}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
     );
     return getResponse(response, data);
   };
@@ -103,6 +126,7 @@ const useApi = () => {
   const filterReports = async (
     dateFrom,
     dateTo,
+    id,
     receipt,
     user,
     request,
@@ -111,7 +135,21 @@ const useApi = () => {
     page
   ) => {
     const { response, data } = await api(
-      `/api/reports/filter?dateFrom=${dateFrom}&dateTo=${dateTo}&receipt=${receipt}&user=${user}&request=${request}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
+      `/api/reports/filter?dateFrom=${dateFrom}&dateTo=${dateTo}&id=${id}&receipt=${receipt}&user=${user}&request=${request}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
+    );
+    return getResponse(response, data);
+  };
+
+  const filterCompanies = async (
+    name,
+    tin,
+    type,
+    orderBy,
+    ascendingOrder,
+    page
+  ) => {
+    const { response, data } = await api(
+      `/api/companies/filter/?name=${name}&tin=${tin}&type=${type}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
     );
     return getResponse(response, data);
   };
@@ -152,6 +190,14 @@ const useApi = () => {
     const { response, data } = await api("/api/reports/", {
       method: "POST",
       body: JSON.stringify(report),
+    });
+    return getResponse(response, data, 201);
+  };
+
+  const createCompanyType = async (type) => {
+    const { response, data } = await api("/api/company/types/", {
+      method: "POST",
+      body: JSON.stringify(type),
     });
     return getResponse(response, data, 201);
   };
@@ -201,6 +247,25 @@ const useApi = () => {
     return getResponse(response, data, 204);
   };
 
+  const deleteCompanyType = async (id) => {
+    const { response, data } = await api(`/api/company/types/${id}/`, {
+      method: "DELETE",
+    });
+    return getResponse(response, data, 204);
+  };
+
+  const changeCompanyImage = async (tin, image) => {
+    const formData = new FormData();
+    formData.append("img", image);
+
+    const { response, data } = await api(`/api/companies/${tin}/change-img/`, {
+      method: "PUT",
+      body: formData,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return getResponse(response, data, 200);
+  };
+
   const getLastReceiptFull = async () => {
     const receipt = await getLastReceipt();
     if (receipt === 404) {
@@ -233,6 +298,21 @@ const useApi = () => {
       company: company,
     };
     return receiptFull;
+  };
+
+  const getFullCompanyInfo = async (tin) => {
+    const company = await getCompany(tin);
+    if (company === 404) {
+      return company;
+    }
+    const units = await getCompanyUnits(tin);
+    const type = await getTypeForCompany(tin);
+    const companyFull = {
+      company: company,
+      units: units,
+      type: type,
+    };
+    return companyFull;
   };
 
   const getBaseStats = async (dateFrom, dateTo, limit) => {
@@ -282,21 +362,29 @@ const useApi = () => {
     getItems,
     getUnit,
     getCompany,
+    getCompanyTypes,
+    getTypeForCompany,
+    getCompanyVisits,
     getUser,
     getReport,
     getLastReceiptFull,
     getFullReceiptInfo,
+    getFullCompanyInfo,
     getBaseStats,
     filterReceipts,
     filterReports,
+    filterCompanies,
     addFullReceipt,
     createReport,
+    createCompanyType,
     updateUser,
     updateUserPassword,
     updateReport,
     setReportSeen,
     deleteReceipt,
     deleteReport,
+    deleteCompanyType,
+    changeCompanyImage,
   };
 };
 
