@@ -1,5 +1,10 @@
 import React from "react";
-import { dateTimeFormatter, noDecimalNum, twoDecimalNum } from "../utils/utils";
+import {
+  dateTimeFormatter,
+  formatPrice,
+  noDecimalNum,
+  twoDecimalNum,
+} from "../utils/utils";
 
 const Receipt = ({ receiptInfo }) => {
   return (
@@ -20,7 +25,7 @@ const Receipt = ({ receiptInfo }) => {
               </p>
               <div className="receipt__item-row">
                 <div className="receipt__item-row-pq">
-                  <span>{item.price}</span>
+                  <span>{formatPrice(item.price)}</span>
                   <span>
                     {" "}
                     (
@@ -30,7 +35,7 @@ const Receipt = ({ receiptInfo }) => {
                     )
                   </span>
                 </div>
-                <span>{twoDecimalNum(item.price * item.quantity)}</span>
+                <span>{formatPrice(item.price * item.quantity)}</span>
               </div>
             </li>
           ))}
@@ -38,11 +43,11 @@ const Receipt = ({ receiptInfo }) => {
         <div className="receipt__price pt-1">
           <div className="receipt__price-total fw-bold">
             <span>Ukupno:</span>
-            <span>{twoDecimalNum(receiptInfo.receipt.totalPrice)}</span>
+            <span>{formatPrice(receiptInfo.receipt.totalPrice)}</span>
           </div>
           <div className="receipt__price-vat fw-bold">
             <span>PDV:</span>
-            <span>{twoDecimalNum(receiptInfo.receipt.totalVat)}</span>
+            <span>{formatPrice(receiptInfo.receipt.totalVat)}</span>
           </div>
         </div>
         <a

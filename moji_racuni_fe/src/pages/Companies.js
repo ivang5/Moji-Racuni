@@ -16,15 +16,22 @@ const Companies = () => {
   const [pageNum, setPageNum] = useState(1);
   const [companies, setCompanies] = useState([]);
   const [companyTypes, setCompanyTypes] = useState([]);
+  const [selectedType, setSelectedType] = useState({});
   const [companiesLoading, setCompaniesLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCompany, setModalCompany] = useState({});
   const [modalOpenType, setModalOpenType] = useState(false);
-  const [typeModalMode, setTypeModalMode] = useState("creation");
+  const [typeModalMain, setTypeModalMain] = useState(true);
   const [typeValidation, setTypeValidation] = useState({
     name: "",
     description: "",
   });
+  const [typeValidationSecondary, setTypeValidationSecondary] = useState({
+    name: "",
+    description: "",
+  });
+  const [typeCreationOpen, setTypeCreationOpen] = useState(false);
+  const [typeDeletionOpen, setTypeDeletionOpen] = useState(false);
   const [toast, setToast] = useState({});
   const [toastOpen, setToastOpen] = useState(false);
   const [documentHeight, setDocumentHeight] = useState(0);
@@ -189,18 +196,83 @@ const Companies = () => {
     const companyTypeInfo = {
       name: e.target.name.value.trim(),
       description: e.target.description.value.trim(),
-      user: user.id,
+      user: user.user_id,
     };
 
     const companyType = await api.createCompanyType(companyTypeInfo);
+    if (companyType) {
+      getCompanyTypes();
+      setToast({
+        title: "Uspešno",
+        text: "Tip preduzeća je uspešno kreiran.",
+      });
+      openToast();
+    }
   };
 
-  const deleteCompanyType = async (id) => {
-    await api.deleteCompanyType(id);
+  const changeType = async (e) => {
+    e.preventDefault();
+    let valid = true;
+    let validationObj = { name: "", description: "" };
+
+    if (e.target.name.value.trim() === "") {
+      validationObj.name = "Naziv tipa ne sme biti prazan!";
+      valid = false;
+    }
+
+    if (e.target.description.value.trim() === "") {
+      validationObj.description = "Opis tipa ne sme biti prazan!";
+      valid = false;
+    }
+
+    if (!valid) {
+      setTypeValidationSecondary(validationObj);
+      return;
+    }
+
+    const typeInfo = {
+      name: e.target.name.value.trim(),
+      description: e.target.description.value.trim(),
+      user: user.user_id,
+    };
+
+    const companyType = await api.changeType(selectedType.id, typeInfo);
+    if (companyType) {
+      getCompanyTypes();
+      applySortingFilters();
+      setTypeModalMain(true);
+      setToast({
+        title: "Uspešno",
+        text: "Tip preduzeća je uspešno promenjen.",
+      });
+      openToast();
+    }
+  };
+
+  const deleteCompanyType = async () => {
+    if (!selectedType.id) {
+      return;
+    }
+    await api.deleteCompanyType(selectedType.id);
     getCompanyTypes();
+    applySortingFilters();
+    setTypeModalMain(true);
     setToast({
       title: "Uspešno",
       text: "Tip preduzeća je uspešno obrisan.",
+    });
+    openToast();
+  };
+
+  const changeCompanyType = async (id) => {
+    const typeInfo = {
+      type: id,
+    };
+    await api.changeCompanyType(modalCompany.company.tin, typeInfo);
+    applySortingFilters();
+    setToast({
+      title: "Uspešno",
+      text: "Tip preduzeća uspešno promenjen.",
     });
     openToast();
   };
@@ -221,41 +293,10 @@ const Companies = () => {
 
     setToast({
       title: "Uspešno",
-      text: "Slika kompanije uspešno promenjena.",
+      text: "Slika preduzeća uspešno promenjena.",
     });
     openToast();
   };
-
-  //   const sendReport = async (e) => {
-  //     e.preventDefault();
-
-  //     if (e.target.repmsg.value.trim() === "") {
-  //       setReportValidation("Polje za opis ne sme biti prazno!");
-  //       return;
-  //     } else if (e.target.repmsg.value.trim().length < 10) {
-  //       setReportValidation("Opis mora sadržati bar 10 karaktera!");
-  //       return;
-  //     }
-
-  //     const date = new Date();
-  //     const formattedDate = dateTimeBEFormatter(date);
-
-  //     const report = {
-  //       date: formattedDate,
-  //       receipt: modalReceipt.receipt.id,
-  //       request: e.target.repmsg.value.trim(),
-  //     };
-
-  //     await api.createReport(report);
-  //     setReportOpen(false);
-  //     setModalOpen(false);
-  //     setReportValidation("");
-  //     setToast({
-  //       title: "Uspešno",
-  //       text: "Prijava je uspešno poslata.",
-  //     });
-  //     openToast();
-  //   };
 
   const openToast = () => {
     setToastOpen(true);
@@ -314,7 +355,7 @@ const Companies = () => {
               </form>
             </div>
           </div>
-          <div className="companies__sort mb-3">
+          <div className="companies__sort mb-2">
             <h4 className="companies__sort-title">Sortiraj po: </h4>
             <div className="companies__sort-wrapper">
               <Dropdown
@@ -331,6 +372,13 @@ const Companies = () => {
               />
             </div>
           </div>
+          <button
+            className="btn btn-primary btn-round mb-2"
+            onClick={() => setModalOpenType(true)}
+          >
+            Upravljaj tipovima preduzeća{" "}
+            <i className="arrow arrow--right arrow--btn"></i>
+          </button>
           {companiesLoading ? (
             <div className="companies__items-empty">
               <div className="spinner">
@@ -376,6 +424,8 @@ const Companies = () => {
               <Company
                 companyInfo={modalCompany}
                 changeCompanyImg={changeCompanyImg}
+                companyTypes={companyTypes}
+                changeCompanyType={changeCompanyType}
               />
             </div>
           ) : (
@@ -393,6 +443,214 @@ const Companies = () => {
             onClick={() => {
               setModalOpen(false);
               setModalCompany({});
+            }}
+          ></span>
+        </div>
+      )}
+      {modalOpenType && (
+        <div className="modal" style={{ minHeight: `${documentHeight}px` }}>
+          <div className="modal__content">
+            {typeModalMain ? (
+              <div className="company-type">
+                <div className="company-type__overview">
+                  <h3 className="t-center">Pregled tipova preduzeća</h3>
+                  {companyTypes.length > 0 ? (
+                    <div className="company-type__tag-wrapper">
+                      {companyTypes.map((type) => (
+                        <div
+                          className="company-type__tag"
+                          key={type.id}
+                          onClick={() => {
+                            setSelectedType(type);
+                            setTypeModalMain(false);
+                          }}
+                        >
+                          {type.name}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="company-type__empty t-center">
+                      Trenutno ne postoji nijedan tip preduzeća.
+                    </p>
+                  )}
+                </div>
+                <div className="modal__options modal__options--single">
+                  {!typeCreationOpen ? (
+                    <button
+                      className="btn btn-primary btn-round"
+                      onClick={() => setTypeCreationOpen(true)}
+                    >
+                      Dodaj tip preduzeća
+                    </button>
+                  ) : (
+                    <div className="modal__deletion">
+                      <h4 className="modal__deletion-title">
+                        Dodavanje tipa preduzeća
+                      </h4>
+                      <form
+                        className="company-type__form"
+                        onSubmit={createCompanyType}
+                      >
+                        <FormGroup
+                          name="name"
+                          text="Naziv"
+                          type="text"
+                          inline={true}
+                          error={typeValidation.name}
+                        />
+                        <textarea
+                          className="company-type__form-field"
+                          name="description"
+                          id="description"
+                          placeholder="Kratak opis tipa..."
+                        ></textarea>
+                        <span
+                          className={
+                            typeValidation.description === ""
+                              ? "d-none"
+                              : "form__error company-type__form-error"
+                          }
+                        >
+                          {typeValidation.description}
+                        </span>
+                        <button
+                          className="btn btn-primary btn-primary--gray btn-round company-type__form-btn"
+                          type="button"
+                          onClick={() => {
+                            setTypeCreationOpen(false);
+                            setTypeValidation({
+                              name: "",
+                              description: "",
+                            });
+                          }}
+                        >
+                          Odustani
+                        </button>
+                        <button
+                          className="btn btn-primary btn-round company-type__form-btn"
+                          type="submit"
+                        >
+                          Dodaj
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="modal__options">
+                  <div className="modal__deletion">
+                    <div className="company-type__back-btn-wrapper">
+                      <button
+                        className="company-type__back-btn"
+                        onClick={() => {
+                          setTypeModalMain(true);
+                          setTypeValidationSecondary({
+                            name: "",
+                            description: "",
+                          });
+                        }}
+                      >
+                        <i className="arrow arrow--left"></i> Nazad
+                      </button>
+                    </div>
+                    <h4 className="modal__deletion-title">
+                      Upravljanje tipom preduzeća
+                    </h4>
+                    {selectedType.id && (
+                      <form
+                        className="company-type__form"
+                        onSubmit={changeType}
+                      >
+                        <FormGroup
+                          name="name"
+                          text="Naziv"
+                          type="text"
+                          inline={true}
+                          error={typeValidationSecondary.name}
+                          defaultVal={selectedType.name}
+                        />
+                        <textarea
+                          className="company-type__form-field"
+                          name="description"
+                          id="description"
+                          placeholder="Kratak opis tipa..."
+                          defaultValue={selectedType.description}
+                        ></textarea>
+                        <span
+                          className={
+                            typeValidationSecondary.description === ""
+                              ? "d-none"
+                              : "form__error company-type__form-error"
+                          }
+                        >
+                          {typeValidationSecondary.description}
+                        </span>
+                        <button
+                          className="btn btn-primary btn-primary--yellow btn-round company-type__form-btn"
+                          type="submit"
+                        >
+                          Sačuvaj
+                        </button>
+                        <button
+                          className="btn btn-primary btn-primary--red btn-round company-type__form-btn"
+                          type="button"
+                          onClick={() => {
+                            setTypeDeletionOpen((prevState) => !prevState);
+                          }}
+                        >
+                          Obriši
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </div>
+                {typeDeletionOpen && (
+                  <div className="modal__options">
+                    <div className="modal__deletion">
+                      <h4 className="modal__deletion-title">
+                        Brisanje tipa preduzeća
+                      </h4>
+                      <p className="modal__deletion-text">
+                        Da li ste sigurni da želite da obrišete tip?
+                      </p>
+                      <div className="modal__deletion-btn-group">
+                        <button
+                          className="btn btn-primary btn-primary--gray btn-round"
+                          onClick={() => setTypeDeletionOpen(false)}
+                        >
+                          Odustani
+                        </button>
+                        <button
+                          className="btn btn-primary btn-primary--red btn-round"
+                          onClick={deleteCompanyType}
+                        >
+                          Potvrdi
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <span
+            className="close"
+            onClick={() => {
+              setModalOpenType(false);
+              setTypeCreationOpen(false);
+              setTypeDeletionOpen(false);
+              setTypeModalMain(true);
+              setTypeValidation({
+                name: "",
+                description: "",
+              });
+              setTypeValidationSecondary({
+                name: "",
+                description: "",
+              });
             }}
           ></span>
         </div>

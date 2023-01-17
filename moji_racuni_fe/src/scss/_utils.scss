@@ -268,6 +268,15 @@ $spaceamounts: (1, 2, 3, 4, 5);
     margin-left: 5px;
   }
 
+  &--btn {
+    border-color: $c-white-2;
+    border-width: 0 3px 3px 0;
+    margin-left: 5px;
+
+    @include respond-to(phone) {
+      margin-left: 10px;
+    }
+  }
   &--right {
     transform: rotate(-45deg);
     -webkit-transform: rotate(-45deg);

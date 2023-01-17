@@ -1,12 +1,41 @@
-import React, { useContext, useRef } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import Dropdown from "react-dropdown";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
 import EditIcon from "../icons/edit-icon.svg";
 import AuthContext from "../context/AuthContext";
 import { BASE_URL } from "../utils/utils";
 
-const Company = ({ companyInfo, changeCompanyImg }) => {
+const Company = ({
+  companyInfo,
+  changeCompanyImg,
+  companyTypes,
+  changeCompanyType,
+}) => {
+  const [companyTypeOption, setCompanyTypeOption] = useState(
+    companyInfo.type && companyInfo.type.name
+  );
+  let companyTypeOptions = ["Bez tipa"];
   const { user } = useContext(AuthContext);
   const imgInput = useRef();
+  const firstUpdate = useRef(true);
+
+  companyTypes.forEach((type) => {
+    companyTypeOptions.push(type.name);
+  });
+
+  useEffect(() => {
+    if (firstUpdate.current) {
+      firstUpdate.current = false;
+      return;
+    }
+    if (companyTypeOption) {
+      const selectedType =
+        companyTypeOption === "Bez tipa"
+          ? "none"
+          : companyTypes.find((type) => type.name === companyTypeOption).id;
+      changeCompanyType(selectedType);
+    }
+  }, [companyTypeOption]);
 
   const handleClick = () => {
     user.role !== "REGULAR" && imgInput.current.click();
@@ -57,11 +86,22 @@ const Company = ({ companyInfo, changeCompanyImg }) => {
                 />
               )}
             </div>
-            {companyInfo.type && (
-              <div className="company__type-wrapper">
-                <span className="company__type">{companyInfo.type.name}</span>
-              </div>
-            )}
+            <div className="fw-bold t-center mb-2">
+              Broj poseta: {companyInfo.visits.visits}
+            </div>
+            <div className="company__type-wrapper">
+              <span className="company__type-text">Tip: </span>
+              <Dropdown
+                options={companyTypeOptions}
+                onChange={(value) => setCompanyTypeOption(value.value)}
+                value={
+                  companyInfo.type
+                    ? companyInfo.type.name
+                    : companyTypeOptions[0]
+                }
+                placeholder="Izaberite opciju"
+              />
+            </div>
             <h5 className="pt-1">Prodajna mesta:</h5>
             <ul className="company__units">
               {companyInfo.units.map((unit) => (

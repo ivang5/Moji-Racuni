@@ -198,7 +198,7 @@ const Home = () => {
           </>
         )}
         {user.role === "REGULAR" && (
-          <div className="py-1 py-lg-1">
+          <div className="pb-4 pt-2">
             <h2>Poslednji račun</h2>
             {receiptLoading ? (
               <div className="receipt-empty">

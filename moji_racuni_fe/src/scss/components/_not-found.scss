@@ -8,7 +8,7 @@
   &__title {
     color: $c-dark-3;
     font-size: 100px;
-    text-shadow: 3px 3px 0px rgba($c-green-4, 0.6);
+    text-shadow: 3px 3px 0px $c-green-3;
 
     @include respond-to(tablet) {
       font-size: 120px;
@@ -16,7 +16,7 @@
 
     @include respond-to(desktop) {
       font-size: 140px;
-      text-shadow: 4px 4px 0px rgba($c-green-4, 0.6);
+      text-shadow: 4px 4px 0px $c-green-3;
     }
   }
 
@@ -36,18 +36,18 @@
   }
 
   &__btn {
-    box-shadow: 3px 3px rgba($c-green-4, 0.6);
+    box-shadow: 3px 3px $c-green-3;
 
     @include respond-to(desktop) {
-      box-shadow: 4px 4px rgba($c-green-4, 0.6);
+      box-shadow: 4px 4px $c-green-3;
     }
 
     &:hover {
       background-color: $c-dark-2;
-      box-shadow: 5px 5px rgba($c-green-4, 0.6);
+      box-shadow: 5px 5px $c-green-3;
 
       @include respond-to(desktop) {
-        box-shadow: 6px 6px rgba($c-green-4, 0.6);
+        box-shadow: 6px 6px $c-green-3;
       }
     }
   }

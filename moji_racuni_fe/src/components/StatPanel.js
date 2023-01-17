@@ -1,9 +1,10 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { formatPrice } from "../utils/utils";
 
 const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
   return (
-    <div className="stat-panel py-4 py-lg-4">
+    <div className="stat-panel py-4 py-lg-3">
       <div className="stat-panel__header">
         <div className="stat-panel__header-main">
           <h2>Statistika</h2>
@@ -40,9 +41,9 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
             </span>
           </div>
         </div>
-        <a href="#" className="stat-panel__header-link">
+        <Link className="stat-panel__header-link" to="/statistike">
           Pogledaj više <i className="arrow arrow--right"></i>
-        </a>
+        </Link>
       </div>
       {statsLoading ? (
         <div className="stat-panel-empty">

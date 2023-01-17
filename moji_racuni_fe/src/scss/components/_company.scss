@@ -87,11 +87,14 @@
   }
 
   &__type {
-    border: 1px solid $c-green-2;
-    border-radius: 15px;
-    cursor: pointer;
-    padding: 3px 10px;
-    background-color: $c-green-2;
+    &-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    &-text {
+      padding-right: 7px;
+    }
   }
 
   &__unit {

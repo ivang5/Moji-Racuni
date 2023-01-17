@@ -49,6 +49,7 @@
     &--single {
       @include respond-to(laptop) {
         justify-content: center;
+        width: 100%;
 
         .btn {
           @include respond-to(laptop) {

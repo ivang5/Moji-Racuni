@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import useApi from "../utils/useApi";
-import { dateTimeFormatter } from "../utils/utils";
+import { dateTimeFormatter, formatPrice } from "../utils/utils";
 
 const ReceiptCard = ({
   id,
@@ -43,11 +43,15 @@ const ReceiptCard = ({
           <div className="receipt-card__price-wrapper">
             <div className="receipt-card__price">
               <span className="receipt-card__price-text">Ukupno:</span>
-              <span className="receipt-card__price-number">{totalPrice}</span>
+              <span className="receipt-card__price-number">
+                {formatPrice(totalPrice)}
+              </span>
             </div>
             <div className="receipt-card__price">
               <span className="receipt-card__price-text">PDV:</span>
-              <span className="receipt-card__price-number">{totalVat}</span>
+              <span className="receipt-card__price-number">
+                {formatPrice(totalVat)}
+              </span>
             </div>
           </div>
         </div>

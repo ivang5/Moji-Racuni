@@ -266,6 +266,22 @@ const useApi = () => {
     return getResponse(response, data, 200);
   };
 
+  const changeCompanyType = async (tin, typeInfo) => {
+    const { response, data } = await api(`/api/companies/${tin}/change-type/`, {
+      method: "PUT",
+      body: JSON.stringify(typeInfo),
+    });
+    return getResponse(response, data, 200);
+  };
+
+  const changeType = async (id, typeInfo) => {
+    const { response, data } = await api(`/api/company/types/${id}/`, {
+      method: "PUT",
+      body: JSON.stringify(typeInfo),
+    });
+    return getResponse(response, data, 200);
+  };
+
   const getLastReceiptFull = async () => {
     const receipt = await getLastReceipt();
     if (receipt === 404) {
@@ -307,10 +323,12 @@ const useApi = () => {
     }
     const units = await getCompanyUnits(tin);
     const type = await getTypeForCompany(tin);
+    const visits = await getCompanyVisits(tin);
     const companyFull = {
       company: company,
       units: units,
       type: type,
+      visits: visits,
     };
     return companyFull;
   };
@@ -385,6 +403,8 @@ const useApi = () => {
     deleteReport,
     deleteCompanyType,
     changeCompanyImage,
+    changeCompanyType,
+    changeType,
   };
 };
 
