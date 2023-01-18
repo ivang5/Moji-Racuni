@@ -715,3 +715,9 @@ def filter_companies(user, name, tin, type, orderBy, ascendingOrder):
                 cursor.execute(f'SELECT c.* FROM company_company c LEFT JOIN company_company_type ct ON c.tin = ct.company_id LEFT JOIN company_companytype t ON ct.companytype_id = t.id JOIN company_companyunit u ON c.tin = u.company JOIN receipt_receipt r ON u.id = r.companyUnit WHERE c.name LIKE "%{name}%" AND c.tin LIKE "%{tin}%" AND t.name LIKE "%{type}%" AND r.user = {user.id}  GROUP BY c.tin ORDER BY {orderBy} {ascendingOrder}')
             filtered_reports = dictfetchall(cursor)
     return filtered_reports
+
+def filter_users(id, username, first_name, last_name, email, orderBy, ascendingOrder):
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT * FROM account_user WHERE id LIKE "%{id}%" AND username LIKE "%{username}%" AND first_name LIKE "%{first_name}%" AND last_name LIKE "%{last_name}%" AND email LIKE "%{email}%" AND role = "REGULAR" ORDER BY {orderBy} {ascendingOrder}')
+        filtered_users = dictfetchall(cursor)
+    return filtered_users

@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
+    path('users/filter/', UserViewSet.as_view({'get': 'filter_users'}), name='user-filter'),
     path('users/', UserViewSet.as_view({'get': 'list', 'post' : 'create'}), name='users'),
     path('users/<int:pk>/', UserViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='user-details'),
     path('users/update-password/<int:pk>/', UserViewSet.as_view({'put': 'update_password'}), name='user-password'),

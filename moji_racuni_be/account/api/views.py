@@ -7,9 +7,11 @@ from rest_framework.decorators import action
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .serializers import UserSerializer, AdminSerializer
 from account.models import User
 from django.contrib.auth.hashers import make_password
+from moji_racuni_be import utils
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -33,6 +35,32 @@ class UserViewSet(viewsets.ViewSet):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         except AttributeError:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+    @action(detail=False)
+    def filter_users(self, request):
+        if (request.user.role != "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        id = self.request.query_params.get('id')
+        username = self.request.query_params.get('username')
+        first_name = self.request.query_params.get('firstname')
+        last_name = self.request.query_params.get('lastname')
+        email = self.request.query_params.get('email')
+        orderBy = self.request.query_params.get('orderBy')
+        ascendingOrder = self.request.query_params.get('ascendingOrder')
+        if (not id or not username or not first_name or not last_name or not email or not orderBy or not ascendingOrder):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        filtered_users = utils.filter_users(id, username, first_name, last_name, email, orderBy, ascendingOrder)
+        p = Paginator(filtered_users, 12)
+        try:
+            page = p.page(self.request.query_params.get('page'))
+        except (EmptyPage, PageNotAnInteger):
+            page = p.page(1)
+        res = {
+            "pageCount": p.num_pages,
+            "pageNum": page.number,
+            "users": page.object_list
+        }
+        return Response(res)
     
     @action(detail=True, methods=['post'])
     def create_admin(self, request):
@@ -88,12 +116,15 @@ class UserViewSet(viewsets.ViewSet):
             users = User.objects.all()
             for u in users:
                 if (u.username == request.data["username"] and request.user.username != request.data["username"]):
-                    return Response(status=status.HTTP_409_CONFLICT)
+                    if (request.user.role != "ADMIN" or u.id != pk):
+                        return Response(status=status.HTTP_409_CONFLICT)
             user = get_object_or_404(User, pk=pk)
             user.username = request.data["username"]
             user.first_name = request.data["first_name"]
             user.last_name = request.data["last_name"]
             user.email = request.data["email"]
+            if (request.user.role == "ADMIN"):
+                user.is_active = request.data["is_active"]
             user.save()
             serializer = UserSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)

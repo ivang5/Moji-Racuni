@@ -186,6 +186,36 @@ export const getCompanyOrderCode = (orderBy) => {
   return orderByCode;
 };
 
+export const getUserOrderCode = (orderBy) => {
+  let orderByCode;
+
+  switch (orderBy) {
+    case "ID":
+      orderByCode = "id";
+      break;
+    case "Status":
+      orderByCode = "is_active";
+      break;
+    case "Kor. ime":
+      orderByCode = "username";
+      break;
+    case "Ime":
+      orderByCode = "first_name";
+      break;
+    case "Prezime":
+      orderByCode = "last_name";
+      break;
+    case "Email":
+      orderByCode = "email";
+      break;
+    default:
+      orderByCode = "id";
+      break;
+  }
+
+  return orderByCode;
+};
+
 export const getPageNumberList = (pageCount, activePage) => {
   if (pageCount < 9) {
     const pages = [];

@@ -102,7 +102,7 @@ const Company = ({
                 placeholder="Izaberite opciju"
               />
             </div>
-            <h5 className="pt-1">Prodajna mesta:</h5>
+            <h5 className="pt-2">Prodajna mesta:</h5>
             <ul className="company__units">
               {companyInfo.units.map((unit) => (
                 <li key={unit.id} className="company__unit">

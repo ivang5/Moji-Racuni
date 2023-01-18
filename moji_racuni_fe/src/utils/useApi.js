@@ -154,6 +154,22 @@ const useApi = () => {
     return getResponse(response, data);
   };
 
+  const filterUsers = async (
+    id,
+    username,
+    firstname,
+    lastname,
+    email,
+    orderBy,
+    ascendingOrder,
+    page
+  ) => {
+    const { response, data } = await api(
+      `/api/users/filter/?id=${id}&username=${username}&firstname=${firstname}&lastname=${lastname}&email=${email}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
+    );
+    return getResponse(response, data);
+  };
+
   const createCompany = async (url) => {
     const { response, data } = await api("/api/companies/", {
       method: "POST",
@@ -392,6 +408,7 @@ const useApi = () => {
     filterReceipts,
     filterReports,
     filterCompanies,
+    filterUsers,
     addFullReceipt,
     createReport,
     createCompanyType,

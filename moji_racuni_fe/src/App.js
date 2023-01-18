@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Reports from "./pages/Reports";
 import Companies from "./pages/Companies";
+import Users from "./pages/Users";
 
 function App() {
   return (
@@ -45,6 +46,16 @@ function App() {
               exact
               path="/preduzeca/strana/:page"
             />
+          </Route>
+          <Route element={<PrivateRoute />} exact path="/korisnici">
+            <Route element={<Users />} exact path="/korisnici" />
+          </Route>
+          <Route
+            element={<PrivateRoute />}
+            exact
+            path="/korisnici/strana/:page"
+          >
+            <Route element={<Users />} exact path="/korisnici/strana/:page" />
           </Route>
           <Route element={<PrivateRoute />} exact path="/profil">
             <Route element={<Profile />} exact path="/profil" />
