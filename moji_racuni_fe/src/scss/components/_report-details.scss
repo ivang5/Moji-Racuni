@@ -64,4 +64,22 @@
       padding: 3px 120px;
     }
   }
+
+  &__link {
+    display: block;
+    text-align: center;
+    padding-top: 30px;
+
+    &:hover {
+      @include respond-to(tablet) {
+        i {
+          transform: translateX(3px) rotate(-45deg);
+        }
+      }
+    }
+
+    i {
+      transition: transform 0.2s ease;
+    }
+  }
 }

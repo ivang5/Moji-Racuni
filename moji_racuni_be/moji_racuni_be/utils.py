@@ -448,6 +448,26 @@ def get_last_receipt(user):
     }
     return receipt
 
+def get_last_report():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM receipt_report WHERE date = (SELECT MAX(date) FROM receipt_report)")
+        row = cursor.fetchone()
+        
+    if (row == None):
+        return row
+    
+    receipt = {
+        "id": row[0],
+        "date": row[1], 
+        "request": row[2], 
+        "response": row[3],
+        "closed": row[4], 
+        "seen": row[5], 
+        "receipt": row[6],
+        "user": row[7]
+    }
+    return receipt
+
 def get_total_spent(user, dateFrom, dateTo):
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:

@@ -65,6 +65,11 @@ const useApi = () => {
     return getResponse(response, data);
   };
 
+  const getLastReport = async () => {
+    const { response, data } = await api("/api/reports/last/");
+    return getResponse(response, data);
+  };
+
   const getTypeForCompany = async (tin) => {
     const { response, data } = await api(
       `/api/company/types/company/?tin=${tin}`
@@ -401,6 +406,7 @@ const useApi = () => {
     getCompanyVisits,
     getUser,
     getReport,
+    getLastReport,
     getLastReceiptFull,
     getFullReceiptInfo,
     getFullCompanyInfo,

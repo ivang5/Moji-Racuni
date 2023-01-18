@@ -13,10 +13,13 @@ import { TypeAnimation } from "react-type-animation";
 import FormGroup from "../components/FormGroup";
 import InfoIcon from "../icons/info-icon.png";
 import Toast from "../components/Toast";
+import Report from "../components/Report";
 
 const Home = () => {
   const [lastReceiptInfo, setLastReceiptInfo] = useState({});
   const [receiptLoading, setReceiptLoading] = useState(true);
+  const [lastReport, setLastReport] = useState({});
+  const [reportLoading, setReportLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [statsLoading, setStatsLoading] = useState(true);
   const [addingReceipt, setAddingReceipt] = useState(false);
@@ -31,6 +34,7 @@ const Home = () => {
 
   useEffect(() => {
     getLastReceipt();
+    getLastReport();
   }, []);
 
   useEffect(() => {
@@ -62,6 +66,16 @@ const Home = () => {
     const receiptInfo = await api.getLastReceiptFull();
     setLastReceiptInfo(receiptInfo);
     setReceiptLoading(false);
+  };
+
+  const getLastReport = async () => {
+    if (user.role !== "ADMIN") {
+      return;
+    }
+    setReportLoading(true);
+    const report = await api.getLastReport();
+    setLastReport(report);
+    setReportLoading(false);
   };
 
   const addReceipt = async (e) => {
@@ -197,7 +211,7 @@ const Home = () => {
             </div>
           </>
         )}
-        {user.role === "REGULAR" && (
+        {user.role === "REGULAR" ? (
           <div className="pb-4 pt-2">
             <h2>Poslednji račun</h2>
             {receiptLoading ? (
@@ -219,6 +233,34 @@ const Home = () => {
                     <p>
                       Dodajte barem jedan račun da bi se prikazao u ovoj
                       sekciji.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="pb-4 pt-2">
+            <h2>Poslednja prijava</h2>
+            {reportLoading ? (
+              <div className="receipt-empty">
+                <div className="spinner">
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </div>
+              </div>
+            ) : (
+              <>
+                {lastReport.receipt ? (
+                  <Report reportInfo={lastReport} hasLink={true} />
+                ) : (
+                  <div className="receipt-empty">
+                    <h3 className="pb-2">Nije pronađena nijedna prijava...</h3>
+                    <p>
+                      Kada bude postojala barem jedna prijava biće prikazana
+                      ovde.
                     </p>
                   </div>
                 )}

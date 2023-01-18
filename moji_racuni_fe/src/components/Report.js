@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import useApi from "../utils/useApi";
 import { dateTimeFormatter } from "../utils/utils";
 
-const Report = ({ reportInfo }) => {
+const Report = ({ reportInfo, hasLink }) => {
   const [reportUser, setReportUser] = useState({});
   const { user } = useContext(AuthContext);
   const api = useApi();
@@ -57,6 +58,11 @@ const Report = ({ reportInfo }) => {
               {reportInfo.response}
             </p>
           </div>
+        )}
+        {hasLink && (
+          <Link className="report-details__link" to="/prijave">
+            Pregled prijava <i className="arrow arrow--right"></i>
+          </Link>
         )}
       </div>
     </div>

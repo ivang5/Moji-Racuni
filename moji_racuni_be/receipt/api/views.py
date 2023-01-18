@@ -286,6 +286,16 @@ class ReportViewSet(viewsets.ViewSet):
         serializer = ReportSerializer(report)
         return Response(serializer.data)
     
+    @action(detail=False, url_path='last', url_name='last')
+    def retrieve_last(self, request):
+        user = request.user
+        if (user.role != "ADMIN"):
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        receipt = utils.get_last_report()
+        if (receipt == None):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(receipt)
+    
     def update(self, request, pk=None):
         report = get_object_or_404(Report, pk=pk)
         serializer = ReportSerializer(report, data=request.data)
