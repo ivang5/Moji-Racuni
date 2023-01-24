@@ -44,6 +44,8 @@ def remove_item_code(name):
     name_parts_space = name.split(' ')
     name_parts_dash = name.split("-")
     name_parts_comma = name.split(',')
+    if (len(name.rstrip()) == len(name_parts_space[0])):
+        return name
     #* Traženje šifre ispred naziva
     try:
         int(name_parts_space[0])

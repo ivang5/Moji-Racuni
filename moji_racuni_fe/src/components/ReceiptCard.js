@@ -32,7 +32,7 @@ const ReceiptCard = ({
 
   return (
     <>
-      {companyUnit && itemsCount && (
+      {companyUnit && itemsCount ? (
         <div
           className="receipt-card"
           onClick={() => {
@@ -66,6 +66,8 @@ const ReceiptCard = ({
             </div>
           </div>
         </div>
+      ) : (
+        ""
       )}
     </>
   );
