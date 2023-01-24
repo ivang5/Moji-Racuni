@@ -97,7 +97,7 @@ export const getPageFromPathname = (pathname) => {
     case "/":
       page = "Home";
       break;
-    case "/statistike":
+    case "/statistika":
       page = "Stats";
       break;
     case "/racuni":
@@ -214,6 +214,318 @@ export const getUserOrderCode = (orderBy) => {
   }
 
   return orderByCode;
+};
+
+const numberToHour = (number) => {
+  let hour;
+  switch (number) {
+    case 0:
+      hour = "00:00";
+      break;
+    case 1:
+      hour = "01:00";
+      break;
+    case 2:
+      hour = "02:00";
+      break;
+    case 3:
+      hour = "03:00";
+      break;
+    case 4:
+      hour = "04:00";
+      break;
+    case 5:
+      hour = "05:00";
+      break;
+    case 6:
+      hour = "06:00";
+      break;
+    case 7:
+      hour = "07:00";
+      break;
+    case 8:
+      hour = "08:00";
+      break;
+    case 9:
+      hour = "09:00";
+      break;
+    case 10:
+      hour = "10:00";
+      break;
+    case 11:
+      hour = "11:00";
+      break;
+    case 12:
+      hour = "12:00";
+      break;
+    case 13:
+      hour = "13:00";
+      break;
+    case 14:
+      hour = "14:00";
+      break;
+    case 15:
+      hour = "15:00";
+      break;
+    case 16:
+      hour = "16:00";
+      break;
+    case 17:
+      hour = "17:00";
+      break;
+    case 18:
+      hour = "18:00";
+      break;
+    case 19:
+      hour = "19:00";
+      break;
+    case 20:
+      hour = "20:00";
+      break;
+    case 21:
+      hour = "21:00";
+      break;
+    case 22:
+      hour = "22:00";
+      break;
+    case 23:
+      hour = "23:00";
+      break;
+    default:
+      hour = "23:00";
+      break;
+  }
+  return hour;
+};
+
+const numberToWeekday = (number) => {
+  let weekday;
+  switch (number) {
+    case 1:
+      weekday = "Pon";
+      break;
+    case 2:
+      weekday = "Uto";
+      break;
+    case 3:
+      weekday = "Sre";
+      break;
+    case 4:
+      weekday = "Čet";
+      break;
+    case 5:
+      weekday = "Pet";
+      break;
+    case 6:
+      weekday = "Sub";
+      break;
+    case 7:
+      weekday = "Ned";
+      break;
+    default:
+      weekday = "Ned";
+      break;
+  }
+  return weekday;
+};
+
+const numberToMonth = (number) => {
+  let month;
+  switch (number) {
+    case 1:
+      month = "Jan";
+      break;
+    case 2:
+      month = "Feb";
+      break;
+    case 3:
+      month = "Mar";
+      break;
+    case 4:
+      month = "Apr";
+      break;
+    case 5:
+      month = "Maj";
+      break;
+    case 6:
+      month = "Jun";
+      break;
+    case 7:
+      month = "Jul";
+      break;
+    case 8:
+      month = "Avg";
+      break;
+    case 9:
+      month = "Sep";
+      break;
+    case 10:
+      month = "Okt";
+      break;
+    case 11:
+      month = "Nov";
+      break;
+    case 12:
+      month = "Dec";
+      break;
+    default:
+      month = "Dec";
+      break;
+  }
+  return month;
+};
+
+export const getHoursFromNumbers = (hoursList, type) => {
+  const newList = [];
+
+  hoursList.forEach((obj) => {
+    const newObj = {
+      hour: numberToHour(obj.hourNum),
+      count: type === "count" ? obj.count : 0,
+      spent: type === "spent" ? obj.spent : 0,
+    };
+    newList.push(newObj);
+  });
+
+  return newList;
+};
+
+export const getWeekdaysFromNumbers = (weekdaysList, type) => {
+  const newList = [];
+
+  weekdaysList.forEach((obj) => {
+    const newObj = {
+      dayofweek: numberToWeekday(obj.dayofweek),
+      count: type === "count" ? obj.count : 0,
+      spent: type === "spent" ? obj.spent : 0,
+    };
+    newList.push(newObj);
+  });
+
+  return newList;
+};
+
+export const getMonthsFromNumbers = (monthsList, type) => {
+  const newList = [];
+
+  monthsList.forEach((obj) => {
+    const newObj = {
+      month: numberToMonth(obj.monthNum),
+      count: type === "count" ? obj.count : 0,
+      spent: type === "spent" ? obj.spent : 0,
+    };
+    newList.push(newObj);
+  });
+
+  return newList;
+};
+
+export const getSpendingsPieFormatData = (data, isCompany) => {
+  const newList = [];
+
+  data.forEach((obj) => {
+    const newObj = {
+      id: isCompany ? obj.companyName : obj.companyType,
+      value: obj.priceSum,
+      test: "hello",
+    };
+    newList.push(newObj);
+  });
+
+  return newList;
+};
+
+export const getVisitsPieFormatData = (data, isCompany) => {
+  const newList = [];
+
+  data.forEach((obj) => {
+    const newObj = {
+      id: isCompany ? obj.companyName : obj.companyType,
+      value: obj.receiptCount,
+    };
+    newList.push(newObj);
+  });
+
+  return newList;
+};
+
+export const getMostValItemsFormat = (itemsList) => {
+  const newList = [];
+
+  itemsList.forEach((obj) => {
+    const newObj = {
+      name: obj.name,
+      price: obj.price,
+    };
+    newList.push(newObj);
+  });
+
+  return newList;
+};
+
+export const formatChartVal = (number) => {
+  const numToStr = Math.round(number).toString();
+  if (numToStr.length === 4) {
+    const val = `${numToStr.charAt(0)}k`;
+    return val;
+  }
+  if (numToStr.length === 5) {
+    const val = `${numToStr.slice(0, 2)}k`;
+    return val;
+  }
+  if (numToStr.length === 6) {
+    const val = `${numToStr.slice(0, 3)}k`;
+    return val;
+  }
+  if (numToStr.length === 7) {
+    const val = `${numToStr.charAt(0)}M`;
+    return val;
+  }
+  if (numToStr.length === 8) {
+    const val = `${numToStr.slice(0, 2)}M`;
+    return val;
+  }
+  if (numToStr.length === 9) {
+    const val = `${numToStr.slice(0, 3)}M`;
+    return val;
+  }
+  return number;
+};
+
+export const sumSpendings = (visitedList) => {
+  let sum = 0;
+  visitedList.forEach((obj) => {
+    sum += obj.value;
+  });
+  return sum;
+};
+
+export const countReceipts = (visitedList) => {
+  let counter = 0;
+  visitedList.forEach((obj) => {
+    counter += obj.value;
+  });
+  return counter;
+};
+
+export const isChartEmpty = (data, type) => {
+  let isEmpty = true;
+
+  if (type === "count") {
+    data.forEach((obj) => {
+      if (obj.count !== 0) {
+        isEmpty = false;
+      }
+    });
+  } else if (type === "spent") {
+    data.forEach((obj) => {
+      if (obj.spent !== 0) {
+        isEmpty = false;
+      }
+    });
+  }
+
+  return isEmpty;
 };
 
 export const getPageNumberList = (pageCount, activePage) => {

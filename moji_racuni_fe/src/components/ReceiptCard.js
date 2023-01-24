@@ -11,10 +11,12 @@ const ReceiptCard = ({
   openModal,
 }) => {
   const [companyUnit, setCompanyUnit] = useState({});
+  const [itemsCount, setItemsCount] = useState(0);
   const api = useApi();
 
   useEffect(() => {
     getCompanyUnit();
+    countItems();
   }, []);
 
   const getCompanyUnit = async () => {
@@ -22,9 +24,15 @@ const ReceiptCard = ({
     setCompanyUnit(companyUnit);
   };
 
+  const countItems = async () => {
+    const items = await api.getItems(id);
+    const count = items.length;
+    setItemsCount(count);
+  };
+
   return (
     <>
-      {companyUnit && (
+      {companyUnit && itemsCount && (
         <div
           className="receipt-card"
           onClick={() => {
@@ -39,6 +47,9 @@ const ReceiptCard = ({
             <h6 className="receipt-card__id">Račun #{id}</h6>
             <h5 className="receipt-card__unit">{companyUnit.name}</h5>
             <span className="receipt-card__tin">{companyUnit.company}</span>
+            <div className="receipt-card__items-count mt-2">
+              Broj stavki: {itemsCount}
+            </div>
           </div>
           <div className="receipt-card__price-wrapper">
             <div className="receipt-card__price">

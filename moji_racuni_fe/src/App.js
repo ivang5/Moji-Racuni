@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import Reports from "./pages/Reports";
 import Companies from "./pages/Companies";
 import Users from "./pages/Users";
+import Statistics from "./pages/Statistics";
 
 function App() {
   return (
@@ -59,6 +60,9 @@ function App() {
           </Route>
           <Route element={<PrivateRoute />} exact path="/profil">
             <Route element={<Profile />} exact path="/profil" />
+          </Route>
+          <Route element={<PrivateRoute />} exact path="/statistika">
+            <Route element={<Statistics />} exact path="/statistika" />
           </Route>
           <Route element={<Login />} path="/prijava" />
           <Route path="*" element={<PrivateRoute />}>

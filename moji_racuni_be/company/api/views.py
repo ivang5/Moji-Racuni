@@ -27,6 +27,20 @@ class CompanyViewSet(viewsets.ViewSet):
         visited_info = utils.count_visited_companies(user, dateFrom, dateTo)
         return Response(visited_info)
     
+    @action(detail=False, url_path='most-spent', url_name='most-spent')
+    def most_spent(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        limit = self.request.query_params.get('limit')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            most_spent_info = utils.get_most_spent_companies(user, dateFrom, dateTo, int(limit))
+            return Response(most_spent_info)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+    
     @action(detail=False, url_path='most-visited', url_name='most-visited')
     def most_visited(self, request):
         user = request.user
@@ -191,8 +205,41 @@ class CompanyTypeViewSet(viewsets.ViewSet):
         companyTypes = user.companytype_set.all()
         serializer = CompanyTypeSerializer(companyTypes, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, url_path='most-spent', url_name='most-spent')
+    def most_spent(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        limit = self.request.query_params.get('limit')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            most_spent_info = utils.get_most_spent_types(user, dateFrom, dateTo, int(limit))
+            return Response(most_spent_info)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, url_path='most-visited', url_name='most-visited')
+    def most_visited(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        limit = self.request.query_params.get('limit')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            most_visited_info = utils.get_most_visited_types(user, dateFrom, dateTo, int(limit))
+            return Response(most_visited_info)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request):
+        user = request.user
+        companyTypes = user.companytype_set.all()
+        for type in companyTypes:
+            if type.name == request.data["name"]:
+                return Response(status=status.HTTP_409_CONFLICT)
         serializer = CompanyTypeSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()

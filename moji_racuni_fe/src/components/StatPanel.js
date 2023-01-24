@@ -41,7 +41,7 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
             </span>
           </div>
         </div>
-        <Link className="stat-panel__header-link" to="/statistike">
+        <Link className="stat-panel__header-link" to="/statistika">
           Pogledaj više <i className="arrow arrow--right"></i>
         </Link>
       </div>

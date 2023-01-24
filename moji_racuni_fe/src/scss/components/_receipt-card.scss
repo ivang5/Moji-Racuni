@@ -44,6 +44,9 @@
 
   &__head-wrapper {
     padding-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   &__id {
@@ -53,6 +56,14 @@
     @include respond-to(laptop) {
       font-size: 15px;
     }
+  }
+
+  &__items-count {
+    border: 1px solid $c-green-2;
+    border-radius: 15px;
+    padding: 3px 10px;
+    background-color: $c-green-2;
+    margin-bottom: 10px;
   }
 
   &__price {

@@ -39,7 +39,7 @@ const Companies = () => {
   const [pageCount, setPageCount] = useState(10000);
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortBy, setSortBy] = useState("Naziv");
-  const [sortType, setSortType] = useState("Opadajuće");
+  const [sortType, setSortType] = useState("Rastuće");
   const [searchObj, setSearchObj] = useState({
     name: "%",
     tin: "%",
@@ -181,8 +181,10 @@ const Companies = () => {
     if (e.target.name.value.trim() === "") {
       validationObj.name = "Naziv tipa ne sme biti prazan!";
       valid = false;
+    } else if (e.target.name.value.trim().length > 11) {
+      validationObj.name = "Naziv tipa ne sme sadržati više od 11 karaktera!";
+      valid = false;
     }
-
     if (e.target.description.value.trim() === "") {
       validationObj.description = "Opis tipa ne sme biti prazan!";
       valid = false;
@@ -200,14 +202,20 @@ const Companies = () => {
     };
 
     const companyType = await api.createCompanyType(companyTypeInfo);
-    if (companyType) {
-      getCompanyTypes();
-      setToast({
-        title: "Uspešno",
-        text: "Tip preduzeća je uspešno kreiran.",
-      });
-      openToast();
+    if (companyType === 409) {
+      validationObj.name = "Naziv tipa već postoji!";
+      setTypeValidation(validationObj);
+      return;
     }
+
+    getCompanyTypes();
+    setTypeValidation(validationObj);
+    setTypeCreationOpen(false);
+    setToast({
+      title: "Uspešno",
+      text: "Tip preduzeća je uspešno kreiran.",
+    });
+    openToast();
   };
 
   const changeType = async (e) => {

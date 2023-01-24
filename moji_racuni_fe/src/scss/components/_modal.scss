@@ -62,7 +62,11 @@
 
   .receipt {
     background-color: $c-white-2;
-    padding: 30px 20px;
+    padding: 30px;
+
+    @include respond-to(phone) {
+      padding: 45px;
+    }
 
     @include respond-to(tablet) {
       padding: 50px 20px;

@@ -3,7 +3,7 @@ import Dropdown from "react-dropdown";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
 import EditIcon from "../icons/edit-icon.svg";
 import AuthContext from "../context/AuthContext";
-import { BASE_URL } from "../utils/utils";
+import { BASE_URL, formatPrice } from "../utils/utils";
 
 const Company = ({
   companyInfo,
@@ -86,8 +86,11 @@ const Company = ({
                 />
               )}
             </div>
-            <div className="fw-bold t-center mb-2">
+            <div className="fw-bold t-center mb-1">
               Broj poseta: {companyInfo.visits.visits}
+            </div>
+            <div className="fw-bold t-center mb-2">
+              Ukupna potrošnja: {formatPrice(companyInfo.visits.spent)} RSD
             </div>
             <div className="company__type-wrapper">
               <span className="company__type-text">Tip: </span>

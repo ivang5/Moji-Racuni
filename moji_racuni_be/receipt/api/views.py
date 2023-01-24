@@ -78,6 +78,36 @@ class ReceiptViewSet(viewsets.ViewSet):
         receipts_count_by_months = utils.get_receipts_sum_by_months(user, dateFrom, dateTo)
         return Response(receipts_count_by_months)
     
+    @action(detail=False, url_path='hours-spent', url_name='hours-spent')
+    def spent_by_hour(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        money_spent_by_hours = utils.get_money_spent_by_hours(user, dateFrom, dateTo)
+        return Response(money_spent_by_hours)
+    
+    @action(detail=False, url_path='weekdays-spent', url_name='weekdays-spent')
+    def spent_by_weekday(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        money_spent_by_days = utils.get_money_spent_by_weekdays(user, dateFrom, dateTo)
+        return Response(money_spent_by_days)
+    
+    @action(detail=False, url_path='months-spent', url_name='months-spent')
+    def spent_by_month(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        money_spent_by_months = utils.get_money_spent_by_months(user, dateFrom, dateTo)
+        return Response(money_spent_by_months)
+    
     @action(detail=False, url_path='filter', url_name='filter')
     def filter_receipts(self, request):
         user = request.user
@@ -177,6 +207,19 @@ class ItemViewSet(viewsets.ViewSet):
         try:
             item = utils.get_most_valuable_items(user, dateFrom, dateTo, int(limit))
             return Response(item)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=False, url_path='most-items', url_name='most-items')
+    def most_items(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        try:
+            most_items_on_receipt = utils.get_most_items_on_receipt(user, dateFrom, dateTo)
+            return Response(most_items_on_receipt)
         except ValueError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 

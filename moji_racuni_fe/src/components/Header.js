@@ -23,7 +23,7 @@ const Header = () => {
       case "/":
         setActivePage("Home");
         break;
-      case "/statistike":
+      case "/statistika":
         setActivePage("Stats");
         break;
       case "/racuni":
@@ -104,14 +104,14 @@ const Header = () => {
                           ? "nav__link nav__link--active"
                           : "nav__link"
                       }
-                      data-content="Statistike"
-                      to="/statistike"
+                      data-content="Statistika"
+                      to="/statistika"
                       onClick={() => {
                         setActivePage("Stats");
                         setDropdownOpen(false);
                       }}
                     >
-                      Statistike
+                      Statistika
                     </Link>
                   </li>
                   <li className="nav__list-item">
@@ -264,14 +264,14 @@ const Header = () => {
                       ? "nav__link nav__link--active"
                       : "nav__link"
                   }
-                  data-content="Statistike"
-                  to="/statistike"
+                  data-content="Statistika"
+                  to="/statistika"
                   onClick={() => {
                     setActivePage("Stats");
                     toggleMobileNav();
                   }}
                 >
-                  Statistike
+                  Statistika
                 </Link>
               </li>
               <li className="nav__list-item">
