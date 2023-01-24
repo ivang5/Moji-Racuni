@@ -126,6 +126,13 @@ const useApi = () => {
     return getResponse(response, data);
   };
 
+  const getMostSpentInADay = async (dateFrom, dateTo) => {
+    const { response, data } = await api(
+      `/api/receipts/most-spent-day?dateFrom=${dateFrom}&dateTo=${dateTo}`
+    );
+    return getResponse(response, data);
+  };
+
   const getCompanyVisits = async (tin) => {
     const { response, data } = await api(`/api/companies/${tin}/visits/`);
     return getResponse(response, data);
@@ -437,12 +444,14 @@ const useApi = () => {
     );
     const mostValuableItems = await getValuableItems(dateFrom, dateTo, limit);
     const mostItems = await getMostItems(dateFrom, dateTo);
+    const mostSpentInADay = await getMostSpentInADay(dateFrom, dateTo);
     const baseStats = {
       totalSpent: totalSpent,
       visitedCompaniesInfo: visitedCompaniesInfo,
       MostVisitedCompaniesInfo: MostVisitedCompaniesInfo,
       mostValuableItems: mostValuableItems,
       mostItems: mostItems,
+      mostSpentInADay: mostSpentInADay,
     };
     return baseStats;
   };

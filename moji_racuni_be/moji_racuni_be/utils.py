@@ -488,7 +488,7 @@ def get_total_spent(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT SUM(totalPrice), SUM(totalVat), count(*), max(totalPrice)  
+                SELECT SUM(totalPrice), SUM(totalVat), count(*), max(totalPrice), avg(totalPrice) 
                     FROM (SELECT * FROM receipt_receipt GROUP BY link) r
                     WHERE r.date BETWEEN %s AND %s
                 ''', 
@@ -498,7 +498,7 @@ def get_total_spent(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT SUM(totalPrice), SUM(totalVat), count(*), max(totalPrice) 
+                SELECT SUM(totalPrice), SUM(totalVat), count(*), max(totalPrice), avg(totalPrice) 
                     FROM receipt_receipt
                     WHERE user = %s AND date BETWEEN %s AND %s
                 ''', 
@@ -510,6 +510,7 @@ def get_total_spent(user, dateFrom, dateTo):
         "totalSpentVat": row[1],
         "receiptsCount": row[2],
         "mostSpentReceipt": row[3],
+        "avgSpentReceipt": row[4],
     }
     return total_spent_info
 
@@ -669,6 +670,41 @@ def get_money_spent_by_months(user, dateFrom, dateTo):
     receipts_by_months = fill_empty_months(receipts_by_months, "spent")
     return receipts_by_months
 
+def get_most_spent_in_a_day(user, dateFrom, dateTo):
+    if (user.role == "ADMIN"):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT max(innerQuery.sumPrice) FROM (
+                    SELECT sum(r.totalPrice) sumPrice, r.date foundDate FROM (
+                        SELECT * FROM receipt_receipt r GROUP BY link
+                        ) r
+                        WHERE r.date BETWEEN %s AND %s
+                        GROUP BY CAST(r.date AS DATE)
+                    ) innerQuery
+                ''', 
+                [dateFrom, dateTo])
+            row = cursor.fetchone()
+    else:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT max(innerQuery.sumPrice) FROM (
+                    SELECT sum(r.totalPrice) sumPrice, r.date foundDate FROM (
+                        SELECT * FROM receipt_receipt r GROUP BY link
+                        ) r
+                        WHERE r.user = %s AND r.date BETWEEN %s AND %s
+                        GROUP BY CAST(r.date AS DATE)
+                    ) innerQuery
+                ''', 
+                [user.id, dateFrom, dateTo])
+            row = cursor.fetchone()
+            
+    most_spent_in_a_day = {
+        "mostSpent": row[0],
+    }
+    return most_spent_in_a_day
+
 def get_most_valuable_items(user, dateFrom, dateTo, limit):
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:
@@ -703,7 +739,7 @@ def get_most_items_on_receipt(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT MAX(innerQuery.itemsCount) 
+                SELECT MAX(innerQuery.itemsCount), AVG(innerQuery.itemsCount) 
                     FROM (
                         (SELECT COUNT(*) AS itemsCount 
                             FROM receipt_item i 
@@ -720,7 +756,7 @@ def get_most_items_on_receipt(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT MAX(innerQuery.itemsCount) 
+                SELECT MAX(innerQuery.itemsCount), AVG(innerQuery.itemsCount) 
                     FROM (
                         (SELECT COUNT(*) AS itemsCount 
                             FROM receipt_item i 
@@ -736,6 +772,7 @@ def get_most_items_on_receipt(user, dateFrom, dateTo):
             
     most_items = {
         "mostItems": row[0],
+        "avgItems": row[1],
     }
     return most_items
 

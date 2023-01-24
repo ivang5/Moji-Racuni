@@ -7,6 +7,19 @@
   border-radius: 20px;
   box-shadow: 0 12px 24px rgb(34 51 49 / 13%);
 
+  @include respond-to(tablet) {
+    width: 450px;
+    align-self: center;
+    padding: 50px 70px !important;
+  }
+
+  & + .modal__options {
+    @include respond-to(tablet) {
+      width: 450px;
+      align-self: center;
+    }
+  }
+
   &-empty {
     display: flex;
     flex-direction: column;

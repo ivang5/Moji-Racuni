@@ -352,7 +352,7 @@ const Statistics = () => {
                       }}
                     />
                     <label htmlFor="check2">
-                      <span></span>Broj računa
+                      <span></span>Računi
                     </label>
                   </li>
                   <li className="statistics__search-checkbox">
@@ -405,9 +405,15 @@ const Statistics = () => {
                   </span>
                 </div>
                 <div className="statistics__panel-item">
-                  <h6 className="c-gray">Ukupno potrošeno na PDV</h6>
+                  <h6 className="c-gray">Potrošeno na PDV</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
                     {formatPrice(baseStats.totalSpent.totalSpentVat)} RSD
+                  </span>
+                </div>
+                <div className="statistics__panel-item">
+                  <h6 className="c-gray">Najviše potrošeno u jednom danu</h6>
+                  <span className="stat-panel__item-val fs-3 fw-bold">
+                    {formatPrice(baseStats.mostSpentInADay.mostSpent)} RSD
                   </span>
                 </div>
               </div>
@@ -475,6 +481,12 @@ const Statistics = () => {
                     {formatPrice(baseStats.totalSpent.mostSpentReceipt)} RSD
                   </span>
                 </div>
+                <div className="statistics__panel-item">
+                  <h6 className="c-gray">Prosečna vrednost računa</h6>
+                  <span className="stat-panel__item-val fs-3 fw-bold">
+                    {formatPrice(baseStats.totalSpent.avgSpentReceipt)} RSD
+                  </span>
+                </div>
               </div>
             ) : (
               <div className="statistics__panel__empty">
@@ -528,6 +540,12 @@ const Statistics = () => {
           <>
             {baseStats.totalSpent ? (
               <div className="statistics__panel">
+                <div className="statistics__panel-item">
+                  <h6 className="c-gray">Najposećenije preduzeće</h6>
+                  <span className="stat-panel__item-val fs-3 fw-bold">
+                    {baseStats.MostVisitedCompaniesInfo[0].companyName}
+                  </span>
+                </div>
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Broj posećenih preduzeća</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
@@ -613,6 +631,12 @@ const Statistics = () => {
                   <h6 className="c-gray">Najviše stavki na jednom računu</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
                     {baseStats.mostItems.mostItems}
+                  </span>
+                </div>
+                <div className="statistics__panel-item">
+                  <h6 className="c-gray">Prosečan broj stavki na računu</h6>
+                  <span className="stat-panel__item-val fs-3 fw-bold">
+                    {Math.round(baseStats.mostItems.avgItems)}
                   </span>
                 </div>
               </div>

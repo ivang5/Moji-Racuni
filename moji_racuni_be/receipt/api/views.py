@@ -48,6 +48,16 @@ class ReceiptViewSet(viewsets.ViewSet):
         total_spent_info = utils.get_total_spent(user, dateFrom, dateTo)
         return Response(total_spent_info)
     
+    @action(detail=False, url_path='most-spent-day', url_name='most-spent-day')
+    def most_spent_in_a_day(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        if (not dateFrom or not dateTo):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        most_spent_day = utils.get_most_spent_in_a_day(user, dateFrom, dateTo)
+        return Response(most_spent_day)
+    
     @action(detail=False, url_path='hours-count', url_name='hours-count')
     def receipts_by_hour(self, request):
         user = request.user
