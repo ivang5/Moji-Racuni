@@ -401,19 +401,28 @@ const Statistics = () => {
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Ukupno potrošeno</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {formatPrice(baseStats.totalSpent.totalSpent)} RSD
+                    {baseStats.totalSpent.totalSpent
+                      ? formatPrice(baseStats.totalSpent.totalSpent)
+                      : 0}{" "}
+                    RSD
                   </span>
                 </div>
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Potrošeno na PDV</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {formatPrice(baseStats.totalSpent.totalSpentVat)} RSD
+                    {baseStats.totalSpent.totalSpentVat
+                      ? formatPrice(baseStats.totalSpent.totalSpentVat)
+                      : 0}{" "}
+                    RSD
                   </span>
                 </div>
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Najviše potrošeno u jednom danu</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {formatPrice(baseStats.mostSpentInADay.mostSpent)} RSD
+                    {baseStats.totalSpent.mostSpent
+                      ? formatPrice(baseStats.mostSpentInADay.mostSpent)
+                      : 0}{" "}
+                    RSD
                   </span>
                 </div>
               </div>
@@ -478,13 +487,19 @@ const Statistics = () => {
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Najveći račun</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {formatPrice(baseStats.totalSpent.mostSpentReceipt)} RSD
+                    {baseStats.totalSpent.mostSpentReceipt
+                      ? formatPrice(baseStats.totalSpent.mostSpentReceipt)
+                      : 0}{" "}
+                    RSD
                   </span>
                 </div>
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Prosečna vrednost računa</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {formatPrice(baseStats.totalSpent.avgSpentReceipt)} RSD
+                    {baseStats.totalSpent.avgSpentReceipt
+                      ? formatPrice(baseStats.totalSpent.avgSpentReceipt)
+                      : 0}{" "}
+                    RSD
                   </span>
                 </div>
               </div>
@@ -538,12 +553,14 @@ const Statistics = () => {
         )}
         {showCompanies && (
           <>
-            {baseStats.totalSpent ? (
+            {baseStats.visitedCompaniesInfo ? (
               <div className="statistics__panel">
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Najposećenije preduzeće</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {baseStats.MostVisitedCompaniesInfo[0].companyName}
+                    {baseStats.MostVisitedCompaniesInfo[0]
+                      ? baseStats.MostVisitedCompaniesInfo[0].companyName
+                      : "Nedovoljno podataka"}
                   </span>
                 </div>
                 <div className="statistics__panel-item">
@@ -619,18 +636,22 @@ const Statistics = () => {
         )}
         {showItems && (
           <>
-            {baseStats.totalSpent ? (
+            {baseStats.mostItems ? (
               <div className="statistics__panel">
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Najskuplja stavka</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {baseStats.mostValuableItems[0].name}
+                    {baseStats.mostValuableItems[0]
+                      ? baseStats.mostValuableItems[0].name
+                      : "Nedovoljno podataka"}
                   </span>
                 </div>
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Najviše stavki na jednom računu</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {baseStats.mostItems.mostItems}
+                    {baseStats.mostItems.mostItems
+                      ? baseStats.mostItems.mostItems
+                      : 0}
                   </span>
                 </div>
                 <div className="statistics__panel-item">
