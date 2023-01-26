@@ -226,7 +226,7 @@ const Home = () => {
             ) : (
               <>
                 {lastReceiptInfo.receipt ? (
-                  <Receipt receiptInfo={lastReceiptInfo} />
+                  <Receipt receiptInfo={lastReceiptInfo} fullWidth={true} />
                 ) : (
                   <div className="receipt-empty">
                     <h3 className="pb-2">Nije pronađen nijedan račun...</h3>

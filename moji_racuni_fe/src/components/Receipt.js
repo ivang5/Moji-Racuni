@@ -6,9 +6,9 @@ import {
   twoDecimalNum,
 } from "../utils/utils";
 
-const Receipt = ({ receiptInfo }) => {
+const Receipt = ({ receiptInfo, fullWidth }) => {
   return (
-    <div className="receipt">
+    <div className={`receipt${fullWidth ? " receipt--full-width" : ""}`}>
       <h4 className="receipt__title">Račun #{receiptInfo.receipt.id}</h4>
       <div className="receipt__body">
         <h5 className="pt-1 t-center">

@@ -20,6 +20,12 @@
     }
   }
 
+  &--full-width {
+    @include respond-to(tablet) {
+      width: unset;
+    }
+  }
+
   &-empty {
     display: flex;
     flex-direction: column;
