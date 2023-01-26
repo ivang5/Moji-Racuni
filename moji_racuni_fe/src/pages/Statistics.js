@@ -419,7 +419,7 @@ const Statistics = () => {
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Najviše potrošeno u jednom danu</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {baseStats.totalSpent.mostSpent
+                    {baseStats.mostSpentInADay.mostSpent
                       ? formatPrice(baseStats.mostSpentInADay.mostSpent)
                       : 0}{" "}
                     RSD

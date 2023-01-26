@@ -741,14 +741,13 @@ def get_most_items_on_receipt(user, dateFrom, dateTo):
                 '''
                 SELECT MAX(innerQuery.itemsCount), AVG(innerQuery.itemsCount) 
                     FROM (
-                        (SELECT COUNT(*) AS itemsCount 
+                        SELECT COUNT(*) AS itemsCount 
                             FROM receipt_item i 
                             JOIN receipt_receipt r ON i.receipt = r.id 
                             WHERE r.date BETWEEN %s AND %s
                             GROUP BY i.receipt
                         ) 
                     innerQuery
-                )
                 ''', 
                 [dateFrom, dateTo])
             row = cursor.fetchone()
@@ -758,14 +757,13 @@ def get_most_items_on_receipt(user, dateFrom, dateTo):
                 '''
                 SELECT MAX(innerQuery.itemsCount), AVG(innerQuery.itemsCount) 
                     FROM (
-                        (SELECT COUNT(*) AS itemsCount 
+                        SELECT COUNT(*) AS itemsCount 
                             FROM receipt_item i 
                             JOIN receipt_receipt r ON i.receipt = r.id 
                             WHERE r.user = %s AND r.date BETWEEN %s AND %s
                             GROUP BY i.receipt
                         ) 
                     innerQuery
-                )
                 ''', 
                 [user.id, dateFrom, dateTo])
             row = cursor.fetchone()
