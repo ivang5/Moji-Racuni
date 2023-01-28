@@ -26,16 +26,16 @@ const Header = () => {
       case "/statistika":
         setActivePage("Stats");
         break;
-      case "/racuni":
+      case currentPath.startsWith("/racuni") ? currentPath : "":
         setActivePage("Receipts");
         break;
-      case "/preduzeca":
+      case currentPath.startsWith("/preduzeca") ? currentPath : "":
         setActivePage("Companies");
         break;
-      case "/korisnici":
+      case currentPath.startsWith("/korisnici") ? currentPath : "":
         setActivePage("Users");
         break;
-      case "/prijave":
+      case currentPath.startsWith("/prijave") ? currentPath : "":
         user.role === "REGULAR"
           ? setActivePage("Profile")
           : setActivePage("Reports");
