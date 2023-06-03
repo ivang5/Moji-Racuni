@@ -6,7 +6,7 @@ from account.models import User, Admin
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'password', 'first_name', 'last_name', 'email', 'role', 'date_joined', 'is_active']
+        fields = ['id', 'username', 'password', 'email', 'role', 'date_joined', 'is_active']
         extra_kwargs = {'password': {
             'write_only':True,
             'required': True
@@ -19,4 +19,4 @@ class UserSerializer(ModelSerializer):
 class AdminSerializer(ModelSerializer):
     class Meta:
         model = Admin
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'role', 'date_joined', 'is_active']
+        fields = ['id', 'username', 'email', 'role', 'date_joined', 'is_active']

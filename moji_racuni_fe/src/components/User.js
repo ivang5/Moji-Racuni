@@ -23,13 +23,6 @@ const User = ({ userInfo }) => {
           Korisničko ime: <span className="fw-bold">{userInfo.username}</span>
         </div>
         <div className="user__info">
-          Ime: <span className="fw-bold capitalize">{userInfo.first_name}</span>
-        </div>
-        <div className="user__info">
-          Prezime:{" "}
-          <span className="fw-bold capitalize">{userInfo.last_name}</span>
-        </div>
-        <div className="user__info">
           Email: <span className="fw-bold">{userInfo.email}</span>
         </div>
       </div>

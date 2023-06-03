@@ -239,15 +239,13 @@ const useApi = () => {
   const filterUsers = async (
     id,
     username,
-    firstname,
-    lastname,
     email,
     orderBy,
     ascendingOrder,
     page
   ) => {
     const { response, data } = await api(
-      `/api/users/filter/?id=${id}&username=${username}&firstname=${firstname}&lastname=${lastname}&email=${email}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
+      `/api/users/filter/?id=${id}&username=${username}&email=${email}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`
     );
     return getResponse(response, data);
   };

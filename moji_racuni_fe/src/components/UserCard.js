@@ -1,14 +1,6 @@
 import React from "react";
 
-const UserCard = ({
-  id,
-  username,
-  firstname,
-  lastname,
-  email,
-  active,
-  openModal,
-}) => {
+const UserCard = ({ id, username, email, active, openModal }) => {
   return (
     <div
       className={active ? "user-card" : "user-card user-card--blocked"}
@@ -29,9 +21,6 @@ const UserCard = ({
         </span>
       </div>
       <div className="user-card__body">
-        <span className="user-card__name">
-          {firstname} {lastname}
-        </span>
         <h6 className="user-card__email">{email}</h6>
       </div>
     </div>

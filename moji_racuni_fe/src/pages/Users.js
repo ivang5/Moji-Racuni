@@ -30,8 +30,6 @@ const Users = () => {
   const [searchObj, setSearchObj] = useState({
     id: "%",
     username: "%",
-    firstname: "%",
-    lastname: "%",
     email: "%",
   });
   const sortByOptions = ["ID", "Status", "Kor. ime", "Ime", "Prezime", "Email"];
@@ -82,8 +80,6 @@ const Users = () => {
     e.preventDefault();
     let id = "%";
     let username = "%";
-    let firstname = "%";
-    let lastname = "%";
     let email = "%";
     let orderBy = getUserOrderCode(sortBy);
     const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
@@ -93,12 +89,6 @@ const Users = () => {
     }
     if (e.target.username.value.trim() !== "") {
       username = e.target.username.value.trim();
-    }
-    if (e.target.firstname !== "") {
-      firstname = e.target.firstname.value.trim();
-    }
-    if (e.target.lastname.value.trim() !== "") {
-      lastname = e.target.lastname.value.trim();
     }
     if (e.target.email.value.trim() !== "") {
       email = e.target.email.value.trim();
@@ -110,8 +100,6 @@ const Users = () => {
     const users = await api.filterUsers(
       id,
       username,
-      firstname,
-      lastname,
       email,
       orderBy,
       ascendingOrder,
@@ -121,8 +109,6 @@ const Users = () => {
     setSearchObj({
       id: id,
       username: username,
-      firstname: firstname,
-      lastname: lastname,
       email: email,
     });
 
@@ -143,8 +129,6 @@ const Users = () => {
     const users = await api.filterUsers(
       searchObj.id,
       searchObj.username,
-      searchObj.firstname,
-      searchObj.lastname,
       searchObj.email,
       orderBy,
       ascendingOrder,
@@ -239,18 +223,6 @@ const Users = () => {
                     type="text"
                     inline={true}
                   />
-                  <FormGroup
-                    name="firstname"
-                    text="Ime"
-                    type="text"
-                    inline={true}
-                  />
-                  <FormGroup
-                    name="lastname"
-                    text="Prezime"
-                    type="text"
-                    inline={true}
-                  />
                 </div>
                 <button
                   className="btn btn-primary btn-primary--black btn-round mb-2"
@@ -300,8 +272,6 @@ const Users = () => {
                       key={user.id}
                       id={user.id}
                       username={user.username}
-                      firstname={user.first_name}
-                      lastname={user.last_name}
                       email={user.email}
                       active={user.is_active}
                       openModal={openModal}

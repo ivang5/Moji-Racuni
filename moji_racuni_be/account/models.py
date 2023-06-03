@@ -12,7 +12,7 @@ class User(AbstractUser):
     
     role = models.CharField(max_length=50, choices=Role.choices)
     
-    REQUIRED_FIELDS=["first_name", "last_name", "email"]
+    REQUIRED_FIELDS=["email"]
     
     def save(self, *args, **kwargs):
         if not self.pk:

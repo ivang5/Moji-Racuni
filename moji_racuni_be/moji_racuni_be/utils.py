@@ -1033,8 +1033,8 @@ def filter_companies(user, name, tin, type, orderBy, ascendingOrder):
             filtered_reports = dictfetchall(cursor)
     return filtered_reports
 
-def filter_users(id, username, first_name, last_name, email, orderBy, ascendingOrder):
+def filter_users(id, username, email, orderBy, ascendingOrder):
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM account_user WHERE id LIKE "%{id}%" AND username LIKE "%{username}%" AND first_name LIKE "%{first_name}%" AND last_name LIKE "%{last_name}%" AND email LIKE "%{email}%" AND role = "REGULAR" ORDER BY {orderBy} {ascendingOrder}')
+        cursor.execute(f'SELECT * FROM account_user WHERE id LIKE "%{id}%" AND username LIKE "%{username}%" AND email LIKE "%{email}%" AND role = "REGULAR" ORDER BY {orderBy} {ascendingOrder}')
         filtered_users = dictfetchall(cursor)
     return filtered_users

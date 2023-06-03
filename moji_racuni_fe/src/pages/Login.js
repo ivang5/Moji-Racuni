@@ -13,8 +13,6 @@ const Login = () => {
     server: "",
   });
   const [registrationValid, setRegistrationValid] = useState({
-    firstName: "",
-    lastName: "",
     email: "",
     username: "",
     password: "",
@@ -68,36 +66,12 @@ const Login = () => {
     e.preventDefault();
     let valid = true;
     let validationObj = {
-      firstName: "",
-      lastName: "",
       email: "",
       username: "",
       password: "",
       passwordRepeat: "",
       server: "",
     };
-
-    if (e.target.regName.value.trim() === "") {
-      validationObj.firstName = "Ime ne može biti prazno!";
-      valid = false;
-    } else if (e.target.regName.value.trim().length < 2) {
-      validationObj.firstName = "Ime je previše kratko!";
-      valid = false;
-    } else if (!isNaN(e.target.regName.value.trim())) {
-      validationObj.firstName = "Ime mora biti tekstualnog tipa!";
-      valid = false;
-    }
-
-    if (e.target.regLastname.value.trim() === "") {
-      validationObj.lastName = "Prezime ne može biti prazno!";
-      valid = false;
-    } else if (e.target.regLastname.value.trim().length < 2) {
-      validationObj.lastName = "Prezime je previše kratko!";
-      valid = false;
-    } else if (!isNaN(e.target.regName.value.trim())) {
-      validationObj.lastName = "Prezime mora biti tekstualnog tipa!";
-      valid = false;
-    }
 
     if (e.target.regEmail.value.trim() === "") {
       validationObj.email = "Email ne može biti prazan!";
@@ -113,7 +87,7 @@ const Login = () => {
     } else if (e.target.regUsername.value.trim().length < 3) {
       validationObj.username = "Korisničko ime je previše kratko!";
       valid = false;
-    } else if (!isNaN(e.target.regName.value.trim())) {
+    } else if (!isNaN(e.target.regUsername.value.trim())) {
       validationObj.username =
         "Korisničko ime mora sadržati barem jedno slovo!";
       valid = false;
@@ -246,18 +220,6 @@ const Login = () => {
             </div>
             <form className="form" onSubmit={initiateRegistration}>
               <div className="form__group-wrapper">
-                <FormGroup
-                  name="regName"
-                  text="Ime"
-                  type="text"
-                  error={registrationValid.firstName}
-                />
-                <FormGroup
-                  name="regLastname"
-                  text="Prezime"
-                  type="text"
-                  error={registrationValid.lastName}
-                />
                 <FormGroup
                   name="regEmail"
                   text="Email"

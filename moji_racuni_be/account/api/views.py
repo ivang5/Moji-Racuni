@@ -42,14 +42,12 @@ class UserViewSet(viewsets.ViewSet):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         id = self.request.query_params.get('id')
         username = self.request.query_params.get('username')
-        first_name = self.request.query_params.get('firstname')
-        last_name = self.request.query_params.get('lastname')
         email = self.request.query_params.get('email')
         orderBy = self.request.query_params.get('orderBy')
         ascendingOrder = self.request.query_params.get('ascendingOrder')
-        if (not id or not username or not first_name or not last_name or not email or not orderBy or not ascendingOrder):
+        if (not id or not username or not email or not orderBy or not ascendingOrder):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        filtered_users = utils.filter_users(id, username, first_name, last_name, email, orderBy, ascendingOrder)
+        filtered_users = utils.filter_users(id, username, email, orderBy, ascendingOrder)
         p = Paginator(filtered_users, 12)
         try:
             page = p.page(self.request.query_params.get('page'))
@@ -120,8 +118,6 @@ class UserViewSet(viewsets.ViewSet):
                         return Response(status=status.HTTP_409_CONFLICT)
             user = get_object_or_404(User, pk=pk)
             user.username = request.data["username"]
-            user.first_name = request.data["first_name"]
-            user.last_name = request.data["last_name"]
             user.email = request.data["email"]
             if (request.user.role == "ADMIN"):
                 user.is_active = request.data["is_active"]

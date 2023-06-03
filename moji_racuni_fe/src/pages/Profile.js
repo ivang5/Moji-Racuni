@@ -16,8 +16,6 @@ const Profile = () => {
   const [toast, setToast] = useState({});
   const [toastOpen, setToastOpen] = useState(false);
   const [formValid, setFormValid] = useState({
-    name: "",
-    lastname: "",
     username: "",
     email: "",
   });
@@ -41,33 +39,9 @@ const Profile = () => {
     e.preventDefault();
     let valid = true;
     let validationObj = {
-      name: "",
-      lastname: "",
       username: "",
       email: "",
     };
-
-    if (e.target.name.value.trim() === "") {
-      validationObj.name = "Ime ne može biti prazno!";
-      valid = false;
-    } else if (e.target.name.value.trim().length < 2) {
-      validationObj.name = "Ime je previše kratko!";
-      valid = false;
-    } else if (!isNaN(e.target.name.value.trim())) {
-      validationObj.name = "Ime mora biti tekstualnog tipa!";
-      valid = false;
-    }
-
-    if (e.target.lastname.value.trim() === "") {
-      validationObj.lastname = "Prezime ne može biti prazno!";
-      valid = false;
-    } else if (e.target.lastname.value.trim().length < 2) {
-      validationObj.lastname = "Prezime je previše kratko!";
-      valid = false;
-    } else if (!isNaN(e.target.lastname.value.trim())) {
-      validationObj.lastname = "Prezime mora biti tekstualnog tipa!";
-      valid = false;
-    }
 
     if (e.target.username.value.trim() === "") {
       validationObj.username = "Korisničko ime ne može biti prazno!";
@@ -95,8 +69,6 @@ const Profile = () => {
     }
 
     const userInfo = {
-      first_name: e.target.name.value,
-      last_name: e.target.lastname.value,
       username: e.target.username.value,
       email: e.target.email.value,
     };
@@ -195,18 +167,6 @@ const Profile = () => {
                   </span>
                 </h5>
                 <h5 className="profile__info-title">
-                  Ime:{" "}
-                  <span className="profile__info-value">
-                    {userInfo.first_name}
-                  </span>
-                </h5>
-                <h5 className="profile__info-title">
-                  Prezime:{" "}
-                  <span className="profile__info-value">
-                    {userInfo.last_name}
-                  </span>
-                </h5>
-                <h5 className="profile__info-title">
                   Email:{" "}
                   <span className="profile__info-value">{userInfo.email}</span>
                 </h5>
@@ -244,20 +204,6 @@ const Profile = () => {
             <div className="modal">
               <form className="profile__form" onSubmit={saveChanges}>
                 <h3 className="profile__form-title">Izmena informacija</h3>
-                <FormGroup
-                  name="name"
-                  text="Ime"
-                  type="text"
-                  error={formValid.name}
-                  defaultVal={userInfo.first_name}
-                />
-                <FormGroup
-                  name="lastname"
-                  text="Prezime"
-                  type="text"
-                  error={formValid.lastname}
-                  defaultVal={userInfo.last_name}
-                />
                 <FormGroup
                   name="username"
                   text="Korisničko ime"
