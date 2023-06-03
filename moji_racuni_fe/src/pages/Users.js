@@ -76,6 +76,31 @@ const Users = () => {
     }, 800);
   }, [users]);
 
+  useEffect(() => {
+    window.addEventListener("click", handleModalClick);
+    window.addEventListener("keydown", handleModalKeydown);
+
+    return () => {
+      window.removeEventListener("click", handleModalClick);
+      window.removeEventListener("keydown", handleModalKeydown);
+    };
+  }, []);
+
+  const handleModalClick = (e) => {
+    if (
+      e.target.className === "modal" ||
+      e.target.className === "modal__content"
+    ) {
+      resetModal();
+    }
+  };
+
+  const handleModalKeydown = (e) => {
+    if (e.key === "Escape") {
+      resetModal();
+    }
+  };
+
   const applyFilters = async (e) => {
     e.preventDefault();
     let id = "%";
@@ -151,6 +176,12 @@ const Users = () => {
     if (user) {
       setModalUser(user);
     }
+  };
+
+  const resetModal = () => {
+    setModalOpen(false);
+    setModalUser({});
+    setBlockingOpen(false);
   };
 
   const toggleUserBlock = async (id) => {
@@ -347,9 +378,7 @@ const Users = () => {
           <span
             className="close"
             onClick={() => {
-              setModalOpen(false);
-              setModalUser({});
-              setBlockingOpen(false);
+              resetModal();
             }}
           ></span>
         </div>

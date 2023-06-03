@@ -30,6 +30,28 @@ const Profile = () => {
     getUserInfo();
   }, []);
 
+  useEffect(() => {
+    window.addEventListener("click", handleModalClick);
+    window.addEventListener("keydown", handleModalKeydown);
+
+    return () => {
+      window.removeEventListener("click", handleModalClick);
+      window.removeEventListener("keydown", handleModalKeydown);
+    };
+  }, []);
+
+  const handleModalClick = (e) => {
+    if (e.target.className === "modal") {
+      resetModal();
+    }
+  };
+
+  const handleModalKeydown = (e) => {
+    if (e.key === "Escape") {
+      resetModal();
+    }
+  };
+
   const getUserInfo = async () => {
     const userInfo = await api.getUser(user.user_id);
     setUserInfo(userInfo);
@@ -144,6 +166,11 @@ const Profile = () => {
 
   const closeToast = () => {
     setToastOpen(false);
+  };
+
+  const resetModal = () => {
+    setModalOpen(false);
+    setModalOpenPass(false);
   };
 
   return (

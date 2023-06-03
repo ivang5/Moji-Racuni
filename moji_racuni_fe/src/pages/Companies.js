@@ -91,6 +91,31 @@ const Companies = () => {
     }, 800);
   }, [companies]);
 
+  useEffect(() => {
+    window.addEventListener("click", handleModalClick);
+    window.addEventListener("keydown", handleModalKeydown);
+
+    return () => {
+      window.removeEventListener("click", handleModalClick);
+      window.removeEventListener("keydown", handleModalKeydown);
+    };
+  }, []);
+
+  const handleModalClick = (e) => {
+    if (
+      e.target.className === "modal" ||
+      e.target.className === "modal__content"
+    ) {
+      resetModal();
+    }
+  };
+
+  const handleModalKeydown = (e) => {
+    if (e.key === "Escape") {
+      resetModal();
+    }
+  };
+
   const applyFilters = async (e) => {
     e.preventDefault();
     let name = "%";
@@ -171,6 +196,11 @@ const Companies = () => {
     if (company) {
       setModalCompany(company);
     }
+  };
+
+  const resetModal = () => {
+    setModalOpen(false);
+    setModalCompany({});
   };
 
   const createCompanyType = async (e) => {
@@ -449,8 +479,7 @@ const Companies = () => {
           <span
             className="close"
             onClick={() => {
-              setModalOpen(false);
-              setModalCompany({});
+              resetModal();
             }}
           ></span>
         </div>

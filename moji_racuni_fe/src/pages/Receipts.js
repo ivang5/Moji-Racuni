@@ -90,6 +90,31 @@ const Receipts = () => {
     }, 800);
   }, [receipts]);
 
+  useEffect(() => {
+    window.addEventListener("click", handleModalClick);
+    window.addEventListener("keydown", handleModalKeydown);
+
+    return () => {
+      window.removeEventListener("click", handleModalClick);
+      window.removeEventListener("keydown", handleModalKeydown);
+    };
+  }, []);
+
+  const handleModalClick = (e) => {
+    if (
+      e.target.className === "modal" ||
+      e.target.className === "modal__content"
+    ) {
+      resetModal();
+    }
+  };
+
+  const handleModalKeydown = (e) => {
+    if (e.key === "Escape") {
+      resetModal();
+    }
+  };
+
   const applyFilters = async (e) => {
     e.preventDefault();
     const dateFrom = dateBEFormatter(fromDate);
@@ -187,6 +212,14 @@ const Receipts = () => {
     if (receipt) {
       setModalReceipt(receipt);
     }
+  };
+
+  const resetModal = () => {
+    setModalOpen(false);
+    setModalReceipt({});
+    setReportOpen(false);
+    setDeletionOpen(false);
+    setReportValidation("");
   };
 
   const sendReport = async (e) => {
@@ -483,11 +516,7 @@ const Receipts = () => {
           <span
             className="close"
             onClick={() => {
-              setModalOpen(false);
-              setModalReceipt({});
-              setReportOpen(false);
-              setDeletionOpen(false);
-              setReportValidation("");
+              resetModal();
             }}
           ></span>
         </div>

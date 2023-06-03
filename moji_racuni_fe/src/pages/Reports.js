@@ -88,6 +88,31 @@ const Reports = () => {
     }, 800);
   }, [reports]);
 
+  useEffect(() => {
+    window.addEventListener("click", handleModalClick);
+    window.addEventListener("keydown", handleModalKeydown);
+
+    return () => {
+      window.removeEventListener("click", handleModalClick);
+      window.removeEventListener("keydown", handleModalKeydown);
+    };
+  }, []);
+
+  const handleModalClick = (e) => {
+    if (
+      e.target.className === "modal" ||
+      e.target.className === "modal__content"
+    ) {
+      resetModal();
+    }
+  };
+
+  const handleModalKeydown = (e) => {
+    if (e.key === "Escape") {
+      resetModal();
+    }
+  };
+
   const applyFilters = async (e) => {
     e.preventDefault();
     const dateFrom = dateBEFormatter(fromDate);
@@ -182,6 +207,12 @@ const Reports = () => {
       }
       setModalReport(report);
     }
+  };
+
+  const resetModal = () => {
+    setModalOpen(false);
+    setModalReport({});
+    setDeletionOpen(false);
   };
 
   const sendResponse = async (e) => {
@@ -492,9 +523,7 @@ const Reports = () => {
           <span
             className="close"
             onClick={() => {
-              setModalOpen(false);
-              setModalReport({});
-              setDeletionOpen(false);
+              resetModal();
             }}
           ></span>
         </div>
