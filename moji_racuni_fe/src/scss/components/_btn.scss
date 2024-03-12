@@ -123,9 +123,18 @@
   }
 
   &-spinner {
-    height: 48px;
-    width: 140px;
+    height: 46px;
+    width: 129px;
     cursor: default;
+
+    @include respond-to(tablet) {
+      height: 48px;
+      width: 140px;
+    }
+
+    @include respond-to(laptop) {
+      text-align: justify;
+    }
 
     &:hover {
       background-color: $c-green-4;
