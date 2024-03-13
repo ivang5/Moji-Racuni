@@ -20,6 +20,8 @@ import {
 } from "../utils/utils";
 import { useEffect } from "react";
 import Chart from "../components/Chart";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import Review from "../components/Review";
 
 const Statistics = () => {
   const [showSpendings, setShowSpendings] = useState(true);
@@ -43,10 +45,12 @@ const Statistics = () => {
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(getTomorrow());
   const [searchOpen, setSearchOpen] = useState(false);
+  const [receiptPlots, setReceiptPlots] = useState({});
   const api = useApi();
 
   useEffect(() => {
     applyFilters();
+    getReceiptPlots();
   }, [fromDate, toDate]);
 
   useEffect(() => {
@@ -253,6 +257,15 @@ const Statistics = () => {
     setMostValuableItems(mostValuableItemsFormatted);
   };
 
+  const getReceiptPlots = async () => {
+    const plots = await api.getReceiptPlots(
+      dateBEFormatter(fromDate),
+      dateBEFormatter(toDate),
+      10
+    );
+    setReceiptPlots(plots);
+  };
+
   const applyFilters = async () => {
     setStatsLoading(true);
     getBaseStats();
@@ -391,6 +404,32 @@ const Statistics = () => {
                   </li>
                 </ul>
               </div>
+              <div className="statistics__btn-wrapper">
+                <PDFDownloadLink
+                  document={<Review receiptPlots={receiptPlots} />}
+                  fileName="File"
+                >
+                  {({ loading }) =>
+                    loading ? (
+                      <div className="btn btn-primary btn-round btn-spinner">
+                        <div className="spinner spinner--sm">
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                          <div></div>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        className="btn btn-primary btn-round"
+                        type="button"
+                      >
+                        Preuzmi PDF
+                      </button>
+                    )
+                  }
+                </PDFDownloadLink>
+              </div>
             </div>
           </div>
         </div>
@@ -439,6 +478,10 @@ const Statistics = () => {
             <h2 className="statistics__chart-wrapper-title mt-4">
               - Potrošnja
             </h2>
+            {/* <img
+              src={`data:image/png;base64,${receiptPlots.daily}`}
+              alt="Your Alt Text"
+            /> */}
             {spentByHour.length !== 0 ? (
               <div className="statistics__chart-wrapper mt-5">
                 <Chart

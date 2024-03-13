@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 
-export const BASE_URL = "http://{IPv4_Address}:8000";
+export const BASE_URL = "http://192.168.1.11:8000";
 
 export const dateFormatter = (date) => {
   return dayjs(date).format("DD/MM/YYYY");

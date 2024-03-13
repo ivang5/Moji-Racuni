@@ -78,7 +78,9 @@
 
       .statistics__search-fields {
         display: flex;
+        width: 100%;
         flex-direction: row;
+        justify-content: space-between;
         text-align: center;
 
         button {
@@ -191,6 +193,19 @@
         transform: rotateY(180deg);
         background: $c-green-3;
       }
+    }
+  }
+
+  &__btn-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+
+    @include respond-to(desktop) {
+      display: block;
+      width: unset;
+      margin-top: 0;
     }
   }
 

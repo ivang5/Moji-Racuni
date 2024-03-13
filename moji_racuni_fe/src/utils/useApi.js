@@ -121,14 +121,14 @@ const useApi = () => {
 
   const getTotalSpent = async (dateFrom, dateTo) => {
     const { response, data } = await api(
-      `/api/receipts/total-spent?dateFrom=${dateFrom}&dateTo=${dateTo}`
+      `/api/receipts/total-spent/?dateFrom=${dateFrom}&dateTo=${dateTo}`
     );
     return getResponse(response, data);
   };
 
   const getMostSpentInADay = async (dateFrom, dateTo) => {
     const { response, data } = await api(
-      `/api/receipts/most-spent-day?dateFrom=${dateFrom}&dateTo=${dateTo}`
+      `/api/receipts/most-spent-day/?dateFrom=${dateFrom}&dateTo=${dateTo}`
     );
     return getResponse(response, data);
   };
@@ -140,49 +140,56 @@ const useApi = () => {
 
   const getVisitedCompaniesInfo = async (dateFrom, dateTo) => {
     const { response, data } = await api(
-      `/api/companies/visited?dateFrom=${dateFrom}&dateTo=${dateTo}`
+      `/api/companies/visited/?dateFrom=${dateFrom}&dateTo=${dateTo}`
     );
     return getResponse(response, data);
   };
 
   const getValuableItems = async (dateFrom, dateTo, limit) => {
     const { response, data } = await api(
-      `/api/items/most-valuable?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
+      `/api/items/most-valuable/?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
     );
     return getResponse(response, data);
   };
 
   const getMostItems = async (dateFrom, dateTo) => {
     const { response, data } = await api(
-      `/api/items/most-items?dateFrom=${dateFrom}&dateTo=${dateTo}`
+      `/api/items/most-items/?dateFrom=${dateFrom}&dateTo=${dateTo}`
     );
     return getResponse(response, data);
   };
 
   const getMostSpentCompaniesInfo = async (dateFrom, dateTo, limit) => {
     const { response, data } = await api(
-      `/api/companies/most-spent?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
+      `/api/companies/most-spent/?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
     );
     return getResponse(response, data);
   };
 
   const getMostVisitedCompaniesInfo = async (dateFrom, dateTo, limit) => {
     const { response, data } = await api(
-      `/api/companies/most-visited?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
+      `/api/companies/most-visited/?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
     );
     return getResponse(response, data);
   };
 
   const getMostSpentTypesInfo = async (dateFrom, dateTo, limit) => {
     const { response, data } = await api(
-      `/api/company/types/most-spent?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
+      `/api/company/types/most-spent/?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
     );
     return getResponse(response, data);
   };
 
   const getMostVisitedTypesInfo = async (dateFrom, dateTo, limit) => {
     const { response, data } = await api(
-      `/api/company/types/most-visited?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
+      `/api/company/types/most-visited/?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
+    );
+    return getResponse(response, data);
+  };
+
+  const getReceiptPlots = async (dateFrom, dateTo, limit) => {
+    const { response, data } = await api(
+      `/api/receipts/plot/?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
     );
     return getResponse(response, data);
   };
@@ -502,6 +509,7 @@ const useApi = () => {
     getFullReceiptInfo,
     getFullCompanyInfo,
     getBaseStats,
+    getReceiptPlots: getReceiptPlots,
     filterReceipts,
     filterReports,
     filterCompanies,

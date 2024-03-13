@@ -1038,3 +1038,37 @@ def filter_users(id, username, email, orderBy, ascendingOrder):
         cursor.execute(f'SELECT * FROM account_user WHERE id LIKE "%{id}%" AND username LIKE "%{username}%" AND email LIKE "%{email}%" AND role = "REGULAR" ORDER BY {orderBy} {ascendingOrder}')
         filtered_users = dictfetchall(cursor)
     return filtered_users
+
+
+
+# ==========================================================
+#                   PLOT RELATED FUNCTIONS
+# ==========================================================
+
+def get_receipts_hours_info(receipts_by_hour):
+    hours = ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
+    counts = []
+    
+    for info in receipts_by_hour:
+        counts.append(info['count'])    
+    
+    return hours, counts
+
+def get_receipts_weekdays_info(receipts_by_weekday):
+    weekdays = ["Pon", "Uto", "Sre", "Čet", "Pet", "Sub", "Ned"]
+    counts = []
+    
+    for info in receipts_by_weekday:
+        counts.append(info['count'])    
+    
+    return weekdays, counts
+
+def get_receipts_months_info(receipts_by_month):
+    months = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Avg", "Sep", "Okt", "Nov", "Dec"]
+    counts = []
+    
+    for info in receipts_by_month:
+        counts.append(info['count'])    
+    
+    return months, counts
+    

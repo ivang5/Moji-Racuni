@@ -9,6 +9,13 @@ from django.shortcuts import get_object_or_404
 from .serializers import ReceiptSerializer, ItemSerializer, ReportSerializer
 from receipt.models import Receipt, Item, Report
 from moji_racuni_be import utils
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+import io
+import base64
+
 
 @permission_classes([IsAuthenticated])
 class ReceiptViewSet(viewsets.ViewSet):
@@ -144,6 +151,44 @@ class ReceiptViewSet(viewsets.ViewSet):
             "receipts": page.object_list
         }
         return Response(res)
+    
+    @action(detail=False, url_path='plot', url_name='plot')
+    def plot_test(self, request):
+        user = request.user
+        dateFrom = self.request.query_params.get('dateFrom')
+        dateTo = self.request.query_params.get('dateTo')
+        limit = self.request.query_params.get('limit')
+        if (not dateFrom or not dateTo or not limit):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        receipts_by_hour = utils.get_receipts_sum_by_hours(user, dateFrom, dateTo)
+        hours, hr_counts = utils.get_receipts_hours_info(receipts_by_hour)
+        receipts_by_weekday = utils.get_receipts_sum_by_weekdays(user, dateFrom, dateTo)
+        weekdays, wd_counts = utils.get_receipts_weekdays_info(receipts_by_weekday)
+        receipts_by_month = utils.get_receipts_sum_by_months(user, dateFrom, dateTo)
+        months, mo_counts = utils.get_receipts_months_info(receipts_by_month)
+
+        fig, ax = plt.subplots()
+        ax.bar(hours, hr_counts)
+        ax.set_title('Po satima')
+        fig.savefig("./receipts_by_hours.png", bbox_inches='tight')
+        fig, ax = plt.subplots()
+        ax.bar(weekdays, wd_counts)
+        ax.set_title('Po danima')
+        fig.savefig("./receipts_by_weekdays.png", bbox_inches='tight')
+        fig, ax = plt.subplots()
+        ax.bar(months, mo_counts)
+        ax.set_title('Po mesecima')
+        fig.savefig("./receipts_by_months.png", bbox_inches='tight')
+        
+        plot = {}
+        
+        with open("./receipts_by_hours.png", "rb") as img_file:
+            plot["hourly"] = base64.b64encode(img_file.read()).decode('utf-8')
+        with open("./receipts_by_weekdays.png", "rb") as img_file:
+            plot["daily"] = base64.b64encode(img_file.read()).decode('utf-8')
+        with open("./receipts_by_months.png", "rb") as img_file:
+            plot["monthly"] = base64.b64encode(img_file.read()).decode('utf-8')
+        return Response(plot)
 
     def create(self, request):
         user = request.user
