@@ -5,12 +5,34 @@ import {
   Document,
   StyleSheet,
   Image,
-  View,
+  Font,
 } from "@react-pdf/renderer";
+
+Font.register({
+  family: "Roboto",
+  fonts: [
+    {
+      src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf",
+      fontWeight: 300,
+    },
+    {
+      src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf",
+      fontWeight: 400,
+    },
+    {
+      src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-medium-webfont.ttf",
+      fontWeight: 500,
+    },
+    {
+      src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf",
+      fontWeight: 600,
+    },
+  ],
+});
 
 const styles = StyleSheet.create({
   page: {
-    backgroundColor: "#E4E4E4",
+    fontFamily: "Roboto",
   },
   container: {
     flexDirection: "row",
@@ -24,27 +46,23 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     width: "50%",
   },
+  title: {
+    marginLeft: 10,
+    marginBottom: 25,
+    paddingBottom: 2,
+    maxWidth: 127,
+    fontSize: 22,
+    borderBottomWidth: 2,
+    borderBottomColor: "#23c363",
+  },
 });
 
 const Review = ({ receiptPlots }) => {
-  console.log(receiptPlots);
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text>Section #1</Text>
-        <Text>Section #2</Text>
-        <View style={styles.container}>
-          <Image
-            src={`data:image/png;base64,${receiptPlots.daily}`}
-            style={styles.halfWidth}
-          />
-          <Image
-            src={`data:image/png;base64,${receiptPlots.monthly}`}
-            style={styles.halfWidth}
-          />
-        </View>
-        <Image src={`data:image/png;base64,${receiptPlots.hourly}`} />
+        <Text style={styles.title}>- Broj računa</Text>
+        <Image src={`data:image/png;base64,${receiptPlots.receipts}`} />
       </Page>
     </Document>
   );

@@ -9,11 +9,9 @@ from django.shortcuts import get_object_or_404
 from .serializers import ReceiptSerializer, ItemSerializer, ReportSerializer
 from receipt.models import Receipt, Item, Report
 from moji_racuni_be import utils
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
-import io
+import matplotlib.gridspec as gridspec
 import base64
 
 
@@ -167,27 +165,31 @@ class ReceiptViewSet(viewsets.ViewSet):
         receipts_by_month = utils.get_receipts_sum_by_months(user, dateFrom, dateTo)
         months, mo_counts = utils.get_receipts_months_info(receipts_by_month)
 
-        fig, ax = plt.subplots()
-        ax.bar(hours, hr_counts)
-        ax.set_title('Po satima')
-        fig.savefig("./receipts_by_hours.png", bbox_inches='tight')
-        fig, ax = plt.subplots()
-        ax.bar(weekdays, wd_counts)
-        ax.set_title('Po danima')
-        fig.savefig("./receipts_by_weekdays.png", bbox_inches='tight')
-        fig, ax = plt.subplots()
-        ax.bar(months, mo_counts)
-        ax.set_title('Po mesecima')
-        fig.savefig("./receipts_by_months.png", bbox_inches='tight')
+        mpl.rcParams["hatch.color"] = "#0cb44f"
+        mpl.rcParams["hatch.linewidth"] = 4
+        fig = plt.figure(figsize=(10, 8))
+        gs = gridspec.GridSpec(2, 5, height_ratios=[3, 4])
+        ax1 = fig.add_subplot(gs[0, 0:2])
+        ax1.bar(weekdays, wd_counts, hatch="//", color="#23c363", zorder=2)
+        ax1.set_title("Po danima", fontsize=14)
+        ax2 = fig.add_subplot(gs[0, 2:])
+        ax2.bar(months, mo_counts, hatch="//", color="#23c363", zorder=2)
+        ax2.set_title("Po mesecima", fontsize=14)
+        ax3 = fig.add_subplot(gs[1, :])
+        ax3.bar(hours, hr_counts, hatch="//", color="#23c363", zorder=2)
+        ax3.set_title("Po satima", fontsize=14)
+        ax3.set_xlim(-0.5, len(hours) - 0.5)
+        for ax in fig.get_axes():
+            ax.tick_params(axis="both", which="both", labelsize=7)
+            for tick in ax.get_yticks():
+                ax.axhline(tick, color="#dddddd", linestyle="-", linewidth=0.5, zorder=1)
+        plt.subplots_adjust(hspace=0.3)
+        fig.savefig("./receipts_stat.png", bbox_inches="tight", dpi=200)
         
         plot = {}
         
-        with open("./receipts_by_hours.png", "rb") as img_file:
-            plot["hourly"] = base64.b64encode(img_file.read()).decode('utf-8')
-        with open("./receipts_by_weekdays.png", "rb") as img_file:
-            plot["daily"] = base64.b64encode(img_file.read()).decode('utf-8')
-        with open("./receipts_by_months.png", "rb") as img_file:
-            plot["monthly"] = base64.b64encode(img_file.read()).decode('utf-8')
+        with open("./receipts_stat.png", "rb") as img_file:
+            plot["receipts"] = base64.b64encode(img_file.read()).decode('utf-8')
         return Response(plot)
 
     def create(self, request):
