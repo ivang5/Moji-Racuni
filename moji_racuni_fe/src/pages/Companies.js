@@ -662,7 +662,10 @@ const Companies = () => {
                         </button>
                         <button
                           className="btn btn-primary btn-primary--red btn-round"
-                          onClick={deleteCompanyType}
+                          onClick={() => {
+                            deleteCompanyType();
+                            setTypeDeletionOpen(false);
+                          }}
                         >
                           Potvrdi
                         </button>
