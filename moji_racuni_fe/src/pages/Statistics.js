@@ -22,6 +22,7 @@ import { useEffect } from "react";
 import Chart from "../components/Chart";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import Review from "../components/Review";
+import InfoIcon from "../icons/info-icon.png";
 
 const Statistics = () => {
   const [showSpendings, setShowSpendings] = useState(true);
@@ -46,11 +47,13 @@ const Statistics = () => {
   const [toDate, setToDate] = useState(getTomorrow());
   const [searchOpen, setSearchOpen] = useState(false);
   const [receiptPlots, setReceiptPlots] = useState({});
+  const [plotsLoading, setPlotsLoading] = useState(true);
   const api = useApi();
 
   useEffect(() => {
     applyFilters();
     getReceiptPlots();
+    setPlotsLoading(true);
   }, [fromDate, toDate]);
 
   useEffect(() => {
@@ -264,6 +267,7 @@ const Statistics = () => {
       10
     );
     setReceiptPlots(plots);
+    await new Promise(() => setTimeout(setPlotsLoading(false), 500));
   };
 
   const applyFilters = async () => {
@@ -405,30 +409,50 @@ const Statistics = () => {
                 </ul>
               </div>
               <div className="statistics__btn-wrapper">
-                <PDFDownloadLink
-                  document={<Review receiptPlots={receiptPlots} />}
-                  fileName="File"
-                >
-                  {({ loading }) =>
-                    loading ? (
-                      <div className="btn btn-primary btn-round btn-spinner">
-                        <div className="spinner spinner--sm">
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                          <div></div>
-                        </div>
-                      </div>
-                    ) : (
+                {plotsLoading ? (
+                  <div className="btn btn-primary btn-round btn-spinner">
+                    <div className="spinner spinner--sm">
+                      <div></div>
+                      <div></div>
+                      <div></div>
+                      <div></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="statistics__pdf-btn">
+                    <PDFDownloadLink
+                      document={<Review receiptPlots={receiptPlots} />}
+                      fileName="File"
+                    >
                       <button
                         className="btn btn-primary btn-round"
                         type="button"
                       >
                         Preuzmi PDF
                       </button>
-                    )
-                  }
-                </PDFDownloadLink>
+                    </PDFDownloadLink>
+                    <div className="statistics__pdf-info">
+                      <img
+                        className="statistics__pdf-info-icon"
+                        src={InfoIcon}
+                        alt="info"
+                      />
+                      <div className="statistics__pdf-info-body">
+                        <ul className="statistics__pdf-info-list">
+                          <li>
+                            PDF datoteka sadrži uvid u statistiku o potrošnji,
+                            računima, reduzećima i stavkama.
+                          </li>
+                          <br />
+                          <li>
+                            Statistika sadržana u PDF datoteci je samo za
+                            odabrani datumski opseg.
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -440,4 +440,52 @@
       }
     }
   }
+
+  &__pdf-btn {
+    display: flex;
+    align-items: center;
+  }
+
+  &__pdf-info {
+    position: relative;
+    height: 28px;
+    padding-left: 7px;
+
+    &-body {
+      display: none;
+    }
+
+    &-icon {
+      height: inherit;
+      cursor: pointer;
+    }
+
+    &-list {
+      list-style: circle;
+      font-size: 14px;
+      padding-left: 15px;
+      text-align: left;
+    }
+
+    &-icon:hover + .statistics__pdf-info-body {
+      display: block;
+      z-index: 1;
+      position: absolute;
+      top: 42px;
+      right: -45px;
+      width: 260px;
+      background-color: $c-white-1;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid $c-green-4;
+
+      @include respond-to(tablet) {
+        right: -115px;
+      }
+
+      @include respond-to(desktop) {
+        right: -5px;
+      }
+    }
+  }
 }
