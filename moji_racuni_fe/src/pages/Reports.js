@@ -62,7 +62,7 @@ const Reports = () => {
         ? setPageNum(parseInt(page))
         : navigate("/not-found");
     } else {
-      page === undefined ? navigate("/prijave") : navigate("/not-found");
+      page === undefined ? setPageNum(1) : navigate("/not-found");
     }
   }, [page]);
 

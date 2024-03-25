@@ -64,7 +64,7 @@ const Receipts = () => {
         ? setPageNum(parseInt(page))
         : navigate("/not-found");
     } else {
-      page === undefined ? navigate("/racuni") : navigate("/not-found");
+      page === undefined ? setPageNum(1) : navigate("/not-found");
     }
   }, [page]);
 

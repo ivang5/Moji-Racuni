@@ -65,7 +65,7 @@ const Companies = () => {
         ? setPageNum(parseInt(page))
         : navigate("/not-found");
     } else {
-      page === undefined ? navigate("/preduzeca") : navigate("/not-found");
+      page === undefined ? setPageNum(1) : navigate("/not-found");
     }
   }, [page]);
 

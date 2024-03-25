@@ -50,7 +50,7 @@ const Users = () => {
         ? setPageNum(parseInt(page))
         : navigate("/not-found");
     } else {
-      page === undefined ? navigate("/korisnici") : navigate("/not-found");
+      page === undefined ? setPageNum(1) : navigate("/not-found");
     }
   }, [page]);
 
