@@ -441,7 +441,7 @@ const Statistics = () => {
                         <ul className="statistics__pdf-info-list">
                           <li>
                             PDF datoteka sadrži uvid u statistiku o potrošnji,
-                            računima, reduzećima i stavkama.
+                            računima, preduzećima i stavkama.
                           </li>
                           <br />
                           <li>

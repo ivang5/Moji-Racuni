@@ -151,7 +151,7 @@ class ReceiptViewSet(viewsets.ViewSet):
         return Response(res)
     
     @action(detail=False, url_path='plot', url_name='plot')
-    def plot_test(self, request):
+    def plot_stat(self, request):
         user = request.user
         dateFrom = self.request.query_params.get('dateFrom')
         dateTo = self.request.query_params.get('dateTo')
