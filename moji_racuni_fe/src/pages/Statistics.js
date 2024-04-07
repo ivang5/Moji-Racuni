@@ -421,7 +421,14 @@ const Statistics = () => {
                 ) : (
                   <div className="statistics__pdf-btn">
                     <PDFDownloadLink
-                      document={<Review receiptPlots={receiptPlots} />}
+                      document={
+                        <Review
+                          receiptPlots={receiptPlots}
+                          baseStats={baseStats}
+                          fromDate={fromDate}
+                          toDate={toDate}
+                        />
+                      }
                       fileName="File"
                     >
                       <button
