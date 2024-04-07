@@ -50,8 +50,8 @@ const styles = StyleSheet.create({
     width: "50%",
   },
   thirdWidth: {
-    marginLeft: 5,
-    marginRight: 5,
+    marginLeft: 2,
+    marginRight: 2,
     width: "33%",
     textAlign: "center",
   },
@@ -82,6 +82,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: "#23c363",
   },
+  subTitleSpending: {
+    maxWidth: 109,
+  },
   infoGroup: {
     display: "flex",
     flexDirection: "row",
@@ -93,11 +96,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   infoTitle: {
-    fontSize: 14,
+    marginBottom: 2,
+    fontSize: 12,
     color: "#979595",
   },
   infoVal: {
-    fontSize: 20,
+    fontSize: 19,
   },
   footer: {
     position: "absolute",
@@ -129,7 +133,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const Review = ({ receiptPlots, baseStats, fromDate, toDate }) => {
+const Review = ({ statPlots, baseStats, fromDate, toDate }) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -165,7 +169,56 @@ const Review = ({ receiptPlots, baseStats, fromDate, toDate }) => {
           </View>
         </View>
         <Text style={styles.subTitle}>- Broj računa</Text>
-        <Image src={`data:image/png;base64,${receiptPlots.receipts}`} />
+        <Image src={`data:image/png;base64,${statPlots.receipts}`} />
+        <View style={styles.footer}>
+          <View style={styles.footerBrand}>
+            <Image src={Logo} style={styles.logo} />
+            <Text style={styles.footerText}>Moji Računi</Text>
+          </View>
+          <Text style={styles.footerAddress}>address placeholder</Text>
+        </View>
+      </Page>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>Pregled statistike</Text>
+        <Text style={styles.statType}>– Potrošnja –</Text>
+        <Text style={styles.statDate}>
+          {dateFormatter(fromDate)} - {dateFormatter(toDate)}
+        </Text>
+        <View style={styles.infoGroup}>
+          <View style={styles.thirdWidth}>
+            <Text style={styles.infoTitle}>Ukupno potrošeno</Text>
+            <Text style={styles.infoVal}>
+              {baseStats.totalSpent.totalSpent
+                ? formatPrice(baseStats.totalSpent.totalSpent)
+                : 0}{" "}
+              RSD
+            </Text>
+          </View>
+          <View style={styles.thirdWidth}>
+            <Text style={styles.infoTitle}>Potrošeno na PDV</Text>
+            <Text style={styles.infoVal}>
+              {baseStats.totalSpent.totalSpentVat
+                ? formatPrice(baseStats.totalSpent.totalSpentVat)
+                : 0}{" "}
+              RSD
+            </Text>
+          </View>
+          <View style={styles.thirdWidth}>
+            <Text style={styles.infoTitle}>
+              Najviše potrošeno u jednom danu
+            </Text>
+            <Text style={styles.infoVal}>
+              {baseStats.mostSpentInADay.mostSpent
+                ? formatPrice(baseStats.mostSpentInADay.mostSpent)
+                : 0}{" "}
+              RSD
+            </Text>
+          </View>
+        </View>
+        <Text style={[styles.subTitle, styles.subTitleSpending]}>
+          - Potrošnja
+        </Text>
+        <Image src={`data:image/png;base64,${statPlots.spending}`} />
         <View style={styles.footer}>
           <View style={styles.footerBrand}>
             <Image src={Logo} style={styles.logo} />

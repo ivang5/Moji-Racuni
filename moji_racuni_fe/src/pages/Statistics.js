@@ -46,13 +46,13 @@ const Statistics = () => {
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(getTomorrow());
   const [searchOpen, setSearchOpen] = useState(false);
-  const [receiptPlots, setReceiptPlots] = useState({});
+  const [statPlots, setStatPlots] = useState({});
   const [plotsLoading, setPlotsLoading] = useState(true);
   const api = useApi();
 
   useEffect(() => {
     applyFilters();
-    getReceiptPlots();
+    getStatPlots();
     setPlotsLoading(true);
   }, [fromDate, toDate]);
 
@@ -260,13 +260,13 @@ const Statistics = () => {
     setMostValuableItems(mostValuableItemsFormatted);
   };
 
-  const getReceiptPlots = async () => {
-    const plots = await api.getReceiptPlots(
+  const getStatPlots = async () => {
+    const plots = await api.getStatPlots(
       dateBEFormatter(fromDate),
       dateBEFormatter(toDate),
       10
     );
-    setReceiptPlots(plots);
+    setStatPlots(plots);
     await new Promise(() => setTimeout(setPlotsLoading(false), 500));
   };
 
@@ -423,7 +423,7 @@ const Statistics = () => {
                     <PDFDownloadLink
                       document={
                         <Review
-                          receiptPlots={receiptPlots}
+                          statPlots={statPlots}
                           baseStats={baseStats}
                           fromDate={fromDate}
                           toDate={toDate}
@@ -509,10 +509,6 @@ const Statistics = () => {
             <h2 className="statistics__chart-wrapper-title mt-4">
               - Potrošnja
             </h2>
-            {/* <img
-              src={`data:image/png;base64,${receiptPlots.daily}`}
-              alt="Your Alt Text"
-            /> */}
             {spentByHour.length !== 0 ? (
               <div className="statistics__chart-wrapper mt-5">
                 <Chart

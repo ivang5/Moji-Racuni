@@ -427,7 +427,6 @@ export const getSpendingsPieFormatData = (data, isCompany) => {
     const newObj = {
       id: isCompany ? obj.companyName : obj.companyType,
       value: obj.priceSum,
-      test: "hello",
     };
     newList.push(newObj);
   });

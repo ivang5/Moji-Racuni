@@ -1045,30 +1045,36 @@ def filter_users(id, username, email, orderBy, ascendingOrder):
 #                   PLOT RELATED FUNCTIONS
 # ==========================================================
 
-def get_receipts_hours_info(receipts_by_hour):
+def get_receipts_hours_info(receipts_by_hour, money_spent_by_hour):
     hours = ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
     counts = []
+    spent = []
     
-    for info in receipts_by_hour:
-        counts.append(info['count'])    
+    for rec_info, spent_info in zip(receipts_by_hour, money_spent_by_hour):
+        counts.append(rec_info['count'])
+        spent.append(spent_info['spent'])
     
-    return hours, counts
+    return hours, counts, spent
 
-def get_receipts_weekdays_info(receipts_by_weekday):
+def get_receipts_weekdays_info(receipts_by_weekday, money_spent_by_weekday):
     weekdays = ["Pon", "Uto", "Sre", "Čet", "Pet", "Sub", "Ned"]
     counts = []
+    spent = []
     
-    for info in receipts_by_weekday:
-        counts.append(info['count'])    
+    for rec_info, spent_info in zip(receipts_by_weekday, money_spent_by_weekday):
+        counts.append(rec_info['count'])
+        spent.append(spent_info['spent'])
     
-    return weekdays, counts
+    return weekdays, counts, spent
 
-def get_receipts_months_info(receipts_by_month):
+def get_receipts_months_info(receipts_by_month, money_spent_by_month):
     months = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Avg", "Sep", "Okt", "Nov", "Dec"]
     counts = []
+    spent = []
     
-    for info in receipts_by_month:
-        counts.append(info['count'])    
+    for rec_info, spent_info in zip(receipts_by_month, money_spent_by_month):
+        counts.append(rec_info['count'])
+        spent.append(spent_info['spent'])
     
-    return months, counts
+    return months, counts, spent
     

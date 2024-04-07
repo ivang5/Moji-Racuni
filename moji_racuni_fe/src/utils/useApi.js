@@ -187,7 +187,7 @@ const useApi = () => {
     return getResponse(response, data);
   };
 
-  const getReceiptPlots = async (dateFrom, dateTo, limit) => {
+  const getStatPlots = async (dateFrom, dateTo, limit) => {
     const { response, data } = await api(
       `/api/receipts/plot/?dateFrom=${dateFrom}&dateTo=${dateTo}&limit=${limit}`
     );
@@ -509,7 +509,7 @@ const useApi = () => {
     getFullReceiptInfo,
     getFullCompanyInfo,
     getBaseStats,
-    getReceiptPlots: getReceiptPlots,
+    getStatPlots: getStatPlots,
     filterReceipts,
     filterReports,
     filterCompanies,

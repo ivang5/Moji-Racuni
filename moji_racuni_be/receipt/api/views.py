@@ -12,6 +12,7 @@ from moji_racuni_be import utils
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.ticker import FuncFormatter
 import base64
 
 
@@ -159,11 +160,14 @@ class ReceiptViewSet(viewsets.ViewSet):
         if (not dateFrom or not dateTo or not limit):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         receipts_by_hour = utils.get_receipts_sum_by_hours(user, dateFrom, dateTo)
-        hours, hr_counts = utils.get_receipts_hours_info(receipts_by_hour)
+        money_spent_by_hour = utils.get_money_spent_by_hours(user, dateFrom, dateTo)
+        hours, hr_counts, hr_spent = utils.get_receipts_hours_info(receipts_by_hour, money_spent_by_hour)
         receipts_by_weekday = utils.get_receipts_sum_by_weekdays(user, dateFrom, dateTo)
-        weekdays, wd_counts = utils.get_receipts_weekdays_info(receipts_by_weekday)
+        money_spent_by_weekday = utils.get_money_spent_by_weekdays(user, dateFrom, dateTo)
+        weekdays, wd_counts, wd_spent = utils.get_receipts_weekdays_info(receipts_by_weekday, money_spent_by_weekday)
         receipts_by_month = utils.get_receipts_sum_by_months(user, dateFrom, dateTo)
-        months, mo_counts = utils.get_receipts_months_info(receipts_by_month)
+        money_spent_by_month = utils.get_money_spent_by_months(user, dateFrom, dateTo)
+        months, mo_counts, mo_spent = utils.get_receipts_months_info(receipts_by_month, money_spent_by_month)
 
         mpl.rcParams["hatch.color"] = "#0cb44f"
         mpl.rcParams["hatch.linewidth"] = 4
@@ -179,6 +183,7 @@ class ReceiptViewSet(viewsets.ViewSet):
         ax3.bar(hours, hr_counts, hatch="//", color="#23c363", zorder=2)
         ax3.set_title("Po satima", fontsize=14)
         ax3.set_xlim(-0.5, len(hours) - 0.5)
+        plt.subplots_adjust(wspace=0.4)
         for ax in fig.get_axes():
             ax.tick_params(axis="both", which="both", labelsize=7)
             for tick in ax.get_yticks():
@@ -186,10 +191,44 @@ class ReceiptViewSet(viewsets.ViewSet):
         plt.subplots_adjust(hspace=0.3)
         fig.savefig("./receipts_stat.png", bbox_inches="tight", dpi=200)
         
+        def custom_formatter(x, pos):
+            if abs(x) >= 1e6:
+                return f'{x / 1e6:.0f}M'
+            elif abs(x) >= 1e3:
+                return f'{x / 1e3:.0f}k'
+            else:
+                return f'{x:.0f}'
+        
+        mpl.rcParams["hatch.linewidth"] = 2
+        fig = plt.figure(figsize=(10, 8))
+        gs = gridspec.GridSpec(2, 5, height_ratios=[3, 4])
+        ax1 = fig.add_subplot(gs[0, 0:2])
+        ax1.bar(weekdays, wd_spent, hatch="..", color="#23c363", zorder=2)
+        fig.gca().yaxis.set_major_formatter(FuncFormatter(custom_formatter))
+        ax1.set_title("Po danima", fontsize=14)
+        ax2 = fig.add_subplot(gs[0, 2:])
+        ax2.bar(months, mo_spent, hatch="..", color="#23c363", zorder=2)
+        fig.gca().yaxis.set_major_formatter(FuncFormatter(custom_formatter))
+        ax2.set_title("Po mesecima", fontsize=14)
+        ax3 = fig.add_subplot(gs[1, :])
+        ax3.bar(hours, hr_spent, hatch="..", color="#23c363", zorder=2)
+        fig.gca().yaxis.set_major_formatter(FuncFormatter(custom_formatter))
+        ax3.set_title("Po satima", fontsize=14)
+        ax3.set_xlim(-0.5, len(hours) - 0.5)
+        plt.subplots_adjust(wspace=0.4)
+        for ax in fig.get_axes():
+            ax.tick_params(axis="both", which="both", labelsize=7)
+            for tick in ax.get_yticks():
+                ax.axhline(tick, color="#dddddd", linestyle="-", linewidth=0.5, zorder=1)
+        plt.subplots_adjust(hspace=0.3)
+        fig.savefig("./spent_stat.png", bbox_inches="tight", dpi=200)
+        
         plot = {}
         
         with open("./receipts_stat.png", "rb") as img_file:
             plot["receipts"] = base64.b64encode(img_file.read()).decode('utf-8')
+        with open("./spent_stat.png", "rb") as img_file:
+            plot["spending"] = base64.b64encode(img_file.read()).decode('utf-8')
         return Response(plot)
 
     def create(self, request):
