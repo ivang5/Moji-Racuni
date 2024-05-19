@@ -1051,8 +1051,8 @@ def get_receipts_hours_info(receipts_by_hour, money_spent_by_hour):
     spent = []
     
     for rec_info, spent_info in zip(receipts_by_hour, money_spent_by_hour):
-        counts.append(rec_info['count'])
-        spent.append(spent_info['spent'])
+        counts.append(rec_info["count"])
+        spent.append(spent_info["spent"])
     
     return hours, counts, spent
 
@@ -1062,8 +1062,8 @@ def get_receipts_weekdays_info(receipts_by_weekday, money_spent_by_weekday):
     spent = []
     
     for rec_info, spent_info in zip(receipts_by_weekday, money_spent_by_weekday):
-        counts.append(rec_info['count'])
-        spent.append(spent_info['spent'])
+        counts.append(rec_info["count"])
+        spent.append(spent_info["spent"])
     
     return weekdays, counts, spent
 
@@ -1073,8 +1073,81 @@ def get_receipts_months_info(receipts_by_month, money_spent_by_month):
     spent = []
     
     for rec_info, spent_info in zip(receipts_by_month, money_spent_by_month):
-        counts.append(rec_info['count'])
-        spent.append(spent_info['spent'])
+        counts.append(rec_info["count"])
+        spent.append(spent_info["spent"])
     
     return months, counts, spent
+
+# TODO: TRY TO USE ONLY ONE FUNCTION INSTEAD OF 4 BELOW
+
+def get_most_spent_companies_info(most_spent_companies):
+    labels = []
+    values = []
     
+    for company in most_spent_companies:
+        labels.append(company["companyName"])
+        values.append(company["priceSum"])
+        
+    return labels, values
+    
+def get_most_spent_types_info(most_spent_types):
+    labels = []
+    values = []
+    
+    for company in most_spent_types:
+        labels.append(company["companyType"])
+        values.append(company["priceSum"])
+        
+    return labels, values
+
+def get_most_visited_companies_info(most_visited_companies):
+    labels = []
+    values = []
+    
+    for company in most_visited_companies:
+        labels.append(company["companyName"])
+        values.append(company["receiptCount"])
+        
+    return labels, values
+
+def get_most_visited_types_info(most_visited_types):
+    labels = []
+    values = []
+    
+    for company in most_visited_types:
+        labels.append(company["companyType"])
+        values.append(company["receiptCount"])
+        
+    return labels, values
+
+def format_chart_val(number):
+    num_to_str = str(round(int(number)))
+    if len(num_to_str) == 4:
+        value = f"{num_to_str[0]}.{num_to_str[0]}k"
+        return value
+    if len(num_to_str) == 5:
+        value = f"{num_to_str[:2]}.{num_to_str[2]}k"
+        return value
+    if len(num_to_str) == 6:
+        value = f"{num_to_str[:3]}k"
+        return value
+    if len(num_to_str) == 7:
+        value = f"{num_to_str[0]}.{num_to_str[1]}M"
+        return value
+    if len(num_to_str) == 8:
+        value = f"{num_to_str[:2]}.{num_to_str[2]}M"
+        return value
+    if len(num_to_str) == 9:
+        value = f"{num_to_str[:3]}M"
+        return value
+    return number
+
+def get_most_valuable_items_info(most_valuable_items):
+    labels = []
+    values = []
+    
+    for item in most_valuable_items:
+        labels.append(item["name"]) if len(item["name"]) <= 30 else labels.append(f'{item["name"][:27]}...')
+        values.append(item["price"])
+        
+    return labels, values

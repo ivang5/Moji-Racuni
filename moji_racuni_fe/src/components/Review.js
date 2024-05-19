@@ -57,19 +57,19 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 10,
-    fontSize: 32,
+    fontSize: 28,
     textAlign: "center",
     fontWeight: "bold",
   },
   statType: {
-    fontSize: 20,
+    fontSize: 16,
     textAlign: "center",
     fontWeight: "bold",
   },
   statDate: {
     marginTop: 5,
     marginBottom: 30,
-    fontSize: 14,
+    fontSize: 12,
     textAlign: "center",
   },
   subTitle: {
@@ -85,6 +85,12 @@ const styles = StyleSheet.create({
   subTitleSpending: {
     maxWidth: 109,
   },
+  subTitleCompanies: {
+    maxWidth: 118,
+  },
+  subTitleItems: {
+    maxWidth: 154,
+  },
   infoGroup: {
     display: "flex",
     flexDirection: "row",
@@ -97,11 +103,11 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     marginBottom: 2,
-    fontSize: 12,
+    fontSize: 11,
     color: "#979595",
   },
   infoVal: {
-    fontSize: 19,
+    fontSize: 16,
   },
   footer: {
     position: "absolute",
@@ -219,6 +225,82 @@ const Review = ({ statPlots, baseStats, fromDate, toDate }) => {
           - Potrošnja
         </Text>
         <Image src={`data:image/png;base64,${statPlots.spending}`} />
+        <View style={styles.footer}>
+          <View style={styles.footerBrand}>
+            <Image src={Logo} style={styles.logo} />
+            <Text style={styles.footerText}>Moji Računi</Text>
+          </View>
+          <Text style={styles.footerAddress}>address placeholder</Text>
+        </View>
+      </Page>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>Pregled statistike</Text>
+        <Text style={styles.statType}>– Preduzeća –</Text>
+        <Text style={styles.statDate}>
+          {dateFormatter(fromDate)} - {dateFormatter(toDate)}
+        </Text>
+        <View style={styles.infoGroup}>
+          <View style={styles.thirdWidth}>
+            <Text style={styles.infoTitle}>Najposećenije preduzeće</Text>
+            <Text style={styles.infoVal}>
+              {baseStats.MostVisitedCompaniesInfo[0].companyName}
+            </Text>
+          </View>
+          <View style={styles.thirdWidth}>
+            <Text style={styles.infoTitle}>Broj posećenih preduzeća</Text>
+            <Text style={styles.infoVal}>
+              {baseStats.visitedCompaniesInfo.companyCount}
+            </Text>
+          </View>
+          <View style={styles.thirdWidth}>
+            <Text style={styles.infoTitle}>Broj posećenih prodajnih mesta</Text>
+            <Text style={styles.infoVal}>
+              {baseStats.visitedCompaniesInfo.unitCount}
+            </Text>
+          </View>
+        </View>
+        <Text style={[styles.subTitle, styles.subTitleCompanies]}>
+          - Preduzeća
+        </Text>
+        <Image src={`data:image/png;base64,${statPlots.companies}`} />
+        <View style={styles.footer}>
+          <View style={styles.footerBrand}>
+            <Image src={Logo} style={styles.logo} />
+            <Text style={styles.footerText}>Moji Računi</Text>
+          </View>
+          <Text style={styles.footerAddress}>address placeholder</Text>
+        </View>
+      </Page>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>Pregled statistike</Text>
+        <Text style={styles.statType}>– Stakve –</Text>
+        <Text style={styles.statDate}>
+          {dateFormatter(fromDate)} - {dateFormatter(toDate)}
+        </Text>
+        <View style={styles.infoGroup}>
+          <View style={styles.thirdWidth}>
+            <Text style={styles.infoTitle}>Najskuplja stavka</Text>
+            <Text style={styles.infoVal}>
+              {baseStats.mostValuableItems[0].name}
+            </Text>
+          </View>
+          <View style={styles.thirdWidth}>
+            <Text style={styles.infoTitle}>
+              Najviše stavki na jednom računu
+            </Text>
+            <Text style={styles.infoVal}>{baseStats.mostItems.mostItems}</Text>
+          </View>
+          <View style={styles.thirdWidth}>
+            <Text style={styles.infoTitle}>Prosečan broj stavki na računu</Text>
+            <Text style={styles.infoVal}>
+              {Math.round(baseStats.mostItems.avgItems)}
+            </Text>
+          </View>
+        </View>
+        <Text style={[styles.subTitle, styles.subTitleItems]}>
+          - Stavke računa
+        </Text>
+        <Image src={`data:image/png;base64,${statPlots.items}`} />
         <View style={styles.footer}>
           <View style={styles.footerBrand}>
             <Image src={Logo} style={styles.logo} />

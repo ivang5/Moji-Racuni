@@ -12,6 +12,7 @@ from moji_racuni_be import utils
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import numpy as np
 from matplotlib.ticker import FuncFormatter
 import base64
 
@@ -169,6 +170,18 @@ class ReceiptViewSet(viewsets.ViewSet):
         money_spent_by_month = utils.get_money_spent_by_months(user, dateFrom, dateTo)
         months, mo_counts, mo_spent = utils.get_receipts_months_info(receipts_by_month, money_spent_by_month)
 
+        most_spent_companies = utils.get_most_spent_companies(user, dateFrom, dateTo, 5)
+        msc_labels, msc_values = utils.get_most_spent_companies_info(most_spent_companies)
+        most_spent_types = utils.get_most_spent_types(user, dateFrom, dateTo, 5)
+        mst_labels, mst_values = utils.get_most_spent_types_info(most_spent_types)
+        most_visited_companies = utils.get_most_visited_companies(user, dateFrom, dateTo, 5)
+        mvc_labels, mvc_values = utils.get_most_visited_companies_info(most_visited_companies)
+        most_visited_types = utils.get_most_visited_types(user, dateFrom, dateTo, 5)
+        mvt_labels, mvt_values = utils.get_most_visited_types_info(most_visited_types)
+        
+        most_valuable_items = utils.get_most_valuable_items(user, dateFrom, dateTo, 10)
+        item_labels, item_values = utils.get_most_valuable_items_info(most_valuable_items)
+
         mpl.rcParams["hatch.color"] = "#0cb44f"
         mpl.rcParams["hatch.linewidth"] = 4
         fig = plt.figure(figsize=(10, 8))
@@ -183,13 +196,12 @@ class ReceiptViewSet(viewsets.ViewSet):
         ax3.bar(hours, hr_counts, hatch="//", color="#23c363", zorder=2)
         ax3.set_title("Po satima", fontsize=14)
         ax3.set_xlim(-0.5, len(hours) - 0.5)
-        plt.subplots_adjust(wspace=0.4)
         for ax in fig.get_axes():
             ax.tick_params(axis="both", which="both", labelsize=7)
             for tick in ax.get_yticks():
                 ax.axhline(tick, color="#dddddd", linestyle="-", linewidth=0.5, zorder=1)
-        plt.subplots_adjust(hspace=0.3)
-        fig.savefig("./receipts_stat.png", bbox_inches="tight", dpi=200)
+        plt.subplots_adjust(wspace=0.4, hspace=0.3)
+        fig.savefig("./receipts_stat.png", bbox_inches="tight", dpi=400)
         
         def custom_formatter(x, pos):
             if abs(x) >= 1e6:
@@ -215,13 +227,56 @@ class ReceiptViewSet(viewsets.ViewSet):
         fig.gca().yaxis.set_major_formatter(FuncFormatter(custom_formatter))
         ax3.set_title("Po satima", fontsize=14)
         ax3.set_xlim(-0.5, len(hours) - 0.5)
-        plt.subplots_adjust(wspace=0.4)
         for ax in fig.get_axes():
             ax.tick_params(axis="both", which="both", labelsize=7)
             for tick in ax.get_yticks():
                 ax.axhline(tick, color="#dddddd", linestyle="-", linewidth=0.5, zorder=1)
-        plt.subplots_adjust(hspace=0.3)
-        fig.savefig("./spent_stat.png", bbox_inches="tight", dpi=200)
+        plt.subplots_adjust(wspace=0.4, hspace=0.3)
+        fig.savefig("./spent_stat.png", bbox_inches="tight", dpi=400)
+        
+        def absolute_value_msc(val):
+            av = np.round(val/100.*float(np.array(msc_values).sum()), 0)
+            num_to_str = str(round(int(av)))
+            return utils.format_chart_val(num_to_str)
+        
+        def absolute_value_mvc(val):
+            av = np.round(val/100.*np.array(mvc_values).sum(), 0)
+            num_to_str = str(round(int(av)))
+            return utils.format_chart_val(num_to_str)
+        
+        fig = plt.figure(figsize=(10, 6))
+        gs = gridspec.GridSpec(1, 4)
+        wedgeprops = {'linewidth': 2, 'edgecolor': 'white', 'linestyle': 'solid', 'antialiased': True}
+        colors = ["#8dd3c7", "#bebada", "#fb8072", "#80b1d3", "#fdb462"]
+        ax1 = fig.add_subplot(gs[0, 0:2])
+        ax1.pie(x=msc_values, autopct=absolute_value_msc, textprops={'fontsize': 7}, pctdistance=0.8, wedgeprops=wedgeprops, colors=colors, startangle=90)
+        ax1.set_title('Najveći troškovi', fontsize=13, y=0.92)
+        ax1.legend(labels=msc_labels, loc='lower center', bbox_to_anchor=(0.3, -0.18, 0.5, 1), prop={'size': 8}, frameon=False)
+        circle = plt.Circle(xy=(0,0), radius=.4, facecolor='white')
+        plt.gca().add_artist(circle)
+        ax2 = fig.add_subplot(gs[0, 2:])
+        ax2.pie(x=msc_values, autopct=absolute_value_mvc, textprops={'fontsize': 7}, pctdistance=0.8, wedgeprops=wedgeprops, colors=colors, startangle=90)
+        ax2.set_title('Najposećenija', fontsize=13, y=0.92)
+        ax2.legend(labels=mvc_labels, loc='lower center', bbox_to_anchor=(0.3, -0.18, 0.5, 1), prop={'size': 8}, frameon=False)
+        circle = plt.Circle(xy=(0,0), radius=.4, facecolor='white')
+        plt.gca().add_artist(circle)
+        plt.subplots_adjust(wspace=0.01, hspace=0.3)
+        fig.savefig("./companies_stat.png", bbox_inches="tight", dpi=400)
+        
+        mpl.rcParams["hatch.linewidth"] = 2
+        fig = plt.figure(figsize=(10, 8))
+        gs = gridspec.GridSpec(3, 1)
+        ax1 = fig.add_subplot(gs[0:2, :])
+        ax1.bar(item_labels, item_values, hatch="..", color="#23c363", zorder=2)
+        fig.gca().yaxis.set_major_formatter(FuncFormatter(custom_formatter))
+        ax1.set_title("Najskuplje", fontsize=14)
+        for ax in fig.get_axes():
+            ax.tick_params(axis="both", which="both", labelsize=7)
+            for tick in ax.get_yticks():
+                ax.axhline(tick, color="#dddddd", linestyle="-", linewidth=0.5, zorder=1)
+        plt.xticks(rotation = -45, ha="left", rotation_mode="anchor")
+        plt.subplots_adjust(wspace=0.4, hspace=0.3)
+        fig.savefig("./items_stat.png", bbox_inches="tight", dpi=400)
         
         plot = {}
         
@@ -229,6 +284,10 @@ class ReceiptViewSet(viewsets.ViewSet):
             plot["receipts"] = base64.b64encode(img_file.read()).decode('utf-8')
         with open("./spent_stat.png", "rb") as img_file:
             plot["spending"] = base64.b64encode(img_file.read()).decode('utf-8')
+        with open("./companies_stat.png", "rb") as img_file:
+            plot["companies"] = base64.b64encode(img_file.read()).decode('utf-8')
+        with open("./items_stat.png", "rb") as img_file:
+            plot["items"] = base64.b64encode(img_file.read()).decode('utf-8')
         return Response(plot)
 
     def create(self, request):
