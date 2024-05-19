@@ -939,7 +939,7 @@ def get_most_visited_types(user, dateFrom, dateTo, limit):
                         AND t.user = %s
                         GROUP BY t.id
                 ) innerQuery 
-                    ORDER BY priceSum DESC, receiptCount DESC
+                    ORDER BY receiptCount DESC, priceSum DESC
                     LIMIT %s;
                 ''', 
                 [dateFrom, dateTo, user.id, limit])
