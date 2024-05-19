@@ -1078,45 +1078,23 @@ def get_receipts_months_info(receipts_by_month, money_spent_by_month):
     
     return months, counts, spent
 
-# TODO: TRY TO USE ONLY ONE FUNCTION INSTEAD OF 4 BELOW
-
-def get_most_spent_companies_info(most_spent_companies):
+def get_objects_info(obj_list, lab, val):
     labels = []
     values = []
     
-    for company in most_spent_companies:
-        labels.append(company["companyName"])
-        values.append(company["priceSum"])
-        
-    return labels, values
-    
-def get_most_spent_types_info(most_spent_types):
-    labels = []
-    values = []
-    
-    for company in most_spent_types:
-        labels.append(company["companyType"])
-        values.append(company["priceSum"])
+    for obj in obj_list:
+        labels.append(obj[lab])
+        values.append(obj[val])
         
     return labels, values
 
-def get_most_visited_companies_info(most_visited_companies):
+def get_most_valuable_items_info(most_valuable_items):
     labels = []
     values = []
     
-    for company in most_visited_companies:
-        labels.append(company["companyName"])
-        values.append(company["receiptCount"])
-        
-    return labels, values
-
-def get_most_visited_types_info(most_visited_types):
-    labels = []
-    values = []
-    
-    for company in most_visited_types:
-        labels.append(company["companyType"])
-        values.append(company["receiptCount"])
+    for item in most_valuable_items:
+        labels.append(item["name"]) if len(item["name"]) <= 30 else labels.append(f'{item["name"][:27]}...')
+        values.append(item["price"])
         
     return labels, values
 
@@ -1141,13 +1119,3 @@ def format_chart_val(number):
         value = f"{num_to_str[:3]}M"
         return value
     return number
-
-def get_most_valuable_items_info(most_valuable_items):
-    labels = []
-    values = []
-    
-    for item in most_valuable_items:
-        labels.append(item["name"]) if len(item["name"]) <= 30 else labels.append(f'{item["name"][:27]}...')
-        values.append(item["price"])
-        
-    return labels, values

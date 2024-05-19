@@ -171,13 +171,13 @@ class ReceiptViewSet(viewsets.ViewSet):
         months, mo_counts, mo_spent = utils.get_receipts_months_info(receipts_by_month, money_spent_by_month)
 
         most_spent_companies = utils.get_most_spent_companies(user, dateFrom, dateTo, 5)
-        msc_labels, msc_values = utils.get_most_spent_companies_info(most_spent_companies)
+        msc_labels, msc_values = utils.get_objects_info(most_spent_companies, "companyName", "priceSum")
         most_spent_types = utils.get_most_spent_types(user, dateFrom, dateTo, 5)
-        mst_labels, mst_values = utils.get_most_spent_types_info(most_spent_types)
+        mst_labels, mst_values = utils.get_objects_info(most_spent_types, "companyType", "priceSum")
         most_visited_companies = utils.get_most_visited_companies(user, dateFrom, dateTo, 5)
-        mvc_labels, mvc_values = utils.get_most_visited_companies_info(most_visited_companies)
+        mvc_labels, mvc_values = utils.get_objects_info(most_visited_companies, "companyName", "receiptCount")
         most_visited_types = utils.get_most_visited_types(user, dateFrom, dateTo, 5)
-        mvt_labels, mvt_values = utils.get_most_visited_types_info(most_visited_types)
+        mvt_labels, mvt_values = utils.get_objects_info(most_visited_types, "companyType", "receiptCount")
         
         most_valuable_items = utils.get_most_valuable_items(user, dateFrom, dateTo, 10)
         item_labels, item_values = utils.get_most_valuable_items_info(most_valuable_items)
@@ -255,13 +255,42 @@ class ReceiptViewSet(viewsets.ViewSet):
         circle = plt.Circle(xy=(0,0), radius=.4, facecolor='white')
         plt.gca().add_artist(circle)
         ax2 = fig.add_subplot(gs[0, 2:])
-        ax2.pie(x=msc_values, autopct=absolute_value_mvc, textprops={'fontsize': 7}, pctdistance=0.8, wedgeprops=wedgeprops, colors=colors, startangle=90)
+        ax2.pie(x=mvc_values, autopct=absolute_value_mvc, textprops={'fontsize': 7}, pctdistance=0.8, wedgeprops=wedgeprops, colors=colors, startangle=90)
         ax2.set_title('Najposećenija', fontsize=13, y=0.92)
         ax2.legend(labels=mvc_labels, loc='lower center', bbox_to_anchor=(0.3, -0.18, 0.5, 1), prop={'size': 8}, frameon=False)
         circle = plt.Circle(xy=(0,0), radius=.4, facecolor='white')
         plt.gca().add_artist(circle)
         plt.subplots_adjust(wspace=0.01, hspace=0.3)
         fig.savefig("./companies_stat.png", bbox_inches="tight", dpi=400)
+        
+        def absolute_value_mst(val):
+            av = np.round(val/100.*float(np.array(mst_values).sum()), 0)
+            num_to_str = str(round(int(av)))
+            return utils.format_chart_val(num_to_str)
+        
+        def absolute_value_mvt(val):
+            av = np.round(val/100.*np.array(mvt_values).sum(), 0)
+            num_to_str = str(round(int(av)))
+            return utils.format_chart_val(num_to_str)
+        
+        fig = plt.figure(figsize=(10, 6))
+        gs = gridspec.GridSpec(1, 4)
+        wedgeprops = {'linewidth': 2, 'edgecolor': 'white', 'linestyle': 'solid', 'antialiased': True}
+        colors = ["#8dd3c7", "#bebada", "#fb8072", "#80b1d3", "#fdb462"]
+        ax1 = fig.add_subplot(gs[0, 0:2])
+        ax1.pie(x=mst_values, autopct=absolute_value_mst, textprops={'fontsize': 7}, pctdistance=0.8, wedgeprops=wedgeprops, colors=colors, startangle=90)
+        ax1.set_title('Najveći troškovi', fontsize=13, y=0.92)
+        ax1.legend(labels=mst_labels, loc='lower center', bbox_to_anchor=(0.3, -0.18, 0.5, 1), prop={'size': 8}, frameon=False)
+        circle = plt.Circle(xy=(0,0), radius=.4, facecolor='white')
+        plt.gca().add_artist(circle)
+        ax2 = fig.add_subplot(gs[0, 2:])
+        ax2.pie(x=mvt_values, autopct=absolute_value_mvt, textprops={'fontsize': 7}, pctdistance=0.8, wedgeprops=wedgeprops, colors=colors, startangle=90)
+        ax2.set_title('Najposećeniji', fontsize=13, y=0.92)
+        ax2.legend(labels=mvt_labels, loc='lower center', bbox_to_anchor=(0.3, -0.18, 0.5, 1), prop={'size': 8}, frameon=False)
+        circle = plt.Circle(xy=(0,0), radius=.4, facecolor='white')
+        plt.gca().add_artist(circle)
+        plt.subplots_adjust(wspace=0.01, hspace=0.3)
+        fig.savefig("./types_stat.png", bbox_inches="tight", dpi=400)
         
         mpl.rcParams["hatch.linewidth"] = 2
         fig = plt.figure(figsize=(10, 8))
@@ -286,6 +315,8 @@ class ReceiptViewSet(viewsets.ViewSet):
             plot["spending"] = base64.b64encode(img_file.read()).decode('utf-8')
         with open("./companies_stat.png", "rb") as img_file:
             plot["companies"] = base64.b64encode(img_file.read()).decode('utf-8')
+        with open("./types_stat.png", "rb") as img_file:
+            plot["types"] = base64.b64encode(img_file.read()).decode('utf-8')
         with open("./items_stat.png", "rb") as img_file:
             plot["items"] = base64.b64encode(img_file.read()).decode('utf-8')
         return Response(plot)
