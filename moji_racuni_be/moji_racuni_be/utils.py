@@ -691,7 +691,7 @@ def get_most_spent_in_a_day(user, dateFrom, dateTo):
                 '''
                 SELECT max(innerQuery.sumPrice) FROM (
                     SELECT sum(r.totalPrice) sumPrice, r.date foundDate FROM (
-                        SELECT * FROM receipt_receipt r GROUP BY link
+                        SELECT * FROM receipt_receipt r
                         ) r
                         WHERE r.user = %s AND r.date BETWEEN %s AND %s
                         GROUP BY CAST(r.date AS DATE)

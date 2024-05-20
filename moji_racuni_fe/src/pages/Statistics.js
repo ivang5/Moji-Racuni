@@ -408,59 +408,64 @@ const Statistics = () => {
                   </li>
                 </ul>
               </div>
-              <div className="statistics__btn-wrapper">
-                {plotsLoading ? (
-                  <div className="btn btn-primary btn-round btn-spinner">
-                    <div className="spinner spinner--sm">
-                      <div></div>
-                      <div></div>
-                      <div></div>
-                      <div></div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="statistics__pdf-btn">
-                    <PDFDownloadLink
-                      document={
-                        <Review
-                          statPlots={statPlots}
-                          baseStats={baseStats}
-                          fromDate={fromDate}
-                          toDate={toDate}
-                        />
-                      }
-                      fileName="File"
-                    >
-                      <button
-                        className="btn btn-primary btn-round"
-                        type="button"
-                      >
-                        Preuzmi PDF
-                      </button>
-                    </PDFDownloadLink>
-                    <div className="statistics__pdf-info">
-                      <img
-                        className="statistics__pdf-info-icon"
-                        src={InfoIcon}
-                        alt="info"
-                      />
-                      <div className="statistics__pdf-info-body">
-                        <ul className="statistics__pdf-info-list">
-                          <li>
-                            PDF datoteka sadrži uvid u statistiku o potrošnji,
-                            računima, preduzećima i stavkama.
-                          </li>
-                          <br />
-                          <li>
-                            Statistika sadržana u PDF datoteci je samo za
-                            odabrani datumski opseg.
-                          </li>
-                        </ul>
+              {baseStats.totalSpent?.receiptsCount !== 0 && (
+                <div className="statistics__btn-wrapper">
+                  {plotsLoading ? (
+                    <div className="btn btn-primary btn-round btn-spinner">
+                      <div className="spinner spinner--sm">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="statistics__pdf-btn">
+                      <PDFDownloadLink
+                        document={
+                          <Review
+                            statPlots={statPlots}
+                            baseStats={baseStats}
+                            fromDate={fromDate}
+                            toDate={toDate}
+                            showCompanyTypes={
+                              mostSpentTypes.length > 1 ? true : false
+                            }
+                          />
+                        }
+                        fileName="File"
+                      >
+                        <button
+                          className="btn btn-primary btn-round"
+                          type="button"
+                        >
+                          Preuzmi PDF
+                        </button>
+                      </PDFDownloadLink>
+                      <div className="statistics__pdf-info">
+                        <img
+                          className="statistics__pdf-info-icon"
+                          src={InfoIcon}
+                          alt="info"
+                        />
+                        <div className="statistics__pdf-info-body">
+                          <ul className="statistics__pdf-info-list">
+                            <li>
+                              PDF datoteka sadrži uvid u statistiku o potrošnji,
+                              računima, preduzećima i stavkama.
+                            </li>
+                            <br />
+                            <li>
+                              Statistika sadržana u PDF datoteci je samo za
+                              odabrani datumski opseg.
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
