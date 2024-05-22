@@ -20,9 +20,8 @@ import {
 } from "../utils/utils";
 import { useEffect } from "react";
 import Chart from "../components/Chart";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import Review from "../components/Review";
 import InfoIcon from "../icons/info-icon.png";
+import { saveAs } from "file-saver";
 
 const Statistics = () => {
   const [showSpendings, setShowSpendings] = useState(true);
@@ -48,7 +47,14 @@ const Statistics = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [statPlots, setStatPlots] = useState({});
   const [plotsLoading, setPlotsLoading] = useState(true);
+  const [PDFBlob, setPDFBlob] = useState(null);
   const api = useApi();
+
+  let worker = new Worker(new URL("../workers/WorkerPDF.js", import.meta.url));
+
+  worker.onmessage = (e) => {
+    setPDFBlob(e.data);
+  };
 
   useEffect(() => {
     applyFilters();
@@ -62,6 +68,10 @@ const Statistics = () => {
     getMostSpentTypes();
     getMostVisitedTypes();
   }, [receiptsInfo]);
+
+  useEffect(() => {
+    baseStats.totalSpent && statPlots.spending && generatePdf();
+  }, [statPlots]);
 
   const getBaseStats = async () => {
     const baseStats = await api.getBaseStats(
@@ -288,6 +298,16 @@ const Statistics = () => {
     setStatsLoading(false);
   };
 
+  const generatePdf = () => {
+    worker.postMessage({
+      statPlots: statPlots,
+      baseStats: baseStats,
+      fromDate: fromDate,
+      toDate: toDate,
+      mostSpentTypes: mostSpentTypes,
+    });
+  };
+
   return (
     <div className="l-container">
       <div className="statistics">
@@ -410,7 +430,7 @@ const Statistics = () => {
               </div>
               {baseStats.totalSpent?.receiptsCount !== 0 && (
                 <div className="statistics__btn-wrapper">
-                  {plotsLoading ? (
+                  {plotsLoading || PDFBlob === null ? (
                     <div className="btn btn-primary btn-round btn-spinner">
                       <div className="spinner spinner--sm">
                         <div></div>
@@ -421,27 +441,15 @@ const Statistics = () => {
                     </div>
                   ) : (
                     <div className="statistics__pdf-btn">
-                      <PDFDownloadLink
-                        document={
-                          <Review
-                            statPlots={statPlots}
-                            baseStats={baseStats}
-                            fromDate={fromDate}
-                            toDate={toDate}
-                            showCompanyTypes={
-                              mostSpentTypes.length > 1 ? true : false
-                            }
-                          />
-                        }
-                        fileName="File"
+                      <button
+                        className="btn btn-primary btn-round"
+                        type="button"
+                        onClick={async () => {
+                          saveAs(PDFBlob, "Statistika.pdf");
+                        }}
                       >
-                        <button
-                          className="btn btn-primary btn-round"
-                          type="button"
-                        >
-                          Preuzmi PDF
-                        </button>
-                      </PDFDownloadLink>
+                        Preuzmi PDF
+                      </button>
                       <div className="statistics__pdf-info">
                         <img
                           className="statistics__pdf-info-icon"

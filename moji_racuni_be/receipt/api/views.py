@@ -202,6 +202,7 @@ class ReceiptViewSet(viewsets.ViewSet):
                 ax.axhline(tick, color="#dddddd", linestyle="-", linewidth=0.5, zorder=1)
         plt.subplots_adjust(wspace=0.4, hspace=0.3)
         fig.savefig("./receipts_stat.png", bbox_inches="tight", dpi=400)
+        plt.clf()
         
         def custom_formatter(x, pos):
             if abs(x) >= 1e6:
@@ -233,6 +234,7 @@ class ReceiptViewSet(viewsets.ViewSet):
                 ax.axhline(tick, color="#dddddd", linestyle="-", linewidth=0.5, zorder=1)
         plt.subplots_adjust(wspace=0.4, hspace=0.3)
         fig.savefig("./spent_stat.png", bbox_inches="tight", dpi=400)
+        plt.clf()
         
         def absolute_value_msc(val):
             av = np.round(val/100.*float(np.array(msc_values).sum()), 0)
@@ -262,6 +264,7 @@ class ReceiptViewSet(viewsets.ViewSet):
         plt.gca().add_artist(circle)
         plt.subplots_adjust(wspace=0.01, hspace=0.3)
         fig.savefig("./companies_stat.png", bbox_inches="tight", dpi=400)
+        plt.clf()
         
         def absolute_value_mst(val):
             av = np.round(val/100.*float(np.array(mst_values).sum()), 0)
@@ -291,6 +294,7 @@ class ReceiptViewSet(viewsets.ViewSet):
         plt.gca().add_artist(circle)
         plt.subplots_adjust(wspace=0.01, hspace=0.3)
         fig.savefig("./types_stat.png", bbox_inches="tight", dpi=400)
+        plt.clf()
         
         mpl.rcParams["hatch.linewidth"] = 2
         fig = plt.figure(figsize=(10, 8))
@@ -306,6 +310,7 @@ class ReceiptViewSet(viewsets.ViewSet):
         plt.xticks(rotation = -45, ha="left", rotation_mode="anchor")
         plt.subplots_adjust(wspace=0.4, hspace=0.3)
         fig.savefig("./items_stat.png", bbox_inches="tight", dpi=400)
+        plt.clf()
         
         plot = {}
         
