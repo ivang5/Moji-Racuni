@@ -125,6 +125,29 @@
       }
     }
 
+    &-trend {
+      padding-top: 5px;
+      font-size: 18px;
+      color: $c-green-5;
+      font-weight: 600;
+
+      &--sm {
+        padding-top: 3px;
+        font-size: 16px;
+      }
+
+      &--down {
+        color: $c-red-3;
+      }
+    }
+
+    &-trend-img {
+      width: 22px;
+      height: 22px;
+      margin-right: 4px;
+      transform: translateY(5px);
+    }
+
     &--one {
       grid-column: 1;
       grid-row: 1;
@@ -133,7 +156,6 @@
     &--two {
       grid-column: 2;
       grid-row: 1;
-      padding-top: 15px;
     }
 
     &--three {

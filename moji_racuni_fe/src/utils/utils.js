@@ -36,10 +36,32 @@ export const getThisMonth = () => {
   return { dateFrom: dateFrom, dateTo: dateTo };
 };
 
+export const getLastMonth = () => {
+  const date = new Date();
+  const lastMonthYear =
+    date.getMonth() !== 0 ? date.getFullYear() : date.getFullYear() - 1;
+
+  const dateFrom = dateBEFormatter(
+    new Date(lastMonthYear, date.getMonth() - 1)
+  );
+  const dateTo = dateBEFormatter(
+    new Date(date.getFullYear(), date.getMonth(), 1)
+  );
+
+  return { dateFrom: dateFrom, dateTo: dateTo };
+};
+
 export const getThisYear = () => {
   const date = new Date();
   const dateFrom = dateBEFormatter(new Date(date.getFullYear(), 0, 1));
   const dateTo = dateBEFormatter(new Date(date.getFullYear() + 1, 0, 1));
+  return { dateFrom: dateFrom, dateTo: dateTo };
+};
+
+export const getLastYear = () => {
+  const date = new Date();
+  const dateFrom = dateBEFormatter(new Date(date.getFullYear() - 1, 0, 1));
+  const dateTo = dateBEFormatter(new Date(date.getFullYear(), 0, 1));
   return { dateFrom: dateFrom, dateTo: dateTo };
 };
 
@@ -55,6 +77,21 @@ export const getAllTime = () => {
 export const getTenYearsAgo = () => {
   const date = new Date();
   return new Date(date.getFullYear() - 10, date.getMonth(), date.getDate());
+};
+
+export const getPercentageChange = (oldNum, newNum) => {
+  if (
+    oldNum === null ||
+    oldNum === undefined ||
+    oldNum === 0 ||
+    newNum === null ||
+    newNum === undefined ||
+    newNum === 0
+  ) {
+    return null;
+  }
+
+  return (((newNum - oldNum) / oldNum) * 100).toFixed(2);
 };
 
 export const validateEmail = (email) => {

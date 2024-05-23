@@ -5,8 +5,11 @@ import AuthContext from "../context/AuthContext";
 import useApi from "../utils/useApi";
 import {
   getThisMonth,
+  getLastMonth,
   getThisYear,
+  getLastYear,
   getAllTime,
+  getPercentageChange,
   capitalize,
 } from "../utils/utils";
 import { TypeAnimation } from "react-type-animation";
@@ -21,10 +24,13 @@ const Home = () => {
   const [lastReport, setLastReport] = useState({});
   const [reportLoading, setReportLoading] = useState(true);
   const [stats, setStats] = useState({});
+  const [previousStats, setPreviousStats] = useState({});
   const [statsLoading, setStatsLoading] = useState(true);
   const [addingReceipt, setAddingReceipt] = useState(false);
   const [date, setDate] = useState(getThisMonth());
+  const [previousDate, setPreviousDate] = useState(getLastMonth());
   const [timeSpan, setTimeSpan] = useState("month");
+  const [percentageChanges, setPercentageChanges] = useState({});
   const [receiptLinkValid, setReceiptLinkValid] = useState("");
   const [successText, setSuccessText] = useState("");
   const [toast, setToast] = useState({});
@@ -40,22 +46,65 @@ const Home = () => {
   useEffect(() => {
     if (timeSpan === "month") {
       setDate(getThisMonth);
+      setPreviousDate(getLastMonth);
     } else if (timeSpan === "year") {
       setDate(getThisYear);
+      setPreviousDate(getLastYear);
     } else {
       setDate(getAllTime);
     }
   }, [timeSpan]);
 
   useEffect(() => {
+    if (timeSpan !== "all") {
+      getPreviousStats();
+    }
     getStats();
-  }, [date]);
+  }, [previousDate]);
+
+  useEffect(() => {
+    if (stats.totalSpent && previousStats.totalSpent && timeSpan !== "all") {
+      const changes = {
+        totalSpent: getPercentageChange(
+          previousStats.totalSpent.totalSpent,
+          stats.totalSpent.totalSpent
+        ),
+        unitCount: getPercentageChange(
+          previousStats.visitedCompaniesInfo?.unitCount,
+          stats.visitedCompaniesInfo?.unitCount
+        ),
+        mostVisitedCompanyReceiptCount: getPercentageChange(
+          previousStats.MostVisitedCompaniesInfo[0]?.receiptCount,
+          stats.MostVisitedCompaniesInfo[0]?.receiptCount
+        ),
+        mostVisitedCompanyPriceSum: getPercentageChange(
+          previousStats.MostVisitedCompaniesInfo[0]?.priceSum,
+          stats.MostVisitedCompaniesInfo[0]?.priceSum
+        ),
+        mostSpentReceipt: getPercentageChange(
+          previousStats.totalSpent?.mostSpentReceipt,
+          stats.totalSpent?.mostSpentReceipt
+        ),
+      };
+
+      setPercentageChanges(changes);
+    }
+  }, [stats]);
 
   const getStats = async () => {
     setStatsLoading(true);
     const baseStats = await api.getBaseStats(date.dateFrom, date.dateTo, 1);
     setStats(baseStats);
     setStatsLoading(false);
+  };
+
+  const getPreviousStats = async () => {
+    const baseStats = await api.getBaseStats(
+      previousDate.dateFrom,
+      previousDate.dateTo,
+      1
+    );
+    setPreviousStats(baseStats);
   };
 
   const getLastReceipt = async () => {
@@ -196,6 +245,7 @@ const Home = () => {
             stats={stats}
             timeSpan={timeSpan}
             setTimeSpan={setTimeSpan}
+            percentageChanges={percentageChanges}
             statsLoading={statsLoading}
           />
         ) : (

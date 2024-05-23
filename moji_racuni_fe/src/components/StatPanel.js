@@ -1,8 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { formatPrice } from "../utils/utils";
+import TrendUp from "../icons/trend-up.png";
+import TrendDown from "../icons/trend-down.png";
 
-const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
+const StatPanel = ({
+  stats,
+  timeSpan,
+  setTimeSpan,
+  percentageChanges,
+  statsLoading,
+}) => {
   return (
     <div className="stat-panel py-4 py-lg-3">
       <div className="stat-panel__header">
@@ -65,6 +73,30 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
                 <span className="stat-panel__item-val fs-2 fw-bold">
                   {formatPrice(stats.totalSpent.totalSpent)} RSD
                 </span>
+                {timeSpan !== "all" &&
+                  percentageChanges.totalSpent !== null && (
+                    <div
+                      className={`stat-panel__item-trend ${
+                        percentageChanges.totalSpent < 0 &&
+                        "stat-panel__item-trend--down"
+                      }`}
+                    >
+                      <img
+                        className="stat-panel__item-trend-img"
+                        src={
+                          percentageChanges.totalSpent >= 0
+                            ? TrendUp
+                            : TrendDown
+                        }
+                        alt={
+                          percentageChanges.totalSpent >= 0
+                            ? "uptrend"
+                            : "downtrend"
+                        }
+                      />
+                      {percentageChanges.totalSpent}%
+                    </div>
+                  )}
               </div>
               <div className="stat-panel__item stat-panel__item--two">
                 <h6 className="stat-panel__item-title c-gray">
@@ -73,6 +105,27 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
                 <span className="stat-panel__item-val fs-2 fw-bold">
                   {stats.visitedCompaniesInfo.unitCount}
                 </span>
+                {timeSpan !== "all" && percentageChanges.unitCount !== null && (
+                  <div
+                    className={`stat-panel__item-trend ${
+                      percentageChanges.unitCount < 0 &&
+                      "stat-panel__item-trend--down"
+                    }`}
+                  >
+                    <img
+                      className="stat-panel__item-trend-img"
+                      src={
+                        percentageChanges.unitCount >= 0 ? TrendUp : TrendDown
+                      }
+                      alt={
+                        percentageChanges.unitCount >= 0
+                          ? "uptrend"
+                          : "downtrend"
+                      }
+                    />
+                    {percentageChanges.unitCount}%
+                  </div>
+                )}
               </div>
               <div className="stat-panel__item stat-panel__item--three">
                 <h6 className="stat-panel__item-title c-gray">
@@ -87,6 +140,33 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
                       {stats.MostVisitedCompaniesInfo[0].receiptCount}
                     </span>
                     <h6 className="stat-panel__item-title c-gray">Računa</h6>
+                    {timeSpan !== "all" &&
+                      percentageChanges.mostVisitedCompanyReceiptCount !==
+                        null && (
+                        <div
+                          className={`stat-panel__item-trend stat-panel__item-trend--sm ${
+                            percentageChanges.mostVisitedCompanyReceiptCount <
+                              0 && "stat-panel__item-trend--down"
+                          }`}
+                        >
+                          <img
+                            className="stat-panel__item-trend-img"
+                            src={
+                              percentageChanges.mostVisitedCompanyReceiptCount >=
+                              0
+                                ? TrendUp
+                                : TrendDown
+                            }
+                            alt={
+                              percentageChanges.mostVisitedCompanyReceiptCount >=
+                              0
+                                ? "uptrend"
+                                : "downtrend"
+                            }
+                          />
+                          {percentageChanges.mostVisitedCompanyReceiptCount}%
+                        </div>
+                      )}
                   </div>
                   <div>
                     <span className="stat-panel__item-val fs-3 fw-bold">
@@ -94,6 +174,30 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
                       RSD
                     </span>
                     <h6 className="stat-panel__item-title c-gray">Potrošeno</h6>
+                    {timeSpan !== "all" &&
+                      percentageChanges.mostVisitedCompanyPriceSum !== null && (
+                        <div
+                          className={`stat-panel__item-trend stat-panel__item-trend--sm ${
+                            percentageChanges.mostVisitedCompanyPriceSum < 0 &&
+                            "stat-panel__item-trend--down"
+                          }`}
+                        >
+                          <img
+                            className="stat-panel__item-trend-img"
+                            src={
+                              percentageChanges.mostVisitedCompanyPriceSum >= 0
+                                ? TrendUp
+                                : TrendDown
+                            }
+                            alt={
+                              percentageChanges.mostVisitedCompanyPriceSum >= 0
+                                ? "uptrend"
+                                : "downtrend"
+                            }
+                          />
+                          {percentageChanges.mostVisitedCompanyPriceSum}%
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
@@ -107,6 +211,30 @@ const StatPanel = ({ stats, timeSpan, setTimeSpan, statsLoading }) => {
                 <span className="stat-panel__item-val fs-2 fw-bold">
                   {formatPrice(stats.mostValuableItems[0].price)} RSD
                 </span>
+                {timeSpan !== "all" &&
+                  percentageChanges.mostSpentReceipt !== null && (
+                    <div
+                      className={`stat-panel__item-trend ${
+                        percentageChanges.mostSpentReceipt < 0 &&
+                        "stat-panel__item-trend--down"
+                      }`}
+                    >
+                      <img
+                        className="stat-panel__item-trend-img"
+                        src={
+                          percentageChanges.mostSpentReceipt >= 0
+                            ? TrendUp
+                            : TrendDown
+                        }
+                        alt={
+                          percentageChanges.mostSpentReceipt >= 0
+                            ? "uptrend"
+                            : "downtrend"
+                        }
+                      />
+                      {percentageChanges.mostSpentReceipt}%
+                    </div>
+                  )}
               </div>
             </div>
           ) : (
