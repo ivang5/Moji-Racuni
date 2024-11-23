@@ -12,7 +12,7 @@ Web aplikacija za praćenje finansija. Skladišti podatke sa fiskalnih računa i
   - Izvršiti `python manage.py createsuperuser` (za kreiranje administratora koji treba da bude predefinisan)
 - Unutar `moji_racuni_fe` direktorijuma:
   - Izvršiti `npm install`
-  - Navigirati se do `/src/utils/utils.js` i na vrhu fajla promeniti `BASE_URL` konstantu tako da bude formata `http://{IPv4 adresa vašeg uređaja na mreži}:8000` (npr. `http://192.168.1.1:8000`).
+  - Kreirati `.env` fajl i dodati `REACT_APP_BASE_URL` varijablu, vrednost treba da bude formata `http://{IPv4 adresa vašeg uređaja na mreži}:8000` (npr. `http://192.168.1.1:8000`).
 
 ## Pokretanje:
 
