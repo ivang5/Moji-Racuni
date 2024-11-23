@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import useApi from "../utils/useApi";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
-import { BASE_URL } from "../utils/utils";
 
 const CompanyCard = ({ tin, name, image, openModal }) => {
   const [companyVisits, setCompanyVisits] = useState(0);
@@ -41,7 +40,11 @@ const CompanyCard = ({ tin, name, image, openModal }) => {
             ? "company-card__img company-card__img--logo"
             : "company-card__img"
         }
-        src={image ? `${BASE_URL}/media/${image}` : ImgPlaceholder}
+        src={
+          image
+            ? `${process.env.REACT_APP_BASE_URL}/media/${image}`
+            : ImgPlaceholder
+        }
         alt="logo preduzeća"
       />
       {companyType && (

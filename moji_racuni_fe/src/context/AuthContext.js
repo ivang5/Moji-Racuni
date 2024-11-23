@@ -1,7 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-import { BASE_URL } from "../utils/utils";
 
 const AuthContext = createContext();
 
@@ -31,16 +30,19 @@ export const AuthProvider = ({ children }) => {
 
   const callLogin = async (username, password) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/token/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username,
-          password: password,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/token/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: username,
+            password: password,
+          }),
+        }
+      );
       const data = await response.json();
 
       if (response.status === 200) {
@@ -61,7 +63,9 @@ export const AuthProvider = ({ children }) => {
       if (!isNaN(username)) {
         return 404;
       }
-      const response = await fetch(`${BASE_URL}/api/users/${username}/`);
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/users/${username}/`
+      );
       return response.status;
     } catch (error) {
       return 0;
@@ -87,20 +91,23 @@ export const AuthProvider = ({ children }) => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${BASE_URL}/api/users/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: e.target.regEmail.value,
-          username: e.target.regUsername.value,
-          password: e.target.regPassword.value,
-          role: "REGULAR",
-          date_joined: "2022-11-12",
-          is_active: true,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/api/users/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: e.target.regEmail.value,
+            username: e.target.regUsername.value,
+            password: e.target.regPassword.value,
+            role: "REGULAR",
+            date_joined: "2022-11-12",
+            is_active: true,
+          }),
+        }
+      );
 
       if (response.status === 201) {
         await callLogin(e.target.regUsername.value, e.target.regPassword.value);

@@ -2,7 +2,6 @@ import { useContext } from "react";
 import jwt_decode from "jwt-decode";
 import dayjs from "dayjs";
 import AuthContext from "../context/AuthContext";
-import { BASE_URL } from "./utils";
 
 const useFetch = () => {
   const { authTokens, setAuthTokens, setUser, logoutUser } =
@@ -14,7 +13,7 @@ const useFetch = () => {
   }
 
   const originalRequest = async (url, config) => {
-    url = `${BASE_URL}${url}`;
+    url = `${process.env.REACT_APP_BASE_URL}${url}`;
     const response = await fetch(url, config);
     let data;
     try {
@@ -27,13 +26,16 @@ const useFetch = () => {
 
   const refreshToken = async (authTokens) => {
     isRefreshing = true;
-    const response = await fetch(`${BASE_URL}/api/token/refresh/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ refresh: authTokens.refresh }),
-    });
+    const response = await fetch(
+      `${process.env.REACT_APP_BASE_URL}/api/token/refresh/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refresh: authTokens.refresh }),
+      }
+    );
     const data = await response.json();
 
     if (response.status === 401) {

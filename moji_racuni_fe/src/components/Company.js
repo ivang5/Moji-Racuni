@@ -3,7 +3,7 @@ import Dropdown from "react-dropdown";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
 import EditIcon from "../icons/edit-icon.svg";
 import AuthContext from "../context/AuthContext";
-import { BASE_URL, formatPrice } from "../utils/utils";
+import { formatPrice } from "../utils/utils";
 
 const Company = ({
   companyInfo,
@@ -73,7 +73,7 @@ const Company = ({
                 }
                 src={
                   companyInfo.company.image
-                    ? `${BASE_URL}${companyInfo.company.image}`
+                    ? `${process.env.REACT_APP_BASE_URL}${companyInfo.company.image}`
                     : ImgPlaceholder
                 }
                 alt="logo preduzeća"
