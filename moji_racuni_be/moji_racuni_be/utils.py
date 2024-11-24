@@ -128,9 +128,10 @@ def get_vat(item_part):
         new_part = new_part.replace("(đ)", "")
     return {"new_part": new_part, "vat": vat}
 
-def remove_replacement_char(item_part):
-    return item_part.replace(u"\ufffd", "")
-
+def remove_blacklisted_chars(item_part):
+    blacklist = {u"\ufffd", "ø"}
+    return ''.join(char for char in item_part if char not in blacklist)
+    
 def get_name(item_part, measure_type, measure_prefix):
     """
     Vraća naziv stavke bez merne jedinice i šifre
@@ -269,7 +270,7 @@ def get_items(receipt, receipt_id):
             item_part_latin = cyrillic_to_latin(item_part_lower)
             item_part_filtered = get_vat(item_part_latin)
             item_vats.append(item_part_filtered["vat"])
-            item_part_normalized = remove_replacement_char(item_part_filtered["new_part"])
+            item_part_normalized = remove_blacklisted_chars(item_part_filtered["new_part"])
             
             measure_prefix = get_measure_prefix(item_part_normalized)
             measure_type = get_measure_type(item_part_normalized, measure_prefix)
@@ -291,7 +292,6 @@ def get_items(receipt, receipt_id):
                     item_quantities.append(item_quantity)
                     successful = True
                 except ValueError:
-                    test = " ".join(item_part.replace('.', '').split()).split(' ')[position].replace(",", ".")
                     position += 1
                 except IndexError:
                     break
