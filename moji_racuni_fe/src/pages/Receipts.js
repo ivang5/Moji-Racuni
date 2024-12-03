@@ -346,7 +346,7 @@ const Receipts = () => {
                   </div>
                 </div>
                 <button
-                  className="btn btn-primary btn-primary--black btn-round mb-2"
+                  className="btn btn-primary btn-round mb-2"
                   type="submit"
                 >
                   Pretraži

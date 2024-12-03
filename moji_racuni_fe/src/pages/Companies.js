@@ -201,6 +201,10 @@ const Companies = () => {
   const resetModal = () => {
     setModalOpen(false);
     setModalCompany({});
+    setTypeModalMain(true);
+    setModalOpenType(false);
+    setTypeCreationOpen(false);
+    setTypeDeletionOpen(false);
   };
 
   const createCompanyType = async (e) => {
@@ -385,7 +389,7 @@ const Companies = () => {
                   <FormGroup name="type" text="Tip" type="text" inline={true} />
                 </div>
                 <button
-                  className="btn btn-primary btn-primary--black btn-round mb-2"
+                  className="btn btn-primary btn-round mb-2"
                   type="submit"
                 >
                   Pretraži
