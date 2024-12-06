@@ -192,6 +192,11 @@
       cursor: pointer;
     }
 
+    &-content {
+      display: flex;
+      align-items: center;
+    }
+
     .nav__link {
       padding-right: 8px;
     }
@@ -199,6 +204,10 @@
     .arrow {
       border-color: $c-gray-1;
       transform: rotate(45deg) translate(-7px, -2px);
+
+      @include respond-to(tablet) {
+        transform: rotate(45deg) translate(-2px, 0px);
+      }
     }
 
     .nav__link--active + .arrow {

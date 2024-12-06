@@ -16,6 +16,10 @@ const Header = () => {
     const pathname = window.location.pathname;
     const page = getPageFromPathname(pathname);
     setActivePage(page);
+
+    window.addEventListener("click", handleMouseClick);
+
+    return () => window.removeEventListener("click", handleMouseClick);
   }, []);
 
   useEffect(() => {
@@ -50,6 +54,15 @@ const Header = () => {
 
   const toggleMobileNav = () => {
     setMobileNav(!mobileNav);
+  };
+
+  const handleMouseClick = (e) => {
+    if (
+      !e.target.className.startsWith("nav__") &&
+      !e.target.className.startsWith("arrow")
+    ) {
+      setDropdownOpen(false);
+    }
   };
 
   return (
@@ -194,7 +207,10 @@ const Header = () => {
                       : "nav__dropdown"
                   }
                 >
-                  <div onClick={() => setDropdownOpen(!dropdownOpen)}>
+                  <div
+                    className="nav__dropdown-content"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                  >
                     <span
                       className={
                         activePage === "Profile"

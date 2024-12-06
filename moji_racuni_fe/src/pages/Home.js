@@ -60,7 +60,7 @@ const Home = () => {
       getPreviousStats();
     }
     getStats();
-  }, [previousDate]);
+  }, [date]);
 
   useEffect(() => {
     if (stats.totalSpent && previousStats.totalSpent && timeSpan !== "all") {
