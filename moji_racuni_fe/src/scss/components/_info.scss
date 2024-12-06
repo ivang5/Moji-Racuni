@@ -35,6 +35,7 @@
     padding: 15px;
     border-radius: 10px;
     border: 1px solid $c-green-4;
+    box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
 
     @include respond-to(tablet) {
       top: -75px;
