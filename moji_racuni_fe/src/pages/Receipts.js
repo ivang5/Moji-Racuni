@@ -76,11 +76,6 @@ const Receipts = () => {
   }, [pageNum, pageCount]);
 
   useEffect(() => {
-    const pageNumbers = getPageNumberList(pageCount, pageNum);
-    setPageNumbers(pageNumbers, pageNum);
-  }, [pageCount]);
-
-  useEffect(() => {
     setTimeout(() => {
       setDocumentHeight(
         window.document.body.offsetHeight >= window.innerHeight
