@@ -23,13 +23,7 @@ const CompanyCard = ({ tin, name, image, openModal }) => {
   };
 
   return (
-    <div
-      className="company-card"
-      onClick={() => {
-        openModal(tin);
-        window.scrollTo(0, 0);
-      }}
-    >
+    <div className="company-card" onClick={() => openModal(tin)}>
       <div className="company-card__head-wrapper">
         <h5 className="company-card__name">{name}</h5>
         <span className="company-card__tin">{tin}</span>

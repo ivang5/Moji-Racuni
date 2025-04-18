@@ -34,7 +34,6 @@ const Companies = () => {
   const [typeDeletionOpen, setTypeDeletionOpen] = useState(false);
   const [toast, setToast] = useState({});
   const [toastOpen, setToastOpen] = useState(false);
-  const [documentHeight, setDocumentHeight] = useState(0);
   const [pageNumbers, setPageNumbers] = useState([]);
   const [pageCount, setPageCount] = useState(10000);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -75,16 +74,6 @@ const Companies = () => {
     applySortingFilters();
     window.scrollTo(0, 0);
   }, [pageNum, pageCount]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setDocumentHeight(
-        window.document.body.offsetHeight >= window.innerHeight
-          ? window.document.body.offsetHeight
-          : window.innerHeight
-      );
-    }, 800);
-  }, [companies]);
 
   useEffect(() => {
     window.addEventListener("click", handleModalClick);
@@ -190,6 +179,7 @@ const Companies = () => {
 
     if (company) {
       setModalCompany(company);
+      document.body.style.overflowY = "hidden";
     }
   };
 
@@ -200,6 +190,7 @@ const Companies = () => {
     setModalOpenType(false);
     setTypeCreationOpen(false);
     setTypeDeletionOpen(false);
+    document.body.style.overflow = "auto";
   };
 
   const createCompanyType = async (e) => {
@@ -411,7 +402,10 @@ const Companies = () => {
           </div>
           <button
             className="btn btn-primary btn-round mb-2"
-            onClick={() => setModalOpenType(true)}
+            onClick={() => {
+              setModalOpenType(true);
+              document.body.style.overflowY = "hidden";
+            }}
           >
             Upravljaj tipovima preduzeća{" "}
             <i className="arrow arrow--right arrow--btn"></i>
@@ -455,7 +449,7 @@ const Companies = () => {
         </div>
       </div>
       {modalOpen && (
-        <div className="modal" style={{ minHeight: `${documentHeight}px` }}>
+        <div className="modal">
           {modalCompany.company ? (
             <div className="modal__content">
               <Company
@@ -484,7 +478,7 @@ const Companies = () => {
         </div>
       )}
       {modalOpenType && (
-        <div className="modal" style={{ minHeight: `${documentHeight}px` }}>
+        <div className="modal">
           <div className="modal__content">
             {typeModalMain ? (
               <div className="company-type">

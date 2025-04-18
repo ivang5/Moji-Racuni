@@ -4,10 +4,7 @@ const UserCard = ({ id, username, email, active, openModal }) => {
   return (
     <div
       className={active ? "user-card" : "user-card user-card--blocked"}
-      onClick={() => {
-        openModal(id);
-        window.scrollTo(0, 0);
-      }}
+      onClick={() => openModal(id)}
     >
       <div className="user-card__head-wrapper">
         <h5 className="user-card__username">

@@ -30,7 +30,6 @@ const Reports = () => {
   const [deletionOpen, setDeletionOpen] = useState(false);
   const [toast, setToast] = useState({});
   const [toastOpen, setToastOpen] = useState(false);
-  const [documentHeight, setDocumentHeight] = useState(0);
   const [pageNumbers, setPageNumbers] = useState([]);
   const [pageCount, setPageCount] = useState(10000);
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
@@ -72,16 +71,6 @@ const Reports = () => {
     applySortingFilters();
     window.scrollTo(0, 0);
   }, [pageNum, pageCount]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setDocumentHeight(
-        window.document.body.offsetHeight >= window.innerHeight
-          ? window.document.body.offsetHeight
-          : window.innerHeight
-      );
-    }, 800);
-  }, [reports]);
 
   useEffect(() => {
     window.addEventListener("click", handleModalClick);
@@ -201,6 +190,7 @@ const Reports = () => {
         applySortingFilters();
       }
       setModalReport(report);
+      document.body.style.overflowY = "hidden";
     }
   };
 
@@ -208,6 +198,7 @@ const Reports = () => {
     setModalOpen(false);
     setModalReport({});
     setDeletionOpen(false);
+    document.body.style.overflow = "auto";
   };
 
   const sendResponse = async (e) => {
@@ -409,7 +400,7 @@ const Reports = () => {
         </div>
       </div>
       {modalOpen && (
-        <div className="modal" style={{ minHeight: `${documentHeight}px` }}>
+        <div className="modal">
           {modalReport.request ? (
             <div className="modal__content">
               <Report reportInfo={modalReport} />

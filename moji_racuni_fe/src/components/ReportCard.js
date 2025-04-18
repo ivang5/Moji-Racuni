@@ -39,10 +39,7 @@ const ReportCard = ({
                 : "report-card report-card--closed"
               : "report-card"
           }
-          onClick={() => {
-            openModal(id);
-            window.scrollTo(0, 0);
-          }}
+          onClick={() => openModal(id)}
         >
           {user.role === "REGULAR" && closed && !seen ? (
             <img

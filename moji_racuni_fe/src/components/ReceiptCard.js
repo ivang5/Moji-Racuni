@@ -33,13 +33,7 @@ const ReceiptCard = ({
   return (
     <>
       {companyUnit && itemsCount ? (
-        <div
-          className="receipt-card"
-          onClick={() => {
-            openModal(id);
-            window.scrollTo(0, 0);
-          }}
-        >
+        <div className="receipt-card" onClick={() => openModal(id)}>
           <div className="receipt-card__head-wrapper">
             <span className="receipt-card__date">
               {dateTimeFormatter(date)}

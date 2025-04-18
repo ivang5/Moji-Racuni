@@ -31,7 +31,6 @@ const Receipts = () => {
   const [deletionOpen, setDeletionOpen] = useState(false);
   const [toast, setToast] = useState({});
   const [toastOpen, setToastOpen] = useState(false);
-  const [documentHeight, setDocumentHeight] = useState(0);
   const [pageNumbers, setPageNumbers] = useState([]);
   const [pageCount, setPageCount] = useState(10000);
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
@@ -74,16 +73,6 @@ const Receipts = () => {
     applySortingFilters();
     window.scrollTo(0, 0);
   }, [pageNum, pageCount]);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setDocumentHeight(
-        window.document.body.offsetHeight >= window.innerHeight
-          ? window.document.body.offsetHeight
-          : window.innerHeight
-      );
-    }, 800);
-  }, [receipts]);
 
   useEffect(() => {
     window.addEventListener("click", handleModalClick);
@@ -206,6 +195,7 @@ const Receipts = () => {
 
     if (receipt) {
       setModalReceipt(receipt);
+      document.body.style.overflowY = "hidden";
     }
   };
 
@@ -215,6 +205,7 @@ const Receipts = () => {
     setReportOpen(false);
     setDeletionOpen(false);
     setReportValidation("");
+    document.body.style.overflow = "auto";
   };
 
   const sendReport = async (e) => {
@@ -407,7 +398,7 @@ const Receipts = () => {
         </div>
       </div>
       {modalOpen && (
-        <div className="modal" style={{ minHeight: `${documentHeight}px` }}>
+        <div className="modal">
           {modalReceipt.receipt ? (
             <div className="modal__content">
               <Receipt receiptInfo={modalReceipt} />
