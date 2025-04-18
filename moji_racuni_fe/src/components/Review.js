@@ -183,7 +183,7 @@ const Review = ({
             </Text>
           </View>
         </View>
-        <Text style={styles.subTitle}>- Broj računa</Text>
+        <Text style={styles.subTitle}>Broj računa</Text>
         <Image src={`data:image/png;base64,${statPlots.receipts}`} />
         <View style={styles.footer}>
           <View style={styles.footerBrand}>
@@ -231,7 +231,7 @@ const Review = ({
           </View>
         </View>
         <Text style={[styles.subTitle, styles.subTitleSpending]}>
-          - Potrošnja
+          Potrošnja
         </Text>
         <Image src={`data:image/png;base64,${statPlots.spending}`} />
         <View style={styles.footer}>
@@ -269,7 +269,7 @@ const Review = ({
           </View>
         </View>
         <Text style={[styles.subTitle, styles.subTitleCompanies]}>
-          - Preduzeća
+          Preduzeća
         </Text>
         <Image src={`data:image/png;base64,${statPlots.companies}`} />
         <View style={styles.footer}>
@@ -310,7 +310,7 @@ const Review = ({
             </View>
           </View>
           <Text style={[styles.subTitle, styles.subTitleTypes]}>
-            - Tipovi preduzeća
+            Tipovi preduzeća
           </Text>
           <Image src={`data:image/png;base64,${statPlots.types}`} />
           <View style={styles.footer}>
@@ -349,7 +349,7 @@ const Review = ({
           </View>
         </View>
         <Text style={[styles.subTitle, styles.subTitleItems]}>
-          - Stavke računa
+          Stavke računa
         </Text>
         <Image src={`data:image/png;base64,${statPlots.items}`} />
         <View style={styles.footer}>

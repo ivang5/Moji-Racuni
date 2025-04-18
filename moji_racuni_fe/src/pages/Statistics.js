@@ -519,9 +519,7 @@ const Statistics = () => {
                 </div>
               </div>
             )}
-            <h2 className="statistics__chart-wrapper-title mt-4">
-              - Potrošnja
-            </h2>
+            <h2 className="statistics__chart-wrapper-title mt-5">Potrošnja</h2>
             {spentByHour.length !== 0 ? (
               <div className="statistics__chart-wrapper mt-5">
                 <Chart
@@ -596,8 +594,8 @@ const Statistics = () => {
                 </div>
               </div>
             )}
-            <h2 className="statistics__chart-wrapper-title mt-4">
-              - Broj računa
+            <h2 className="statistics__chart-wrapper-title mt-5">
+              Broj računa
             </h2>
             {receiptsByHour.length !== 0 ? (
               <div className="statistics__chart-wrapper mt-5">
@@ -669,9 +667,7 @@ const Statistics = () => {
                 </div>
               </div>
             )}
-            <h2 className="statistics__chart-wrapper-title mt-4">
-              - Preduzeća
-            </h2>
+            <h2 className="statistics__chart-wrapper-title mt-5">Preduzeća</h2>
             {mostSpentCompanies.length !== 0 ? (
               <div className="statistics__chart-wrapper mt-4">
                 <Chart
@@ -692,8 +688,8 @@ const Statistics = () => {
                 Nedovoljno podataka da bi se prikazali grafikoni!
               </p>
             )}
-            <h2 className="statistics__chart-wrapper-title mt-4">
-              - Tipovi preduzeća
+            <h2 className="statistics__chart-wrapper-title mt-5">
+              Tipovi preduzeća
             </h2>
             {mostSpentTypes.length !== 0 ? (
               <div className="statistics__chart-wrapper mt-4">
@@ -754,8 +750,8 @@ const Statistics = () => {
                 </div>
               </div>
             )}
-            <h2 className="statistics__chart-wrapper-title mt-4">
-              - Stavke računa
+            <h2 className="statistics__chart-wrapper-title mt-5">
+              Stavke računa
             </h2>
             {receiptsByHour.length !== 0 ? (
               <div className="statistics__chart-wrapper mt-5">
