@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import Receipt from "../components/Receipt";
 import StatPanel from "../components/StatPanel";
 import AuthContext from "../context/AuthContext";
@@ -35,6 +35,7 @@ const Home = () => {
   const [successText, setSuccessText] = useState("");
   const [toast, setToast] = useState({});
   const [toastOpen, setToastOpen] = useState(false);
+  const receiptInputRef = useRef(null);
   const api = useApi();
   const { user } = useContext(AuthContext);
 
@@ -164,7 +165,6 @@ const Home = () => {
     } else if (response === 409) {
       setReceiptLinkValid("Ovaj račun ste već uneli!");
     } else {
-      setSuccessText("Račun je uspešno dodat!");
       getStats();
       getLastReceipt();
       setToast({
@@ -172,12 +172,16 @@ const Home = () => {
         text: "Račun je uspešno dodat.",
       });
       openToast();
+
+      if (receiptInputRef.current) {
+        receiptInputRef.current.value = "";
+      }
     }
   };
 
   const openToast = () => {
     setToastOpen(true);
-    setTimeout(() => setToastOpen(false), 7000);
+    setTimeout(() => setToastOpen(false), 10000);
   };
 
   const closeToast = () => {
@@ -217,6 +221,7 @@ const Home = () => {
             </h2>
             <form className="form form--simple pb-2" onSubmit={addReceipt}>
               <FormGroup
+                ref={receiptInputRef}
                 name="receiptLink"
                 text="Link fiskalnog računa"
                 type="text"
