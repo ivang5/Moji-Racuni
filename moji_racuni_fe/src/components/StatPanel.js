@@ -74,7 +74,8 @@ const StatPanel = ({
                   {formatPrice(stats.totalSpent.totalSpent)} RSD
                 </span>
                 {timeSpan !== "all" &&
-                  percentageChanges.totalSpent !== null && (
+                  percentageChanges.totalSpent !== null &&
+                  percentageChanges.totalSpent != 0 && (
                     <div
                       className={`stat-panel__item-trend ${
                         percentageChanges.totalSpent < 0 &&
@@ -105,27 +106,29 @@ const StatPanel = ({
                 <span className="stat-panel__item-val fs-2 fw-bold">
                   {stats.visitedCompaniesInfo.unitCount}
                 </span>
-                {timeSpan !== "all" && percentageChanges.unitCount !== null && (
-                  <div
-                    className={`stat-panel__item-trend ${
-                      percentageChanges.unitCount < 0 &&
-                      "stat-panel__item-trend--down"
-                    }`}
-                  >
-                    <img
-                      className="stat-panel__item-trend-img"
-                      src={
-                        percentageChanges.unitCount >= 0 ? TrendUp : TrendDown
-                      }
-                      alt={
-                        percentageChanges.unitCount >= 0
-                          ? "uptrend"
-                          : "downtrend"
-                      }
-                    />
-                    {percentageChanges.unitCount}%
-                  </div>
-                )}
+                {timeSpan !== "all" &&
+                  percentageChanges.unitCount !== null &&
+                  percentageChanges.unitCount != 0 && (
+                    <div
+                      className={`stat-panel__item-trend ${
+                        percentageChanges.unitCount < 0 &&
+                        "stat-panel__item-trend--down"
+                      }`}
+                    >
+                      <img
+                        className="stat-panel__item-trend-img"
+                        src={
+                          percentageChanges.unitCount >= 0 ? TrendUp : TrendDown
+                        }
+                        alt={
+                          percentageChanges.unitCount >= 0
+                            ? "uptrend"
+                            : "downtrend"
+                        }
+                      />
+                      {percentageChanges.unitCount}%
+                    </div>
+                  )}
               </div>
               <div className="stat-panel__item stat-panel__item--three">
                 <h6 className="stat-panel__item-title c-gray">
@@ -142,7 +145,8 @@ const StatPanel = ({
                     <h6 className="stat-panel__item-title c-gray">Računa</h6>
                     {timeSpan !== "all" &&
                       percentageChanges.mostVisitedCompanyReceiptCount !==
-                        null && (
+                        null &&
+                      percentageChanges.mostVisitedCompanyReceiptCount != 0 && (
                         <div
                           className={`stat-panel__item-trend stat-panel__item-trend--sm ${
                             percentageChanges.mostVisitedCompanyReceiptCount <
@@ -175,7 +179,8 @@ const StatPanel = ({
                     </span>
                     <h6 className="stat-panel__item-title c-gray">Potrošeno</h6>
                     {timeSpan !== "all" &&
-                      percentageChanges.mostVisitedCompanyPriceSum !== null && (
+                      percentageChanges.mostVisitedCompanyPriceSum !== null &&
+                      percentageChanges.mostVisitedCompanyPriceSum != 0 && (
                         <div
                           className={`stat-panel__item-trend stat-panel__item-trend--sm ${
                             percentageChanges.mostVisitedCompanyPriceSum < 0 &&
@@ -212,7 +217,8 @@ const StatPanel = ({
                   {formatPrice(stats.mostValuableItems[0].price)} RSD
                 </span>
                 {timeSpan !== "all" &&
-                  percentageChanges.mostSpentReceipt !== null && (
+                  percentageChanges.mostSpentReceipt !== null &&
+                  percentageChanges.mostSpentReceipt != 0 && (
                     <div
                       className={`stat-panel__item-trend ${
                         percentageChanges.mostSpentReceipt < 0 &&
