@@ -130,7 +130,7 @@ def get_vat(item_part):
 
 def remove_blacklisted_chars(item_part):
     blacklist = {u"\ufffd", "ø"}
-    return ''.join(char for char in item_part if char not in blacklist)
+    return ''.join(char for char in item_part if char not in blacklist).replace("å", "a")
     
 def get_name(item_part, measure_type, measure_prefix):
     """
@@ -271,6 +271,7 @@ def get_items(receipt, receipt_id):
             item_part_filtered = get_vat(item_part_latin)
             item_vats.append(item_part_filtered["vat"])
             item_part_normalized = remove_blacklisted_chars(item_part_filtered["new_part"])
+            print(item_part_normalized)
             
             measure_prefix = get_measure_prefix(item_part_normalized)
             measure_type = get_measure_type(item_part_normalized, measure_prefix)
