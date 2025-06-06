@@ -271,7 +271,6 @@ def get_items(receipt, receipt_id):
             item_part_filtered = get_vat(item_part_latin)
             item_vats.append(item_part_filtered["vat"])
             item_part_normalized = remove_blacklisted_chars(item_part_filtered["new_part"])
-            print(item_part_normalized)
             
             measure_prefix = get_measure_prefix(item_part_normalized)
             measure_type = get_measure_type(item_part_normalized, measure_prefix)

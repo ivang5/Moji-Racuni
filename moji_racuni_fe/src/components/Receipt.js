@@ -1,10 +1,4 @@
-import React from "react";
-import {
-  dateTimeFormatter,
-  formatPrice,
-  noDecimalNum,
-  twoDecimalNum,
-} from "../utils/utils";
+import { dateTimeFormatter, formatPrice, noDecimalNum } from "../utils/utils";
 
 const Receipt = ({ receiptInfo, fullWidth }) => {
   return (

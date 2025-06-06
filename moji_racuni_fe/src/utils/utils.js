@@ -1,4 +1,7 @@
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 export const dateFormatter = (date) => {
   return dayjs(date).format("DD/MM/YYYY");
@@ -9,7 +12,7 @@ export const dateBEFormatter = (date) => {
 };
 
 export const dateTimeFormatter = (date) => {
-  return dayjs(date).format("DD/MM/YYYY - HH:mm:ss");
+  return dayjs.utc(date).format("DD/MM/YYYY - HH:mm:ss");
 };
 
 export const dateTimeBEFormatter = (date) => {
