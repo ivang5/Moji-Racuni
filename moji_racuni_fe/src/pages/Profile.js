@@ -1,6 +1,10 @@
-import React, { useContext } from "react";
-import { useEffect } from "react";
-import { useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Link } from "react-router-dom";
 import { TypeAnimation } from "react-type-animation";
 import FormGroup from "../components/FormGroup";
@@ -29,16 +33,21 @@ const Profile = () => {
     passwordRepeat: "",
   });
   const api = useApi();
+  const apiRef = useRef(api);
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
-    getUserInfo();
-  }, []);
+    apiRef.current = api;
+  }, [api]);
 
-  const getUserInfo = async () => {
-    const userInfo = await api.getUser(user.user_id);
+  const getUserInfo = useCallback(async () => {
+    const userInfo = await apiRef.current.getUser(user.user_id);
     setUserInfo(userInfo);
-  };
+  }, [user.user_id]);
+
+  useEffect(() => {
+    getUserInfo();
+  }, [getUserInfo]);
 
   const saveChanges = async (e) => {
     e.preventDefault();

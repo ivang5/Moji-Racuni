@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import useApi from "../utils/useApi";
@@ -18,15 +18,20 @@ const ReportCard = ({
   const [reportUser, setReportUser] = useState({});
   const { user } = useContext(AuthContext);
   const api = useApi();
+  const apiRef = useRef(api);
 
   useEffect(() => {
-    getReportUser();
-  }, []);
+    apiRef.current = api;
+  }, [api]);
 
-  const getReportUser = async () => {
-    const repUser = await api.getUser(userId);
-    setReportUser(repUser);
-  };
+  useEffect(() => {
+    const loadReportUser = async () => {
+      const repUser = await apiRef.current.getUser(userId);
+      setReportUser(repUser);
+    };
+
+    loadReportUser();
+  }, [userId]);
 
   return (
     <>

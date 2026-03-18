@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { capitalize, getPageFromPathname } from "../utils/utils";
@@ -12,6 +12,15 @@ const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const currentPath = window.location.pathname;
 
+  const handleMouseClick = useCallback((e) => {
+    if (
+      !e.target.className.startsWith("nav__") &&
+      !e.target.className.startsWith("arrow")
+    ) {
+      setDropdownOpen(false);
+    }
+  }, []);
+
   useEffect(() => {
     const pathname = window.location.pathname;
     const page = getPageFromPathname(pathname);
@@ -20,7 +29,7 @@ const Header = () => {
     window.addEventListener("click", handleMouseClick);
 
     return () => window.removeEventListener("click", handleMouseClick);
-  }, []);
+  }, [handleMouseClick]);
 
   useEffect(() => {
     switch (currentPath) {
@@ -50,19 +59,10 @@ const Header = () => {
       default:
         setActivePage("Home");
     }
-  }, [currentPath]);
+  }, [currentPath, user.role]);
 
   const toggleMobileNav = () => {
     setMobileNav(!mobileNav);
-  };
-
-  const handleMouseClick = (e) => {
-    if (
-      !e.target.className.startsWith("nav__") &&
-      !e.target.className.startsWith("arrow")
-    ) {
-      setDropdownOpen(false);
-    }
   };
 
   return (

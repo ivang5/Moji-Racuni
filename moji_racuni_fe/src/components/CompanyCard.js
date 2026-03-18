@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import useApi from "../utils/useApi";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
 
@@ -6,21 +6,24 @@ const CompanyCard = ({ tin, name, image, openModal }) => {
   const [companyVisits, setCompanyVisits] = useState(0);
   const [companyType, setCompanyType] = useState({});
   const api = useApi();
+  const apiRef = useRef(api);
 
   useEffect(() => {
-    getCompanyType();
-    getCompanyVisits();
-  }, []);
+    apiRef.current = api;
+  }, [api]);
 
-  const getCompanyType = async () => {
-    const type = await api.getTypeForCompany(tin);
-    setCompanyType(type);
-  };
+  useEffect(() => {
+    const loadCompanyData = async () => {
+      const [type, visits] = await Promise.all([
+        apiRef.current.getTypeForCompany(tin),
+        apiRef.current.getCompanyVisits(tin),
+      ]);
+      setCompanyType(type);
+      setCompanyVisits(visits.visits);
+    };
 
-  const getCompanyVisits = async () => {
-    const visits = await api.getCompanyVisits(tin);
-    setCompanyVisits(visits.visits);
-  };
+    loadCompanyData();
+  }, [tin]);
 
   return (
     <div className="company-card" onClick={() => openModal(tin)}>

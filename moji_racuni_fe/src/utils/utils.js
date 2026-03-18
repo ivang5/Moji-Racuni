@@ -29,10 +29,10 @@ export const getTomorrow = () => {
 export const getThisMonth = () => {
   const date = new Date();
   const dateFrom = dateBEFormatter(
-    new Date(date.getFullYear(), date.getMonth())
+    new Date(date.getFullYear(), date.getMonth()),
   );
   const dateTo = dateBEFormatter(
-    new Date(date.getFullYear(), date.getMonth() + 1, 1)
+    new Date(date.getFullYear(), date.getMonth() + 1, 1),
   );
   return { dateFrom: dateFrom, dateTo: dateTo };
 };
@@ -43,10 +43,10 @@ export const getLastMonth = () => {
     date.getMonth() !== 0 ? date.getFullYear() : date.getFullYear() - 1;
 
   const dateFrom = dateBEFormatter(
-    new Date(lastMonthYear, date.getMonth() - 1)
+    new Date(lastMonthYear, date.getMonth() - 1),
   );
   const dateTo = dateBEFormatter(
-    new Date(date.getFullYear(), date.getMonth(), 1)
+    new Date(date.getFullYear(), date.getMonth(), 1),
   );
 
   return { dateFrom: dateFrom, dateTo: dateTo };
@@ -69,7 +69,7 @@ export const getLastYear = () => {
 export const getAllTime = () => {
   const date = new Date();
   const dateFrom = dateBEFormatter(
-    new Date(date.getFullYear() - 10, date.getMonth())
+    new Date(date.getFullYear() - 10, date.getMonth()),
   );
   const dateTo = dateBEFormatter(new Date(date.getFullYear() + 1, 0, 1));
   return { dateFrom: dateFrom, dateTo: dateTo };
@@ -97,7 +97,7 @@ export const getPercentageChange = (oldNum, newNum) => {
 
 export const validateEmail = (email) => {
   return email.match(
-    /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
   );
 };
 
@@ -152,6 +152,9 @@ export const getPageFromPathname = (pathname) => {
       break;
     case "/profil":
       page = "Profile";
+      break;
+    default:
+      page = "Home";
       break;
   }
 

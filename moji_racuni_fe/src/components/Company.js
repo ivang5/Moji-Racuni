@@ -12,7 +12,7 @@ const Company = ({
   changeCompanyType,
 }) => {
   const [companyTypeOption, setCompanyTypeOption] = useState(
-    companyInfo.type && companyInfo.type.name
+    companyInfo.type && companyInfo.type.name,
   );
   let companyTypeOptions = ["Bez tipa"];
   const { user } = useContext(AuthContext);
@@ -35,7 +35,7 @@ const Company = ({
           : companyTypes.find((type) => type.name === companyTypeOption).id;
       changeCompanyType(selectedType);
     }
-  }, [companyTypeOption]);
+  }, [changeCompanyType, companyTypeOption, companyTypes]);
 
   const handleClick = () => {
     user.role !== "REGULAR" && imgInput.current.click();
@@ -79,11 +79,7 @@ const Company = ({
                 alt="logo preduzeća"
               />
               {user.role !== "REGULAR" && (
-                <img
-                  className="company__img-icon"
-                  src={EditIcon}
-                  alt="edit image"
-                />
+                <img className="company__img-icon" src={EditIcon} alt="edit" />
               )}
             </div>
             <div className="fw-bold t-center mb-1">

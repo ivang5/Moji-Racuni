@@ -75,7 +75,7 @@ const StatPanel = ({
                 </span>
                 {timeSpan !== "all" &&
                   percentageChanges.totalSpent !== null &&
-                  percentageChanges.totalSpent != 0 && (
+                  percentageChanges.totalSpent !== 0 && (
                     <div
                       className={`stat-panel__item-trend ${
                         percentageChanges.totalSpent < 0 &&
@@ -108,7 +108,7 @@ const StatPanel = ({
                 </span>
                 {timeSpan !== "all" &&
                   percentageChanges.unitCount !== null &&
-                  percentageChanges.unitCount != 0 && (
+                  percentageChanges.unitCount !== 0 && (
                     <div
                       className={`stat-panel__item-trend ${
                         percentageChanges.unitCount < 0 &&
@@ -146,7 +146,8 @@ const StatPanel = ({
                     {timeSpan !== "all" &&
                       percentageChanges.mostVisitedCompanyReceiptCount !==
                         null &&
-                      percentageChanges.mostVisitedCompanyReceiptCount != 0 && (
+                      percentageChanges.mostVisitedCompanyReceiptCount !==
+                        0 && (
                         <div
                           className={`stat-panel__item-trend stat-panel__item-trend--sm ${
                             percentageChanges.mostVisitedCompanyReceiptCount <
@@ -180,7 +181,7 @@ const StatPanel = ({
                     <h6 className="stat-panel__item-title c-gray">Potrošeno</h6>
                     {timeSpan !== "all" &&
                       percentageChanges.mostVisitedCompanyPriceSum !== null &&
-                      percentageChanges.mostVisitedCompanyPriceSum != 0 && (
+                      percentageChanges.mostVisitedCompanyPriceSum !== 0 && (
                         <div
                           className={`stat-panel__item-trend stat-panel__item-trend--sm ${
                             percentageChanges.mostVisitedCompanyPriceSum < 0 &&
@@ -218,7 +219,7 @@ const StatPanel = ({
                 </span>
                 {timeSpan !== "all" &&
                   percentageChanges.mostSpentReceipt !== null &&
-                  percentageChanges.mostSpentReceipt != 0 && (
+                  percentageChanges.mostSpentReceipt !== 0 && (
                     <div
                       className={`stat-panel__item-trend ${
                         percentageChanges.mostSpentReceipt < 0 &&

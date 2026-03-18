@@ -18,29 +18,31 @@ const Chart = ({
 
   useEffect(() => {
     const handleWindowResize = () => {
-      if (
-        (window.innerWidth < 768 ||
-          (window.innerWidth >= 992 && window.innerWidth < 1200)) &&
-        pieChartSettings.anchor !== "bottom"
-      ) {
-        setPieChartSettings({
-          margin: { top: 4, right: 0, bottom: 360, left: 1 },
-          anchor: "bottom",
-          translateX: -70,
-          translateY: 290,
-        });
-      } else if (
-        ((window.innerWidth >= 768 && window.innerWidth < 992) ||
-          window.innerWidth >= 1200) &&
-        pieChartSettings.anchor !== "right"
-      ) {
-        setPieChartSettings({
-          margin: { top: 4, right: 200, bottom: 100, left: 4 },
-          anchor: "right",
-          translateX: 50,
-          translateY: 0,
-        });
-      }
+      const shouldUseBottomLegend =
+        window.innerWidth < 768 ||
+        (window.innerWidth >= 992 && window.innerWidth < 1200);
+
+      setPieChartSettings((prevSettings) => {
+        if (shouldUseBottomLegend && prevSettings.anchor !== "bottom") {
+          return {
+            margin: { top: 4, right: 0, bottom: 360, left: 1 },
+            anchor: "bottom",
+            translateX: -70,
+            translateY: 290,
+          };
+        }
+
+        if (!shouldUseBottomLegend && prevSettings.anchor !== "right") {
+          return {
+            margin: { top: 4, right: 200, bottom: 100, left: 4 },
+            anchor: "right",
+            translateX: 50,
+            translateY: 0,
+          };
+        }
+
+        return prevSettings;
+      });
     };
 
     handleWindowResize();

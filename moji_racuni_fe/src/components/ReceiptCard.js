@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import useApi from "../utils/useApi";
 import { dateTimeFormatter, formatPrice } from "../utils/utils";
 
@@ -13,22 +13,24 @@ const ReceiptCard = ({
   const [companyUnit, setCompanyUnit] = useState({});
   const [itemsCount, setItemsCount] = useState(0);
   const api = useApi();
+  const apiRef = useRef(api);
 
   useEffect(() => {
-    getCompanyUnit();
-    countItems();
-  }, []);
+    apiRef.current = api;
+  }, [api]);
 
-  const getCompanyUnit = async () => {
-    const companyUnit = await api.getUnit(companyUnitId);
-    setCompanyUnit(companyUnit);
-  };
+  useEffect(() => {
+    const loadReceiptCardData = async () => {
+      const [unit, items] = await Promise.all([
+        apiRef.current.getUnit(companyUnitId),
+        apiRef.current.getItems(id),
+      ]);
+      setCompanyUnit(unit);
+      setItemsCount(items.length);
+    };
 
-  const countItems = async () => {
-    const items = await api.getItems(id);
-    const count = items.length;
-    setItemsCount(count);
-  };
+    loadReceiptCardData();
+  }, [companyUnitId, id]);
 
   return (
     <>

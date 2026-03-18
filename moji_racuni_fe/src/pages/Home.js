@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  useCallback,
+} from "react";
 import Receipt from "../components/Receipt";
 import StatPanel from "../components/StatPanel";
 import AuthContext from "../context/AuthContext";
@@ -37,13 +43,58 @@ const Home = () => {
   const [successText, setSuccessText] = useState("");
   const receiptInputRef = useRef(null);
   const api = useApi();
+  const apiRef = useRef(api);
   const { user } = useContext(AuthContext);
   const { toast, toastOpen, showToast, closeToast } = useToast(10000);
 
   useEffect(() => {
+    apiRef.current = api;
+  }, [api]);
+
+  const getStats = useCallback(async () => {
+    setStatsLoading(true);
+    const baseStats = await apiRef.current.getBaseStats(
+      date.dateFrom,
+      date.dateTo,
+      1,
+    );
+    setStats(baseStats);
+    setStatsLoading(false);
+  }, [date.dateFrom, date.dateTo]);
+
+  const getPreviousStats = useCallback(async () => {
+    const baseStats = await apiRef.current.getBaseStats(
+      previousDate.dateFrom,
+      previousDate.dateTo,
+      1,
+    );
+    setPreviousStats(baseStats);
+  }, [previousDate.dateFrom, previousDate.dateTo]);
+
+  const getLastReceipt = useCallback(async () => {
+    if (user.role !== "REGULAR") {
+      return;
+    }
+    setReceiptLoading(true);
+    const receiptInfo = await apiRef.current.getLastReceiptFull();
+    setLastReceiptInfo(receiptInfo);
+    setReceiptLoading(false);
+  }, [user.role]);
+
+  const getLastReport = useCallback(async () => {
+    if (user.role !== "ADMIN") {
+      return;
+    }
+    setReportLoading(true);
+    const report = await apiRef.current.getLastReport();
+    setLastReport(report);
+    setReportLoading(false);
+  }, [user.role]);
+
+  useEffect(() => {
     getLastReceipt();
     getLastReport();
-  }, []);
+  }, [getLastReceipt, getLastReport]);
 
   useEffect(() => {
     if (timeSpan === "month") {
@@ -62,7 +113,7 @@ const Home = () => {
       getPreviousStats();
     }
     getStats();
-  }, [date]);
+  }, [date, getPreviousStats, getStats, timeSpan]);
 
   useEffect(() => {
     if (stats.totalSpent && previousStats.totalSpent && timeSpan !== "all") {
@@ -91,43 +142,13 @@ const Home = () => {
 
       setPercentageChanges(changes);
     }
-  }, [stats]);
-
-  const getStats = async () => {
-    setStatsLoading(true);
-    const baseStats = await api.getBaseStats(date.dateFrom, date.dateTo, 1);
-    setStats(baseStats);
-    setStatsLoading(false);
-  };
-
-  const getPreviousStats = async () => {
-    const baseStats = await api.getBaseStats(
-      previousDate.dateFrom,
-      previousDate.dateTo,
-      1,
-    );
-    setPreviousStats(baseStats);
-  };
-
-  const getLastReceipt = async () => {
-    if (user.role !== "REGULAR") {
-      return;
-    }
-    setReceiptLoading(true);
-    const receiptInfo = await api.getLastReceiptFull();
-    setLastReceiptInfo(receiptInfo);
-    setReceiptLoading(false);
-  };
-
-  const getLastReport = async () => {
-    if (user.role !== "ADMIN") {
-      return;
-    }
-    setReportLoading(true);
-    const report = await api.getLastReport();
-    setLastReport(report);
-    setReportLoading(false);
-  };
+  }, [
+    previousStats.MostVisitedCompaniesInfo,
+    previousStats.totalSpent,
+    previousStats.visitedCompaniesInfo?.unitCount,
+    stats,
+    timeSpan,
+  ]);
 
   const addReceipt = async (e) => {
     e.preventDefault();

@@ -28,7 +28,7 @@ const Statistics = () => {
   const [showReceipts, setShowReceipts] = useState(false);
   const [showCompanies, setShowCompanies] = useState(false);
   const [showItems, setShowItems] = useState(false);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [, setStatsLoading] = useState(true);
   const [baseStats, setBaseStats] = useState({});
   const [receiptsByHour, setReceiptsByHour] = useState([]);
   const [receiptsByWeekday, setReceiptsByWeekday] = useState([]);
@@ -77,7 +77,7 @@ const Statistics = () => {
     const baseStats = await api.getBaseStats(
       dateBEFormatter(fromDate),
       dateBEFormatter(toDate),
-      1
+      1,
     );
     setBaseStats(baseStats);
   };
@@ -85,7 +85,7 @@ const Statistics = () => {
   const getReceiptsInfo = async () => {
     const receiptsInfo = await api.getTotalSpent(
       dateBEFormatter(fromDate),
-      dateBEFormatter(toDate)
+      dateBEFormatter(toDate),
     );
     setReceiptsInfo(receiptsInfo);
   };
@@ -93,7 +93,7 @@ const Statistics = () => {
   const getReceiptsByHour = async () => {
     const receiptsCount = await api.getReceiptsByHour(
       dateBEFormatter(fromDate),
-      dateBEFormatter(toDate)
+      dateBEFormatter(toDate),
     );
     if (isChartEmpty(receiptsCount, "count")) {
       setReceiptsByHour([]);
@@ -106,7 +106,7 @@ const Statistics = () => {
   const getReceiptsByWeekday = async () => {
     const receiptsCount = await api.getReceiptsByWeekday(
       dateBEFormatter(fromDate),
-      dateBEFormatter(toDate)
+      dateBEFormatter(toDate),
     );
     if (isChartEmpty(receiptsCount, "count")) {
       setReceiptsByWeekday([]);
@@ -114,7 +114,7 @@ const Statistics = () => {
     }
     const receiptsCountFormatted = getWeekdaysFromNumbers(
       receiptsCount,
-      "count"
+      "count",
     );
     setReceiptsByWeekday(receiptsCountFormatted);
   };
@@ -122,7 +122,7 @@ const Statistics = () => {
   const getReceiptsByMonth = async () => {
     const receiptsCount = await api.getReceiptsByMonth(
       dateBEFormatter(fromDate),
-      dateBEFormatter(toDate)
+      dateBEFormatter(toDate),
     );
     if (isChartEmpty(receiptsCount, "count")) {
       setReceiptsByMonth([]);
@@ -135,7 +135,7 @@ const Statistics = () => {
   const getSpentByHour = async () => {
     const moneySpent = await api.getSpentByHour(
       dateBEFormatter(fromDate),
-      dateBEFormatter(toDate)
+      dateBEFormatter(toDate),
     );
     if (isChartEmpty(moneySpent, "spent")) {
       setSpentByHour([]);
@@ -148,7 +148,7 @@ const Statistics = () => {
   const getSpentByWeekday = async () => {
     const moneySpent = await api.getSpentByWeekday(
       dateBEFormatter(fromDate),
-      dateBEFormatter(toDate)
+      dateBEFormatter(toDate),
     );
     if (isChartEmpty(moneySpent, "spent")) {
       setSpentByWeekday([]);
@@ -161,7 +161,7 @@ const Statistics = () => {
   const getSpentByMonth = async () => {
     const moneySpent = await api.getSpentByMonth(
       dateBEFormatter(fromDate),
-      dateBEFormatter(toDate)
+      dateBEFormatter(toDate),
     );
     if (isChartEmpty(moneySpent, "spent")) {
       setSpentByMonth([]);
@@ -175,7 +175,7 @@ const Statistics = () => {
     const mostSpentCompanies = await api.getMostSpentCompaniesInfo(
       dateBEFormatter(fromDate),
       dateBEFormatter(toDate),
-      10
+      10,
     );
     if (mostSpentCompanies.length === 0) {
       setMostSpentCompanies([]);
@@ -183,7 +183,7 @@ const Statistics = () => {
     }
     const spentCompaniesFormatted = getSpendingsPieFormatData(
       mostSpentCompanies,
-      true
+      true,
     );
     spentCompaniesFormatted.push({
       id: "Ostalo",
@@ -196,7 +196,7 @@ const Statistics = () => {
     const mostVisitedCompanies = await api.getMostVisitedCompaniesInfo(
       dateBEFormatter(fromDate),
       dateBEFormatter(toDate),
-      10
+      10,
     );
     if (mostVisitedCompanies.length === 0) {
       setMostVisitedCompanies([]);
@@ -204,7 +204,7 @@ const Statistics = () => {
     }
     const visitedCompaniesFormatted = getVisitsPieFormatData(
       mostVisitedCompanies,
-      true
+      true,
     );
     visitedCompaniesFormatted.push({
       id: "Ostalo",
@@ -218,7 +218,7 @@ const Statistics = () => {
     const mostSpentTypes = await api.getMostSpentTypesInfo(
       dateBEFormatter(fromDate),
       dateBEFormatter(toDate),
-      10
+      10,
     );
     if (mostSpentTypes.length === 0) {
       setMostSpentTypes([]);
@@ -226,7 +226,7 @@ const Statistics = () => {
     }
     const spentTypesFormatted = getSpendingsPieFormatData(
       mostSpentTypes,
-      false
+      false,
     );
     spentTypesFormatted.push({
       id: "Ostalo",
@@ -239,7 +239,7 @@ const Statistics = () => {
     const mostVisitedTypes = await api.getMostVisitedTypesInfo(
       dateBEFormatter(fromDate),
       dateBEFormatter(toDate),
-      10
+      10,
     );
     if (mostVisitedTypes.length === 0) {
       setMostVisitedTypes([]);
@@ -247,7 +247,7 @@ const Statistics = () => {
     }
     const visitedTypesFormatted = getVisitsPieFormatData(
       mostVisitedTypes,
-      false
+      false,
     );
     visitedTypesFormatted.push({
       id: "Ostalo",
@@ -260,7 +260,7 @@ const Statistics = () => {
     const mostValuableItems = await api.getValuableItems(
       dateBEFormatter(fromDate),
       dateBEFormatter(toDate),
-      10
+      10,
     );
     if (mostValuableItems.length === 0) {
       setMostValuableItems([]);
@@ -274,7 +274,7 @@ const Statistics = () => {
     const plots = await api.getStatPlots(
       dateBEFormatter(fromDate),
       dateBEFormatter(toDate),
-      10
+      10,
     );
     setStatPlots(plots);
     await new Promise(() => setTimeout(setPlotsLoading(false), 500));
