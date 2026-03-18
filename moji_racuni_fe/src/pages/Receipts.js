@@ -20,6 +20,7 @@ import AuthContext from "../context/AuthContext";
 import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
+import useRoutePageParam from "../hooks/useRoutePageParam";
 
 const Receipts = () => {
   const { page } = useParams();
@@ -73,15 +74,11 @@ const Receipts = () => {
     applySortingFilters();
   }, [sortBy, sortType]);
 
-  useEffect(() => {
-    if (parseInt(page)) {
-      Math.sign(page) !== -1
-        ? setPageNum(parseInt(page))
-        : navigate("/not-found");
-    } else {
-      page === undefined ? setPageNum(1) : navigate("/not-found");
-    }
-  }, [page]);
+  useRoutePageParam({
+    page,
+    setPageNum,
+    navigate,
+  });
 
   useEffect(() => {
     applySortingFilters();

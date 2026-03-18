@@ -12,6 +12,7 @@ import {
   validatePasswordUpdateForm,
   validateProfileInfoForm,
 } from "../utils/validators";
+import useModalDismiss from "../hooks/useModalDismiss";
 
 const Profile = () => {
   const [userInfo, setUserInfo] = useState({});
@@ -33,28 +34,6 @@ const Profile = () => {
   useEffect(() => {
     getUserInfo();
   }, []);
-
-  useEffect(() => {
-    window.addEventListener("click", handleModalClick);
-    window.addEventListener("keydown", handleModalKeydown);
-
-    return () => {
-      window.removeEventListener("click", handleModalClick);
-      window.removeEventListener("keydown", handleModalKeydown);
-    };
-  }, []);
-
-  const handleModalClick = (e) => {
-    if (e.target.className === "modal") {
-      resetModal();
-    }
-  };
-
-  const handleModalKeydown = (e) => {
-    if (e.key === "Escape") {
-      resetModal();
-    }
-  };
 
   const getUserInfo = async () => {
     const userInfo = await api.getUser(user.user_id);
@@ -135,6 +114,8 @@ const Profile = () => {
     setModalOpen(false);
     setModalOpenPass(false);
   };
+
+  useModalDismiss(resetModal);
 
   return (
     <div>

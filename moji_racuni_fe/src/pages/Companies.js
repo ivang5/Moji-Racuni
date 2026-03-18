@@ -13,6 +13,7 @@ import Company from "../components/Company";
 import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
+import useRoutePageParam from "../hooks/useRoutePageParam";
 
 const Companies = () => {
   const { page } = useParams();
@@ -75,15 +76,11 @@ const Companies = () => {
     applySortingFilters();
   }, [sortBy, sortType]);
 
-  useEffect(() => {
-    if (parseInt(page)) {
-      Math.sign(page) !== -1
-        ? setPageNum(parseInt(page))
-        : navigate("/not-found");
-    } else {
-      page === undefined ? setPageNum(1) : navigate("/not-found");
-    }
-  }, [page]);
+  useRoutePageParam({
+    page,
+    setPageNum,
+    navigate,
+  });
 
   useEffect(() => {
     applySortingFilters();

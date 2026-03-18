@@ -13,6 +13,7 @@ import UserCard from "../components/UserCard";
 import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
+import useRoutePageParam from "../hooks/useRoutePageParam";
 
 const Users = () => {
   const { page } = useParams();
@@ -58,17 +59,12 @@ const Users = () => {
     applySortingFilters();
   }, [sortBy, sortType]);
 
-  useEffect(() => {
-    if (user.role !== "ADMIN") {
-      navigate("/not-found");
-    } else if (parseInt(page)) {
-      Math.sign(page) !== -1
-        ? setPageNum(parseInt(page))
-        : navigate("/not-found");
-    } else {
-      page === undefined ? setPageNum(1) : navigate("/not-found");
-    }
-  }, [page]);
+  useRoutePageParam({
+    page,
+    setPageNum,
+    navigate,
+    isBlocked: user.role !== "ADMIN",
+  });
 
   useEffect(() => {
     applySortingFilters();
