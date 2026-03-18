@@ -10,7 +10,7 @@ const Paginator = ({ pageNumbers, activePage, path }) => {
     if (parseInt(page) > pageNumbers.at(-1)) {
       navigate("/not-found");
     }
-  }, []);
+  }, [navigate, page, pageNumbers]);
 
   return (
     <div className="paginator">

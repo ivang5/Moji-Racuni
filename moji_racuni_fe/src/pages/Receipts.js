@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
 import useApi from "../utils/useApi";
@@ -27,6 +21,7 @@ import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
+import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 
 const Receipts = () => {
   const { page } = useParams();
@@ -73,52 +68,48 @@ const Receipts = () => {
   const sortByOptions = ["Datum", "Prodavnica", "PIB", "Cena", "PDV"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
-  const apiRef = useRef(api);
-  const filtersRef = useRef({ sortBy, sortType, searchObj, pageNum });
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
+  const fetchSortedPage = useCallback(
+    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+      const receipts = await api.filterReceipts(
+        searchObj.dateFrom,
+        searchObj.dateTo,
+        searchObj.id,
+        searchObj.unit,
+        searchObj.tin,
+        searchObj.priceFrom,
+        searchObj.priceTo,
+        orderBy,
+        ascendingOrder,
+        pageNum,
+      );
 
-  useEffect(() => {
-    filtersRef.current = { sortBy, sortType, searchObj, pageNum };
-  }, [sortBy, sortType, searchObj, pageNum]);
+      if (!receipts) {
+        return null;
+      }
 
-  const applySortingFilters = useCallback(async () => {
-    const {
-      sortBy: currentSortBy,
-      sortType: currentSortType,
-      searchObj: currentSearchObj,
-      pageNum: currentPageNum,
-    } = filtersRef.current;
+      return {
+        pageCount: receipts.pageCount,
+        items: receipts.receipts,
+      };
+    },
+    [],
+  );
 
-    const orderBy = getReceiptOrderCode(currentSortBy);
-    const ascendingOrder = currentSortType === "Opadajuće" ? "desc" : "asc";
-
-    setReceiptsLoading(true);
-
-    const receipts = await apiRef.current.filterReceipts(
-      currentSearchObj.dateFrom,
-      currentSearchObj.dateTo,
-      currentSearchObj.id,
-      currentSearchObj.unit,
-      currentSearchObj.tin,
-      currentSearchObj.priceFrom,
-      currentSearchObj.priceTo,
-      orderBy,
-      ascendingOrder,
-      currentPageNum,
-    );
-
-    setReceiptsLoading(false);
-
-    if (receipts) {
-      setPageCount(receipts.pageCount);
-      setReceipts(receipts.receipts);
-    }
-  }, [setPageCount]);
+  const applySortingFilters = usePaginatedSortingFetch({
+    api,
+    sortBy,
+    sortType,
+    searchObj,
+    pageNum,
+    getOrderBy: getReceiptOrderCode,
+    fetchSortedPage,
+    setLoading: setReceiptsLoading,
+    setPageCount,
+    setItems: setReceipts,
+  });
 
   useEffect(() => {
     applySortingFilters();

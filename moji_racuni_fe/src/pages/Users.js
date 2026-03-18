@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import { getUserOrderCode } from "../utils/utils";
@@ -20,6 +14,7 @@ import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
+import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 
 const Users = () => {
   const { page } = useParams();
@@ -58,48 +53,44 @@ const Users = () => {
   const sortByOptions = ["ID", "Status", "Kor. ime", "Ime", "Prezime", "Email"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
-  const apiRef = useRef(api);
-  const filtersRef = useRef({ sortBy, sortType, searchObj, pageNum });
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
+  const fetchSortedPage = useCallback(
+    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+      const users = await api.filterUsers(
+        searchObj.id,
+        searchObj.username,
+        searchObj.email,
+        orderBy,
+        ascendingOrder,
+        pageNum,
+      );
 
-  useEffect(() => {
-    filtersRef.current = { sortBy, sortType, searchObj, pageNum };
-  }, [sortBy, sortType, searchObj, pageNum]);
+      if (!users) {
+        return null;
+      }
 
-  const applySortingFilters = useCallback(async () => {
-    const {
-      sortBy: currentSortBy,
-      sortType: currentSortType,
-      searchObj: currentSearchObj,
-      pageNum: currentPageNum,
-    } = filtersRef.current;
+      return {
+        pageCount: users.pageCount,
+        items: users.users,
+      };
+    },
+    [],
+  );
 
-    const orderBy = getUserOrderCode(currentSortBy);
-    const ascendingOrder = currentSortType === "Opadajuće" ? "desc" : "asc";
-
-    setUsersLoading(true);
-
-    const users = await apiRef.current.filterUsers(
-      currentSearchObj.id,
-      currentSearchObj.username,
-      currentSearchObj.email,
-      orderBy,
-      ascendingOrder,
-      currentPageNum,
-    );
-
-    setUsersLoading(false);
-
-    if (users) {
-      setPageCount(users.pageCount);
-      setUsers(users.users);
-    }
-  }, [setPageCount]);
+  const applySortingFilters = usePaginatedSortingFetch({
+    api,
+    sortBy,
+    sortType,
+    searchObj,
+    pageNum,
+    getOrderBy: getUserOrderCode,
+    fetchSortedPage,
+    setLoading: setUsersLoading,
+    setPageCount,
+    setItems: setUsers,
+  });
 
   useEffect(() => {
     applySortingFilters();

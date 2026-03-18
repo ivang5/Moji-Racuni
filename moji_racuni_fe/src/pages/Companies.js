@@ -20,6 +20,7 @@ import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
+import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 
 const Companies = () => {
   const { page } = useParams();
@@ -72,7 +73,6 @@ const Companies = () => {
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
   const apiRef = useRef(api);
-  const filtersRef = useRef({ sortBy, sortType, searchObj, pageNum });
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -80,39 +80,41 @@ const Companies = () => {
     apiRef.current = api;
   }, [api]);
 
-  useEffect(() => {
-    filtersRef.current = { sortBy, sortType, searchObj, pageNum };
-  }, [sortBy, sortType, searchObj, pageNum]);
+  const fetchSortedPage = useCallback(
+    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+      const companies = await api.filterCompanies(
+        searchObj.name,
+        searchObj.tin,
+        searchObj.type,
+        orderBy,
+        ascendingOrder,
+        pageNum,
+      );
 
-  const applySortingFilters = useCallback(async () => {
-    const {
-      sortBy: currentSortBy,
-      sortType: currentSortType,
-      searchObj: currentSearchObj,
-      pageNum: currentPageNum,
-    } = filtersRef.current;
+      if (!companies) {
+        return null;
+      }
 
-    const orderBy = getCompanyOrderCode(currentSortBy);
-    const ascendingOrder = currentSortType === "Opadajuće" ? "desc" : "asc";
+      return {
+        pageCount: companies.pageCount,
+        items: companies.companies,
+      };
+    },
+    [],
+  );
 
-    setCompaniesLoading(true);
-
-    const companies = await apiRef.current.filterCompanies(
-      currentSearchObj.name,
-      currentSearchObj.tin,
-      currentSearchObj.type,
-      orderBy,
-      ascendingOrder,
-      currentPageNum,
-    );
-
-    setCompaniesLoading(false);
-
-    if (companies) {
-      setPageCount(companies.pageCount);
-      setCompanies(companies.companies);
-    }
-  }, [setPageCount]);
+  const applySortingFilters = usePaginatedSortingFetch({
+    api,
+    sortBy,
+    sortType,
+    searchObj,
+    pageNum,
+    getOrderBy: getCompanyOrderCode,
+    fetchSortedPage,
+    setLoading: setCompaniesLoading,
+    setPageCount,
+    setItems: setCompanies,
+  });
 
   const getCompanyTypes = useCallback(async () => {
     const types = await apiRef.current.getCompanyTypes();

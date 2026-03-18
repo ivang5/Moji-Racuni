@@ -4,8 +4,7 @@ import dayjs from "dayjs";
 import AuthContext from "../context/AuthContext";
 
 const useFetch = () => {
-  const { authTokens, setAuthTokens, setUser, logoutUser } =
-    useContext(AuthContext);
+  const { setAuthTokens, setUser, logoutUser } = useContext(AuthContext);
   let isRefreshing = false;
 
   function delay(time) {
@@ -34,7 +33,7 @@ const useFetch = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ refresh: authTokens.refresh }),
-      }
+      },
     );
     const data = await response.json();
 
@@ -52,14 +51,13 @@ const useFetch = () => {
 
   const callFetch = async (url, config = {}) => {
     const user = jwt_decode(
-      JSON.parse(localStorage.getItem("authTokens")).access
+      JSON.parse(localStorage.getItem("authTokens")).access,
     );
     const isExpired = dayjs.unix(user.exp).diff(dayjs()) < 1;
-    let at = JSON.parse(localStorage.getItem("authTokens"));
 
     if (isExpired) {
       if (!isRefreshing) {
-        at = await refreshToken(JSON.parse(localStorage.getItem("authTokens")));
+        await refreshToken(JSON.parse(localStorage.getItem("authTokens")));
       } else {
         while (isRefreshing) {
           await delay(200);

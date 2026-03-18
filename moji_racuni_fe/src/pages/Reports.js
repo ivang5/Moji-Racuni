@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import {
@@ -26,6 +20,7 @@ import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
+import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 
 const Reports = () => {
   const { page } = useParams();
@@ -71,51 +66,47 @@ const Reports = () => {
   const sortByOptions = ["Datum", "Status"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
-  const apiRef = useRef(api);
-  const filtersRef = useRef({ sortBy, sortType, searchObj, pageNum });
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
+  const fetchSortedPage = useCallback(
+    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+      const reports = await api.filterReports(
+        searchObj.dateFrom,
+        searchObj.dateTo,
+        searchObj.id,
+        searchObj.receipt,
+        searchObj.user,
+        searchObj.request,
+        orderBy,
+        ascendingOrder,
+        pageNum,
+      );
 
-  useEffect(() => {
-    filtersRef.current = { sortBy, sortType, searchObj, pageNum };
-  }, [sortBy, sortType, searchObj, pageNum]);
+      if (!reports) {
+        return null;
+      }
 
-  const applySortingFilters = useCallback(async () => {
-    const {
-      sortBy: currentSortBy,
-      sortType: currentSortType,
-      searchObj: currentSearchObj,
-      pageNum: currentPageNum,
-    } = filtersRef.current;
+      return {
+        pageCount: reports.pageCount,
+        items: reports.reports,
+      };
+    },
+    [],
+  );
 
-    const orderBy = getReportOrderCode(currentSortBy);
-    const ascendingOrder = currentSortType === "Opadajuće" ? "desc" : "asc";
-
-    setReportsLoading(true);
-
-    const reports = await apiRef.current.filterReports(
-      currentSearchObj.dateFrom,
-      currentSearchObj.dateTo,
-      currentSearchObj.id,
-      currentSearchObj.receipt,
-      currentSearchObj.user,
-      currentSearchObj.request,
-      orderBy,
-      ascendingOrder,
-      currentPageNum,
-    );
-
-    setReportsLoading(false);
-
-    if (reports) {
-      setPageCount(reports.pageCount);
-      setReports(reports.reports);
-    }
-  }, [setPageCount]);
+  const applySortingFilters = usePaginatedSortingFetch({
+    api,
+    sortBy,
+    sortType,
+    searchObj,
+    pageNum,
+    getOrderBy: getReportOrderCode,
+    fetchSortedPage,
+    setLoading: setReportsLoading,
+    setPageCount,
+    setItems: setReports,
+  });
 
   useEffect(() => {
     applySortingFilters();
