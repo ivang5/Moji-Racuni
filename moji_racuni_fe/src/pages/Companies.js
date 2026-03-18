@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import { getCompanyOrderCode } from "../utils/utils";
@@ -65,16 +71,61 @@ const Companies = () => {
   const sortByOptions = ["Naziv", "PIB", "Tip"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
+  const apiRef = useRef(api);
+  const filtersRef = useRef({ sortBy, sortType, searchObj, pageNum });
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
-    getCompanyTypes();
+    apiRef.current = api;
+  }, [api]);
+
+  useEffect(() => {
+    filtersRef.current = { sortBy, sortType, searchObj, pageNum };
+  }, [sortBy, sortType, searchObj, pageNum]);
+
+  const applySortingFilters = useCallback(async () => {
+    const {
+      sortBy: currentSortBy,
+      sortType: currentSortType,
+      searchObj: currentSearchObj,
+      pageNum: currentPageNum,
+    } = filtersRef.current;
+
+    const orderBy = getCompanyOrderCode(currentSortBy);
+    const ascendingOrder = currentSortType === "Opadajuće" ? "desc" : "asc";
+
+    setCompaniesLoading(true);
+
+    const companies = await apiRef.current.filterCompanies(
+      currentSearchObj.name,
+      currentSearchObj.tin,
+      currentSearchObj.type,
+      orderBy,
+      ascendingOrder,
+      currentPageNum,
+    );
+
+    setCompaniesLoading(false);
+
+    if (companies) {
+      setPageCount(companies.pageCount);
+      setCompanies(companies.companies);
+    }
+  }, [setPageCount]);
+
+  const getCompanyTypes = useCallback(async () => {
+    const types = await apiRef.current.getCompanyTypes();
+    setCompanyTypes(types);
   }, []);
 
   useEffect(() => {
+    getCompanyTypes();
+  }, [getCompanyTypes]);
+
+  useEffect(() => {
     applySortingFilters();
-  }, [sortBy, sortType]);
+  }, [sortBy, sortType, applySortingFilters]);
 
   useRoutePageParam({
     page,
@@ -85,7 +136,7 @@ const Companies = () => {
   useEffect(() => {
     applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum]);
+  }, [pageNum, applySortingFilters]);
 
   const applyFilters = async (e) => {
     e.preventDefault();
@@ -129,34 +180,6 @@ const Companies = () => {
       setPageCount(companies.pageCount);
       setCompanies(companies.companies);
     }
-  };
-
-  const applySortingFilters = async () => {
-    let orderBy = getCompanyOrderCode(sortBy);
-    const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
-
-    setCompaniesLoading(true);
-
-    const companies = await api.filterCompanies(
-      searchObj.name,
-      searchObj.tin,
-      searchObj.type,
-      orderBy,
-      ascendingOrder,
-      pageNum,
-    );
-
-    setCompaniesLoading(false);
-
-    if (companies) {
-      setPageCount(companies.pageCount);
-      setCompanies(companies.companies);
-    }
-  };
-
-  const getCompanyTypes = async () => {
-    const companyTypes = await api.getCompanyTypes();
-    setCompanyTypes(companyTypes);
   };
 
   const openModal = async (companyId) => {

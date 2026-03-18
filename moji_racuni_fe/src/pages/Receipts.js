@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
 import useApi from "../utils/useApi";
@@ -67,12 +73,56 @@ const Receipts = () => {
   const sortByOptions = ["Datum", "Prodavnica", "PIB", "Cena", "PDV"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
+  const apiRef = useRef(api);
+  const filtersRef = useRef({ sortBy, sortType, searchObj, pageNum });
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
+    apiRef.current = api;
+  }, [api]);
+
+  useEffect(() => {
+    filtersRef.current = { sortBy, sortType, searchObj, pageNum };
+  }, [sortBy, sortType, searchObj, pageNum]);
+
+  const applySortingFilters = useCallback(async () => {
+    const {
+      sortBy: currentSortBy,
+      sortType: currentSortType,
+      searchObj: currentSearchObj,
+      pageNum: currentPageNum,
+    } = filtersRef.current;
+
+    const orderBy = getReceiptOrderCode(currentSortBy);
+    const ascendingOrder = currentSortType === "Opadajuće" ? "desc" : "asc";
+
+    setReceiptsLoading(true);
+
+    const receipts = await apiRef.current.filterReceipts(
+      currentSearchObj.dateFrom,
+      currentSearchObj.dateTo,
+      currentSearchObj.id,
+      currentSearchObj.unit,
+      currentSearchObj.tin,
+      currentSearchObj.priceFrom,
+      currentSearchObj.priceTo,
+      orderBy,
+      ascendingOrder,
+      currentPageNum,
+    );
+
+    setReceiptsLoading(false);
+
+    if (receipts) {
+      setPageCount(receipts.pageCount);
+      setReceipts(receipts.receipts);
+    }
+  }, [setPageCount]);
+
+  useEffect(() => {
     applySortingFilters();
-  }, [sortBy, sortType]);
+  }, [sortBy, sortType, applySortingFilters]);
 
   useRoutePageParam({
     page,
@@ -83,7 +133,7 @@ const Receipts = () => {
   useEffect(() => {
     applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum]);
+  }, [pageNum, applySortingFilters]);
 
   const applyFilters = async (e) => {
     e.preventDefault();
@@ -138,33 +188,6 @@ const Receipts = () => {
       priceFrom: priceFrom,
       priceTo: priceTo,
     });
-
-    setReceiptsLoading(false);
-
-    if (receipts) {
-      setPageCount(receipts.pageCount);
-      setReceipts(receipts.receipts);
-    }
-  };
-
-  const applySortingFilters = async () => {
-    let orderBy = getReceiptOrderCode(sortBy);
-    const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
-
-    setReceiptsLoading(true);
-
-    const receipts = await api.filterReceipts(
-      searchObj.dateFrom,
-      searchObj.dateTo,
-      searchObj.id,
-      searchObj.unit,
-      searchObj.tin,
-      searchObj.priceFrom,
-      searchObj.priceTo,
-      orderBy,
-      ascendingOrder,
-      pageNum,
-    );
 
     setReceiptsLoading(false);
 

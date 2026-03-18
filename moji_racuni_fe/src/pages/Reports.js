@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import {
@@ -65,12 +71,55 @@ const Reports = () => {
   const sortByOptions = ["Datum", "Status"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
+  const apiRef = useRef(api);
+  const filtersRef = useRef({ sortBy, sortType, searchObj, pageNum });
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
+    apiRef.current = api;
+  }, [api]);
+
+  useEffect(() => {
+    filtersRef.current = { sortBy, sortType, searchObj, pageNum };
+  }, [sortBy, sortType, searchObj, pageNum]);
+
+  const applySortingFilters = useCallback(async () => {
+    const {
+      sortBy: currentSortBy,
+      sortType: currentSortType,
+      searchObj: currentSearchObj,
+      pageNum: currentPageNum,
+    } = filtersRef.current;
+
+    const orderBy = getReportOrderCode(currentSortBy);
+    const ascendingOrder = currentSortType === "Opadajuće" ? "desc" : "asc";
+
+    setReportsLoading(true);
+
+    const reports = await apiRef.current.filterReports(
+      currentSearchObj.dateFrom,
+      currentSearchObj.dateTo,
+      currentSearchObj.id,
+      currentSearchObj.receipt,
+      currentSearchObj.user,
+      currentSearchObj.request,
+      orderBy,
+      ascendingOrder,
+      currentPageNum,
+    );
+
+    setReportsLoading(false);
+
+    if (reports) {
+      setPageCount(reports.pageCount);
+      setReports(reports.reports);
+    }
+  }, [setPageCount]);
+
+  useEffect(() => {
     applySortingFilters();
-  }, [sortBy, sortType]);
+  }, [sortBy, sortType, applySortingFilters]);
 
   useRoutePageParam({
     page,
@@ -81,7 +130,7 @@ const Reports = () => {
   useEffect(() => {
     applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum]);
+  }, [pageNum, applySortingFilters]);
 
   const applyFilters = async (e) => {
     e.preventDefault();
@@ -130,32 +179,6 @@ const Reports = () => {
       user: user,
       request: request,
     });
-
-    setReportsLoading(false);
-
-    if (reports) {
-      setPageCount(reports.pageCount);
-      setReports(reports.reports);
-    }
-  };
-
-  const applySortingFilters = async () => {
-    let orderBy = getReportOrderCode(sortBy);
-    const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
-
-    setReportsLoading(true);
-
-    const reports = await api.filterReports(
-      searchObj.dateFrom,
-      searchObj.dateTo,
-      searchObj.id,
-      searchObj.receipt,
-      searchObj.user,
-      searchObj.request,
-      orderBy,
-      ascendingOrder,
-      pageNum,
-    );
 
     setReportsLoading(false);
 
