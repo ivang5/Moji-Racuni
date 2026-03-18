@@ -2,7 +2,10 @@ import React, { useContext, useState } from "react";
 import FormGroup from "../components/FormGroup";
 import AuthContext from "../context/AuthContext";
 import receipt from "../rec.svg";
-import { validateEmail } from "../utils/utils";
+import {
+  validateLoginForm,
+  validateRegistrationForm,
+} from "../utils/validators";
 
 const Login = () => {
   const { loginUser, registerUser } = useContext(AuthContext);
@@ -30,20 +33,12 @@ const Login = () => {
 
   const initiateLogin = async (e) => {
     e.preventDefault();
-    let valid = true;
-    let validationObj = { username: "", password: "", server: "" };
+    let validationObj = validateLoginForm({
+      username: e.target.username.value,
+      password: e.target.password.value,
+    });
 
-    if (e.target.username.value.trim() === "") {
-      validationObj.username = "Korisničko ime ne može biti prazno!";
-      valid = false;
-    }
-
-    if (e.target.password.value.trim() === "") {
-      validationObj.password = "Lozinka ne može biti prazna!";
-      valid = false;
-    }
-
-    if (!valid) {
+    if (validationObj.username !== "" || validationObj.password !== "") {
       setLoginValid(validationObj);
       return;
     }
@@ -64,55 +59,19 @@ const Login = () => {
 
   const initiateRegistration = async (e) => {
     e.preventDefault();
-    let valid = true;
-    let validationObj = {
-      email: "",
-      username: "",
-      password: "",
-      passwordRepeat: "",
-      server: "",
-    };
+    let validationObj = validateRegistrationForm({
+      email: e.target.regEmail.value,
+      username: e.target.regUsername.value,
+      password: e.target.regPassword.value,
+      passwordRepeat: e.target.regPassword1.value,
+    });
 
-    if (e.target.regEmail.value.trim() === "") {
-      validationObj.email = "Email ne može biti prazan!";
-      valid = false;
-    } else if (!validateEmail(e.target.regEmail.value.trim())) {
-      validationObj.email = "Email nije validan!";
-      valid = false;
-    }
-
-    if (e.target.regUsername.value.trim() === "") {
-      validationObj.username = "Korisničko ime ne može biti prazno!";
-      valid = false;
-    } else if (e.target.regUsername.value.trim().length < 3) {
-      validationObj.username = "Korisničko ime je previše kratko!";
-      valid = false;
-    } else if (!isNaN(e.target.regUsername.value.trim())) {
-      validationObj.username =
-        "Korisničko ime mora sadržati barem jedno slovo!";
-      valid = false;
-    }
-
-    if (e.target.regPassword1.value.trim() === "") {
-      validationObj.passwordRepeat = "Morate ponoviti lozinku!";
-      valid = false;
-    } else if (
-      e.target.regPassword.value.trim() !== e.target.regPassword1.value.trim()
+    if (
+      validationObj.email !== "" ||
+      validationObj.username !== "" ||
+      validationObj.password !== "" ||
+      validationObj.passwordRepeat !== ""
     ) {
-      validationObj.passwordRepeat = "Lozinke moraju biti iste!";
-      valid = false;
-    }
-
-    if (e.target.regPassword.value.trim() === "") {
-      validationObj.password = "Lozinka ne može biti prazna!";
-
-      if (e.target.regPassword1.value.trim() === "") {
-        validationObj.passwordRepeat = "Lozinka ne može biti prazna!";
-      }
-      valid = false;
-    }
-
-    if (!valid) {
       setRegistrationValid(validationObj);
       return;
     }

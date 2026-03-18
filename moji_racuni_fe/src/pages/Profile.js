@@ -7,7 +7,11 @@ import FormGroup from "../components/FormGroup";
 import Toast from "../components/Toast";
 import AuthContext from "../context/AuthContext";
 import useApi from "../utils/useApi";
-import { dateFormatter, validateEmail } from "../utils/utils";
+import { dateFormatter } from "../utils/utils";
+import {
+  validatePasswordUpdateForm,
+  validateProfileInfoForm,
+} from "../utils/validators";
 
 const Profile = () => {
   const [userInfo, setUserInfo] = useState({});
@@ -59,33 +63,12 @@ const Profile = () => {
 
   const saveChanges = async (e) => {
     e.preventDefault();
-    let valid = true;
-    let validationObj = {
-      username: "",
-      email: "",
-    };
+    let validationObj = validateProfileInfoForm({
+      username: e.target.username.value,
+      email: e.target.email.value,
+    });
 
-    if (e.target.username.value.trim() === "") {
-      validationObj.username = "Korisničko ime ne može biti prazno!";
-      valid = false;
-    } else if (e.target.username.value.trim().length < 3) {
-      validationObj.username = "Korisničko ime je previše kratko!";
-      valid = false;
-    } else if (!isNaN(e.target.username.value.trim())) {
-      validationObj.username =
-        "Korisničko ime mora sadržati barem jedno slovo!";
-      valid = false;
-    }
-
-    if (e.target.email.value.trim() === "") {
-      validationObj.email = "Email ne može biti prazan!";
-      valid = false;
-    } else if (!validateEmail(e.target.email.value.trim())) {
-      validationObj.email = "Email nije validan!";
-      valid = false;
-    }
-
-    if (!valid) {
+    if (validationObj.username !== "" || validationObj.email !== "") {
       setFormValid(validationObj);
       return;
     }
@@ -113,32 +96,12 @@ const Profile = () => {
 
   const saveChangesPass = async (e) => {
     e.preventDefault();
-    let valid = true;
-    let validationObj = {
-      password: "",
-      passwordRepeat: "",
-    };
+    let validationObj = validatePasswordUpdateForm({
+      password: e.target.pass.value,
+      passwordRepeat: e.target.passRepeat.value,
+    });
 
-    if (e.target.passRepeat.value.trim() === "") {
-      validationObj.passwordRepeat = "Morate ponoviti lozinku!";
-      valid = false;
-    } else if (
-      e.target.pass.value.trim() !== e.target.passRepeat.value.trim()
-    ) {
-      validationObj.passwordRepeat = "Lozinke moraju biti iste!";
-      valid = false;
-    }
-
-    if (e.target.pass.value.trim() === "") {
-      validationObj.password = "Lozinka ne može biti prazna!";
-
-      if (e.target.passRepeat.value.trim() === "") {
-        validationObj.passwordRepeat = "Lozinka ne može biti prazna!";
-      }
-      valid = false;
-    }
-
-    if (!valid) {
+    if (validationObj.password !== "" || validationObj.passwordRepeat !== "") {
       setFormValidPass(validationObj);
       return;
     }

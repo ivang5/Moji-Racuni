@@ -5,7 +5,6 @@ import {
   getTenYearsAgo,
   dateBEFormatter,
   getReportOrderCode,
-  getPageNumberList,
   getTomorrow,
 } from "../utils/utils";
 import DatePicker from "react-datepicker";
@@ -17,10 +16,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import ReportCard from "../components/ReportCard";
 import Report from "../components/Report";
+import useToast from "../hooks/useToast";
+import usePaginatedListState from "../hooks/usePaginatedListState";
 
 const Reports = () => {
   const { page } = useParams();
-  const [pageNum, setPageNum] = useState(1);
   const [reports, setReports] = useState([]);
   const [reportsLoading, setReportsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -28,23 +28,38 @@ const Reports = () => {
   const [responseOpen, setResponseOpen] = useState(false);
   const [responseValidation, setResponseValidation] = useState("");
   const [deletionOpen, setDeletionOpen] = useState(false);
-  const [toast, setToast] = useState({});
-  const [toastOpen, setToastOpen] = useState(false);
-  const [pageNumbers, setPageNumbers] = useState([]);
-  const [pageCount, setPageCount] = useState(10000);
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(getTomorrow());
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [sortBy, setSortBy] = useState("Datum");
-  const [sortType, setSortType] = useState("Opadajuće");
-  const [searchObj, setSearchObj] = useState({
-    dateFrom: dateBEFormatter(fromDate),
-    dateTo: dateBEFormatter(toDate),
-    id: "%",
-    receipt: "%",
-    user: "%",
-    request: "%",
+
+  const {
+    pageNum,
+    setPageNum,
+    pageNumbers,
+    pageCount,
+    setPageCount,
+    searchOpen,
+    setSearchOpen,
+    sortBy,
+    setSortBy,
+    sortType,
+    setSortType,
+    searchObj,
+    setSearchObj,
+  } = usePaginatedListState({
+    initialSortBy: "Datum",
+    initialSortType: "Opadajuće",
+    initialSearchObj: {
+      dateFrom: dateBEFormatter(getTenYearsAgo()),
+      dateTo: dateBEFormatter(getTomorrow()),
+      id: "%",
+      receipt: "%",
+      user: "%",
+      request: "%",
+    },
   });
+
+  const { toast, toastOpen, showToast, closeToast } = useToast(7000);
+
   const sortByOptions = ["Datum", "Status"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
@@ -66,11 +81,9 @@ const Reports = () => {
   }, [page]);
 
   useEffect(() => {
-    const pageNumbers = getPageNumberList(pageCount, pageNum);
-    setPageNumbers(pageNumbers, pageNum);
     applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum, pageCount]);
+  }, [pageNum]);
 
   useEffect(() => {
     window.addEventListener("click", handleModalClick);
@@ -133,7 +146,7 @@ const Reports = () => {
       request,
       orderBy,
       ascendingOrder,
-      pageNum
+      pageNum,
     );
 
     setSearchObj({
@@ -168,7 +181,7 @@ const Reports = () => {
       searchObj.request,
       orderBy,
       ascendingOrder,
-      pageNum
+      pageNum,
     );
 
     setReportsLoading(false);
@@ -227,11 +240,10 @@ const Reports = () => {
     setModalOpen(false);
     setResponseValidation("");
     applySortingFilters();
-    setToast({
+    showToast({
       title: "Uspešno",
       text: "Odgovor na prijavu je uspešno poslat.",
     });
-    openToast();
   };
 
   const deleteReport = async (id) => {
@@ -239,20 +251,10 @@ const Reports = () => {
     applySortingFilters();
     setDeletionOpen(false);
     setModalOpen(false);
-    setToast({
+    showToast({
       title: "Uspešno",
       text: "Prijava je uspešno obrisana.",
     });
-    openToast();
-  };
-
-  const openToast = () => {
-    setToastOpen(true);
-    setTimeout(() => setToastOpen(false), 7000);
-  };
-
-  const closeToast = () => {
-    setToastOpen(false);
   };
 
   return (
@@ -274,8 +276,8 @@ const Reports = () => {
                     ? "reports__search-wrapper reports__search-wrapper--open reports__search-wrapper--special"
                     : "reports__search-wrapper reports__search-wrapper--open"
                   : user.role !== "REGULAR"
-                  ? "reports__search-wrapper reports__search-wrapper--special"
-                  : "reports__search-wrapper"
+                    ? "reports__search-wrapper reports__search-wrapper--special"
+                    : "reports__search-wrapper"
               }
             >
               <h2

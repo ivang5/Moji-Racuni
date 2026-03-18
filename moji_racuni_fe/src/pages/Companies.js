@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
-import { getPageNumberList, getCompanyOrderCode } from "../utils/utils";
+import { getCompanyOrderCode } from "../utils/utils";
 import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
@@ -10,10 +10,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import CompanyCard from "../components/CompanyCard";
 import Company from "../components/Company";
+import useToast from "../hooks/useToast";
+import usePaginatedListState from "../hooks/usePaginatedListState";
 
 const Companies = () => {
   const { page } = useParams();
-  const [pageNum, setPageNum] = useState(1);
   const [companies, setCompanies] = useState([]);
   const [companyTypes, setCompanyTypes] = useState([]);
   const [selectedType, setSelectedType] = useState({});
@@ -32,18 +33,33 @@ const Companies = () => {
   });
   const [typeCreationOpen, setTypeCreationOpen] = useState(false);
   const [typeDeletionOpen, setTypeDeletionOpen] = useState(false);
-  const [toast, setToast] = useState({});
-  const [toastOpen, setToastOpen] = useState(false);
-  const [pageNumbers, setPageNumbers] = useState([]);
-  const [pageCount, setPageCount] = useState(10000);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [sortBy, setSortBy] = useState("Naziv");
-  const [sortType, setSortType] = useState("Rastuće");
-  const [searchObj, setSearchObj] = useState({
-    name: "%",
-    tin: "%",
-    type: "%",
+
+  const {
+    pageNum,
+    setPageNum,
+    pageNumbers,
+    pageCount,
+    setPageCount,
+    searchOpen,
+    setSearchOpen,
+    sortBy,
+    setSortBy,
+    sortType,
+    setSortType,
+    searchObj,
+    setSearchObj,
+  } = usePaginatedListState({
+    initialSortBy: "Naziv",
+    initialSortType: "Rastuće",
+    initialSearchObj: {
+      name: "%",
+      tin: "%",
+      type: "%",
+    },
   });
+
+  const { toast, toastOpen, showToast, closeToast } = useToast(7000);
+
   const sortByOptions = ["Naziv", "PIB", "Tip"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
@@ -69,11 +85,9 @@ const Companies = () => {
   }, [page]);
 
   useEffect(() => {
-    const pageNumbers = getPageNumberList(pageCount, pageNum);
-    setPageNumbers(pageNumbers, pageNum);
     applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum, pageCount]);
+  }, [pageNum]);
 
   useEffect(() => {
     window.addEventListener("click", handleModalClick);
@@ -127,7 +141,7 @@ const Companies = () => {
       type,
       orderBy,
       ascendingOrder,
-      pageNum
+      pageNum,
     );
 
     setSearchObj({
@@ -156,7 +170,7 @@ const Companies = () => {
       searchObj.type,
       orderBy,
       ascendingOrder,
-      pageNum
+      pageNum,
     );
 
     setCompaniesLoading(false);
@@ -231,11 +245,10 @@ const Companies = () => {
     getCompanyTypes();
     setTypeValidation(validationObj);
     setTypeCreationOpen(false);
-    setToast({
+    showToast({
       title: "Uspešno",
       text: "Tip preduzeća je uspešno kreiran.",
     });
-    openToast();
   };
 
   const changeType = async (e) => {
@@ -269,11 +282,10 @@ const Companies = () => {
       getCompanyTypes();
       applySortingFilters();
       setTypeModalMain(true);
-      setToast({
+      showToast({
         title: "Uspešno",
         text: "Tip preduzeća je uspešno promenjen.",
       });
-      openToast();
     }
   };
 
@@ -285,11 +297,10 @@ const Companies = () => {
     getCompanyTypes();
     applySortingFilters();
     setTypeModalMain(true);
-    setToast({
+    showToast({
       title: "Uspešno",
       text: "Tip preduzeća je uspešno obrisan.",
     });
-    openToast();
   };
 
   const changeCompanyType = async (id) => {
@@ -298,18 +309,17 @@ const Companies = () => {
     };
     await api.changeCompanyType(modalCompany.company.tin, typeInfo);
     applySortingFilters();
-    setToast({
+    showToast({
       title: "Uspešno",
       text: "Tip preduzeća uspešno promenjen.",
     });
-    openToast();
   };
 
   const changeCompanyImg = async (e) => {
     const image = e.target.files[0];
     const company = await api.changeCompanyImage(
       modalCompany.company.tin,
-      image
+      image,
     );
     await applySortingFilters();
 
@@ -319,20 +329,10 @@ const Companies = () => {
       });
     }
 
-    setToast({
+    showToast({
       title: "Uspešno",
       text: "Slika preduzeća uspešno promenjena.",
     });
-    openToast();
-  };
-
-  const openToast = () => {
-    setToastOpen(true);
-    setTimeout(() => setToastOpen(false), 7000);
-  };
-
-  const closeToast = () => {
-    setToastOpen(false);
   };
 
   return (

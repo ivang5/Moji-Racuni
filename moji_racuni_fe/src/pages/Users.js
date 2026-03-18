@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
-import { getPageNumberList, getUserOrderCode } from "../utils/utils";
+import { getUserOrderCode } from "../utils/utils";
 import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
@@ -10,27 +10,43 @@ import { useNavigate, useParams } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import User from "../components/User";
 import UserCard from "../components/UserCard";
+import useToast from "../hooks/useToast";
+import usePaginatedListState from "../hooks/usePaginatedListState";
 
 const Users = () => {
   const { page } = useParams();
-  const [pageNum, setPageNum] = useState(1);
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalUser, setModalUser] = useState({});
   const [blockingOpen, setBlockingOpen] = useState(false);
-  const [toast, setToast] = useState({});
-  const [toastOpen, setToastOpen] = useState(false);
-  const [pageNumbers, setPageNumbers] = useState([]);
-  const [pageCount, setPageCount] = useState(10000);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [sortBy, setSortBy] = useState("ID");
-  const [sortType, setSortType] = useState("Rastuće");
-  const [searchObj, setSearchObj] = useState({
-    id: "%",
-    username: "%",
-    email: "%",
+
+  const {
+    pageNum,
+    setPageNum,
+    pageNumbers,
+    pageCount,
+    setPageCount,
+    searchOpen,
+    setSearchOpen,
+    sortBy,
+    setSortBy,
+    sortType,
+    setSortType,
+    searchObj,
+    setSearchObj,
+  } = usePaginatedListState({
+    initialSortBy: "ID",
+    initialSortType: "Rastuće",
+    initialSearchObj: {
+      id: "%",
+      username: "%",
+      email: "%",
+    },
   });
+
+  const { toast, toastOpen, showToast, closeToast } = useToast(7000);
+
   const sortByOptions = ["ID", "Status", "Kor. ime", "Ime", "Prezime", "Email"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
@@ -54,11 +70,9 @@ const Users = () => {
   }, [page]);
 
   useEffect(() => {
-    const pageNumbers = getPageNumberList(pageCount, pageNum);
-    setPageNumbers(pageNumbers, pageNum);
     applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum, pageCount]);
+  }, [pageNum]);
 
   useEffect(() => {
     window.addEventListener("click", handleModalClick);
@@ -112,7 +126,7 @@ const Users = () => {
       email,
       orderBy,
       ascendingOrder,
-      pageNum
+      pageNum,
     );
 
     setSearchObj({
@@ -141,7 +155,7 @@ const Users = () => {
       searchObj.email,
       orderBy,
       ascendingOrder,
-      pageNum
+      pageNum,
     );
 
     setUsersLoading(false);
@@ -182,22 +196,12 @@ const Users = () => {
     applySortingFilters();
     setBlockingOpen(false);
     setModalOpen(false);
-    setToast({
+    showToast({
       title: "Uspešno",
       text: newUser.is_active
         ? "Korisnik više nije blokiran."
         : "Korisnik je uspešno blokiran.",
     });
-    openToast();
-  };
-
-  const openToast = () => {
-    setToastOpen(true);
-    setTimeout(() => setToastOpen(false), 7000);
-  };
-
-  const closeToast = () => {
-    setToastOpen(false);
   };
 
   return (

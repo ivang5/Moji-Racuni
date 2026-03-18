@@ -17,6 +17,8 @@ import FormGroup from "../components/FormGroup";
 import InfoIcon from "../icons/info-icon.png";
 import Toast from "../components/Toast";
 import Report from "../components/Report";
+import useToast from "../hooks/useToast";
+import { validateReceiptLink } from "../utils/validators";
 
 const Home = () => {
   const [lastReceiptInfo, setLastReceiptInfo] = useState({});
@@ -33,11 +35,10 @@ const Home = () => {
   const [percentageChanges, setPercentageChanges] = useState({});
   const [receiptLinkValid, setReceiptLinkValid] = useState("");
   const [successText, setSuccessText] = useState("");
-  const [toast, setToast] = useState({});
-  const [toastOpen, setToastOpen] = useState(false);
   const receiptInputRef = useRef(null);
   const api = useApi();
   const { user } = useContext(AuthContext);
+  const { toast, toastOpen, showToast, closeToast } = useToast(10000);
 
   useEffect(() => {
     getLastReceipt();
@@ -68,23 +69,23 @@ const Home = () => {
       const changes = {
         totalSpent: getPercentageChange(
           previousStats.totalSpent.totalSpent,
-          stats.totalSpent.totalSpent
+          stats.totalSpent.totalSpent,
         ),
         unitCount: getPercentageChange(
           previousStats.visitedCompaniesInfo?.unitCount,
-          stats.visitedCompaniesInfo?.unitCount
+          stats.visitedCompaniesInfo?.unitCount,
         ),
         mostVisitedCompanyReceiptCount: getPercentageChange(
           previousStats.MostVisitedCompaniesInfo[0]?.receiptCount,
-          stats.MostVisitedCompaniesInfo[0]?.receiptCount
+          stats.MostVisitedCompaniesInfo[0]?.receiptCount,
         ),
         mostVisitedCompanyPriceSum: getPercentageChange(
           previousStats.MostVisitedCompaniesInfo[0]?.priceSum,
-          stats.MostVisitedCompaniesInfo[0]?.priceSum
+          stats.MostVisitedCompaniesInfo[0]?.priceSum,
         ),
         mostSpentReceipt: getPercentageChange(
           previousStats.totalSpent?.mostSpentReceipt,
-          stats.totalSpent?.mostSpentReceipt
+          stats.totalSpent?.mostSpentReceipt,
         ),
       };
 
@@ -103,7 +104,7 @@ const Home = () => {
     const baseStats = await api.getBaseStats(
       previousDate.dateFrom,
       previousDate.dateTo,
-      1
+      1,
     );
     setPreviousStats(baseStats);
   };
@@ -132,60 +133,39 @@ const Home = () => {
     e.preventDefault();
     setReceiptLinkValid("");
     setSuccessText("");
-    let valid = true;
-    let validation = "";
+    const validationMessage = validateReceiptLink(e.target.receiptLink.value);
 
-    if (e.target.receiptLink.value.trim() === "") {
-      validation = "Polje za unos računa ne sme biti prazno!";
-      valid = false;
-    } else if (
-      !e.target.receiptLink.value.trim().startsWith("https://suf.purs.gov.rs/")
-    ) {
-      validation = "Uneti link nije validan!";
-      valid = false;
-    }
-
-    if (!valid) {
-      setReceiptLinkValid(validation);
+    if (validationMessage !== "") {
+      setReceiptLinkValid(validationMessage);
       return;
     }
 
     setAddingReceipt(true);
 
     const response = await api.addFullReceipt(
-      e.target.receiptLink.value.trim()
+      e.target.receiptLink.value.trim(),
     );
 
     setAddingReceipt(false);
 
     if (response === null) {
       setReceiptLinkValid(
-        "Došlo je do greške, proverite da li ste uneli validan link i pokušajte ponovo!"
+        "Došlo je do greške, proverite da li ste uneli validan link i pokušajte ponovo!",
       );
     } else if (response === 409) {
       setReceiptLinkValid("Ovaj račun ste već uneli!");
     } else {
       getStats();
       getLastReceipt();
-      setToast({
+      showToast({
         title: "Uspešno",
         text: "Račun je uspešno dodat.",
       });
-      openToast();
 
       if (receiptInputRef.current) {
         receiptInputRef.current.value = "";
       }
     }
-  };
-
-  const openToast = () => {
-    setToastOpen(true);
-    setTimeout(() => setToastOpen(false), 10000);
-  };
-
-  const closeToast = () => {
-    setToastOpen(false);
   };
 
   return (

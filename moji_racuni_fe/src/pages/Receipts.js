@@ -7,7 +7,6 @@ import {
   dateBEFormatter,
   dateTimeBEFormatter,
   getReceiptOrderCode,
-  getPageNumberList,
   getTomorrow,
 } from "../utils/utils";
 import DatePicker from "react-datepicker";
@@ -18,10 +17,11 @@ import Receipt from "../components/Receipt";
 import Toast from "../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
+import useToast from "../hooks/useToast";
+import usePaginatedListState from "../hooks/usePaginatedListState";
 
 const Receipts = () => {
   const { page } = useParams();
-  const [pageNum, setPageNum] = useState(1);
   const [receipts, setReceipts] = useState([]);
   const [receiptsLoading, setReceiptsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -29,24 +29,39 @@ const Receipts = () => {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportValidation, setReportValidation] = useState("");
   const [deletionOpen, setDeletionOpen] = useState(false);
-  const [toast, setToast] = useState({});
-  const [toastOpen, setToastOpen] = useState(false);
-  const [pageNumbers, setPageNumbers] = useState([]);
-  const [pageCount, setPageCount] = useState(10000);
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(getTomorrow());
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [sortBy, setSortBy] = useState("Datum");
-  const [sortType, setSortType] = useState("Opadajuće");
-  const [searchObj, setSearchObj] = useState({
-    dateFrom: dateBEFormatter(fromDate),
-    dateTo: dateBEFormatter(toDate),
-    id: "%",
-    unit: "%",
-    tin: "%",
-    priceFrom: 0,
-    priceTo: 9999999,
+
+  const {
+    pageNum,
+    setPageNum,
+    pageNumbers,
+    pageCount,
+    setPageCount,
+    searchOpen,
+    setSearchOpen,
+    sortBy,
+    setSortBy,
+    sortType,
+    setSortType,
+    searchObj,
+    setSearchObj,
+  } = usePaginatedListState({
+    initialSortBy: "Datum",
+    initialSortType: "Opadajuće",
+    initialSearchObj: {
+      dateFrom: dateBEFormatter(getTenYearsAgo()),
+      dateTo: dateBEFormatter(getTomorrow()),
+      id: "%",
+      unit: "%",
+      tin: "%",
+      priceFrom: 0,
+      priceTo: 9999999,
+    },
   });
+
+  const { toast, toastOpen, showToast, closeToast } = useToast(7000);
+
   const sortByOptions = ["Datum", "Prodavnica", "PIB", "Cena", "PDV"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
@@ -68,11 +83,9 @@ const Receipts = () => {
   }, [page]);
 
   useEffect(() => {
-    const pageNumbers = getPageNumberList(pageCount, pageNum);
-    setPageNumbers(pageNumbers, pageNum);
     applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum, pageCount]);
+  }, [pageNum]);
 
   useEffect(() => {
     window.addEventListener("click", handleModalClick);
@@ -140,7 +153,7 @@ const Receipts = () => {
       priceTo,
       orderBy,
       ascendingOrder,
-      pageNum
+      pageNum,
     );
 
     setSearchObj({
@@ -177,7 +190,7 @@ const Receipts = () => {
       searchObj.priceTo,
       orderBy,
       ascendingOrder,
-      pageNum
+      pageNum,
     );
 
     setReceiptsLoading(false);
@@ -232,11 +245,10 @@ const Receipts = () => {
     setReportOpen(false);
     setModalOpen(false);
     setReportValidation("");
-    setToast({
+    showToast({
       title: "Uspešno",
       text: "Prijava je uspešno poslata.",
     });
-    openToast();
   };
 
   const deleteReceipt = async (id) => {
@@ -244,20 +256,10 @@ const Receipts = () => {
     applySortingFilters();
     setDeletionOpen(false);
     setModalOpen(false);
-    setToast({
+    showToast({
       title: "Uspešno",
       text: "Račun je uspešno obrisan.",
     });
-    openToast();
-  };
-
-  const openToast = () => {
-    setToastOpen(true);
-    setTimeout(() => setToastOpen(false), 7000);
-  };
-
-  const closeToast = () => {
-    setToastOpen(false);
   };
 
   return (

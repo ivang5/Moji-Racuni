@@ -50,7 +50,7 @@ const Chart = ({
     return () => {
       window.removeEventListener("resize", handleWindowResize);
     };
-  });
+  }, []);
 
   const theme = {
     axis: {
