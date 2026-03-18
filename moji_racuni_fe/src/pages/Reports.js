@@ -18,6 +18,7 @@ import ReportCard from "../components/ReportCard";
 import Report from "../components/Report";
 import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
+import useModalDismiss from "../hooks/useModalDismiss";
 
 const Reports = () => {
   const { page } = useParams();
@@ -84,31 +85,6 @@ const Reports = () => {
     applySortingFilters();
     window.scrollTo(0, 0);
   }, [pageNum]);
-
-  useEffect(() => {
-    window.addEventListener("click", handleModalClick);
-    window.addEventListener("keydown", handleModalKeydown);
-
-    return () => {
-      window.removeEventListener("click", handleModalClick);
-      window.removeEventListener("keydown", handleModalKeydown);
-    };
-  }, []);
-
-  const handleModalClick = (e) => {
-    if (
-      e.target.className === "modal" ||
-      e.target.className === "modal__content"
-    ) {
-      resetModal();
-    }
-  };
-
-  const handleModalKeydown = (e) => {
-    if (e.key === "Escape") {
-      resetModal();
-    }
-  };
 
   const applyFilters = async (e) => {
     e.preventDefault();
@@ -256,6 +232,8 @@ const Reports = () => {
       text: "Prijava je uspešno obrisana.",
     });
   };
+
+  useModalDismiss(resetModal);
 
   return (
     <div>

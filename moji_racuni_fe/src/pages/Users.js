@@ -12,6 +12,7 @@ import User from "../components/User";
 import UserCard from "../components/UserCard";
 import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
+import useModalDismiss from "../hooks/useModalDismiss";
 
 const Users = () => {
   const { page } = useParams();
@@ -73,31 +74,6 @@ const Users = () => {
     applySortingFilters();
     window.scrollTo(0, 0);
   }, [pageNum]);
-
-  useEffect(() => {
-    window.addEventListener("click", handleModalClick);
-    window.addEventListener("keydown", handleModalKeydown);
-
-    return () => {
-      window.removeEventListener("click", handleModalClick);
-      window.removeEventListener("keydown", handleModalKeydown);
-    };
-  }, []);
-
-  const handleModalClick = (e) => {
-    if (
-      e.target.className === "modal" ||
-      e.target.className === "modal__content"
-    ) {
-      resetModal();
-    }
-  };
-
-  const handleModalKeydown = (e) => {
-    if (e.key === "Escape") {
-      resetModal();
-    }
-  };
 
   const applyFilters = async (e) => {
     e.preventDefault();
@@ -203,6 +179,8 @@ const Users = () => {
         : "Korisnik je uspešno blokiran.",
     });
   };
+
+  useModalDismiss(resetModal);
 
   return (
     <div>

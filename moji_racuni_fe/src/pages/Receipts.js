@@ -19,6 +19,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
+import useModalDismiss from "../hooks/useModalDismiss";
 
 const Receipts = () => {
   const { page } = useParams();
@@ -86,31 +87,6 @@ const Receipts = () => {
     applySortingFilters();
     window.scrollTo(0, 0);
   }, [pageNum]);
-
-  useEffect(() => {
-    window.addEventListener("click", handleModalClick);
-    window.addEventListener("keydown", handleModalKeydown);
-
-    return () => {
-      window.removeEventListener("click", handleModalClick);
-      window.removeEventListener("keydown", handleModalKeydown);
-    };
-  }, []);
-
-  const handleModalClick = (e) => {
-    if (
-      e.target.className === "modal" ||
-      e.target.className === "modal__content"
-    ) {
-      resetModal();
-    }
-  };
-
-  const handleModalKeydown = (e) => {
-    if (e.key === "Escape") {
-      resetModal();
-    }
-  };
 
   const applyFilters = async (e) => {
     e.preventDefault();
@@ -261,6 +237,8 @@ const Receipts = () => {
       text: "Račun je uspešno obrisan.",
     });
   };
+
+  useModalDismiss(resetModal);
 
   return (
     <div>
