@@ -7,6 +7,16 @@ const useFetch = () => {
   const { setAuthTokens, setUser, logoutUser } = useContext(AuthContext);
   let isRefreshing = false;
 
+  const getStoredTokens = () => {
+    try {
+      const rawTokens = localStorage.getItem("authTokens");
+      return rawTokens ? JSON.parse(rawTokens) : null;
+    } catch (error) {
+      localStorage.removeItem("authTokens");
+      return null;
+    }
+  };
+
   function delay(time) {
     return new Promise((resolve) => setTimeout(resolve, time));
   }
@@ -37,7 +47,8 @@ const useFetch = () => {
     );
     const data = await response.json();
 
-    if (response.status === 401) {
+    if (response.status !== 200 || !data?.access) {
+      isRefreshing = false;
       logoutUser();
       return null;
     }
@@ -50,14 +61,28 @@ const useFetch = () => {
   };
 
   const callFetch = async (url, config = {}) => {
-    const user = jwt_decode(
-      JSON.parse(localStorage.getItem("authTokens")).access,
-    );
+    const storedTokens = getStoredTokens();
+    if (!storedTokens?.access || !storedTokens?.refresh) {
+      logoutUser();
+      return { response: { status: 401 }, data: null };
+    }
+
+    let user;
+    try {
+      user = jwt_decode(storedTokens.access);
+    } catch (error) {
+      logoutUser();
+      return { response: { status: 401 }, data: null };
+    }
+
     const isExpired = dayjs.unix(user.exp).diff(dayjs()) < 1;
 
     if (isExpired) {
       if (!isRefreshing) {
-        await refreshToken(JSON.parse(localStorage.getItem("authTokens")));
+        const refreshedTokens = await refreshToken(storedTokens);
+        if (!refreshedTokens?.access) {
+          return { response: { status: 401 }, data: null };
+        }
       } else {
         while (isRefreshing) {
           await delay(200);
@@ -65,20 +90,16 @@ const useFetch = () => {
       }
     }
 
-    if (config === {} || config.headers) {
-      config["headers"] = {
-        Authorization: `Bearer ${
-          JSON.parse(localStorage.getItem("authTokens"))?.access
-        }`,
-      };
-    } else {
-      config["headers"] = {
-        Authorization: `Bearer ${
-          JSON.parse(localStorage.getItem("authTokens"))?.access
-        }`,
-        "Content-Type": "application/json",
-      };
+    const latestTokens = getStoredTokens();
+    if (!latestTokens?.access) {
+      logoutUser();
+      return { response: { status: 401 }, data: null };
     }
+
+    config["headers"] = {
+      ...(config.headers || {}),
+      Authorization: `Bearer ${latestTokens.access}`,
+    };
 
     const { response, data } = await originalRequest(url, config);
     return { response, data };

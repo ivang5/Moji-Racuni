@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import {
@@ -13,7 +13,6 @@ import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
 import Toast from "../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
-import AuthContext from "../context/AuthContext";
 import ReportCard from "../components/ReportCard";
 import Report from "../components/Report";
 import useToast from "../hooks/useToast";
@@ -21,6 +20,7 @@ import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
+import useAuthUser from "../hooks/useAuthUser";
 
 const Reports = () => {
   const { page } = useParams();
@@ -66,7 +66,7 @@ const Reports = () => {
   const sortByOptions = ["Datum", "Status"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
-  const { user } = useContext(AuthContext);
+  const { userRole } = useAuthUser();
   const navigate = useNavigate();
 
   const fetchSortedPage = useCallback(
@@ -185,7 +185,7 @@ const Reports = () => {
     let report = await api.getReport(reportId);
 
     if (report) {
-      if (user.role === "REGULAR" && report.closed && !report.seen) {
+      if (userRole === "REGULAR" && report.closed && !report.seen) {
         report = await api.setReportSeen(reportId);
         applySortingFilters();
       }
@@ -261,10 +261,10 @@ const Reports = () => {
             <div
               className={
                 searchOpen
-                  ? user.role !== "REGULAR"
+                  ? userRole !== "REGULAR"
                     ? "reports__search-wrapper reports__search-wrapper--open reports__search-wrapper--special"
                     : "reports__search-wrapper reports__search-wrapper--open"
-                  : user.role !== "REGULAR"
+                  : userRole !== "REGULAR"
                     ? "reports__search-wrapper reports__search-wrapper--special"
                     : "reports__search-wrapper"
               }
@@ -290,7 +290,7 @@ const Reports = () => {
                     type="number"
                     inline={true}
                   />
-                  {user.role !== "REGULAR" && (
+                  {userRole !== "REGULAR" && (
                     <FormGroup
                       name="user"
                       text="Korisnik"
@@ -397,7 +397,7 @@ const Reports = () => {
               <Report reportInfo={modalReport} />
               {!modalReport.response && (
                 <>
-                  {user.role === "REGULAR" ? (
+                  {userRole === "REGULAR" ? (
                     <div className="modal__options modal__options--single">
                       {!deletionOpen ? (
                         <button

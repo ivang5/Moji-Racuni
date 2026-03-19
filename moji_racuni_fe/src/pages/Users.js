@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import { getUserOrderCode } from "../utils/utils";
@@ -7,7 +7,6 @@ import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
 import Toast from "../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
-import AuthContext from "../context/AuthContext";
 import User from "../components/User";
 import UserCard from "../components/UserCard";
 import useToast from "../hooks/useToast";
@@ -15,6 +14,7 @@ import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
+import useAuthUser from "../hooks/useAuthUser";
 
 const Users = () => {
   const { page } = useParams();
@@ -53,7 +53,7 @@ const Users = () => {
   const sortByOptions = ["ID", "Status", "Kor. ime", "Ime", "Prezime", "Email"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
-  const { user } = useContext(AuthContext);
+  const { userRole } = useAuthUser();
   const navigate = useNavigate();
 
   const fetchSortedPage = useCallback(
@@ -100,7 +100,7 @@ const Users = () => {
     page,
     setPageNum,
     navigate,
-    isBlocked: user.role !== "ADMIN",
+    isBlocked: userRole !== "ADMIN",
   });
 
   useEffect(() => {

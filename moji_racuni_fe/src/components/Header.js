@@ -3,19 +3,24 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { capitalize, getPageFromPathname } from "../utils/utils";
 import AuthContext from "../context/AuthContext";
+import useAuthUser from "../hooks/useAuthUser";
 import Logo from "../icons/logo/Logo_bg_color.svg";
 
 const Header = () => {
-  const { user, logoutUser } = useContext(AuthContext);
+  const { logoutUser } = useContext(AuthContext);
+  const { userRole, username, isAuthenticated } = useAuthUser();
   const [mobileNav, setMobileNav] = useState(false);
   const [activePage, setActivePage] = useState();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const currentPath = window.location.pathname;
 
   const handleMouseClick = useCallback((e) => {
+    const targetClassName =
+      typeof e.target.className === "string" ? e.target.className : "";
+
     if (
-      !e.target.className.startsWith("nav__") &&
-      !e.target.className.startsWith("arrow")
+      !targetClassName.startsWith("nav__") &&
+      !targetClassName.startsWith("arrow")
     ) {
       setDropdownOpen(false);
     }
@@ -49,7 +54,7 @@ const Header = () => {
         setActivePage("Users");
         break;
       case currentPath.startsWith("/prijave") ? currentPath : "":
-        user.role === "REGULAR"
+        userRole === "REGULAR"
           ? setActivePage("Profile")
           : setActivePage("Reports");
         break;
@@ -59,7 +64,7 @@ const Header = () => {
       default:
         setActivePage("Home");
     }
-  }, [currentPath, user.role]);
+  }, [currentPath, userRole]);
 
   const toggleMobileNav = () => {
     setMobileNav(!mobileNav);
@@ -67,7 +72,7 @@ const Header = () => {
 
   return (
     <>
-      {currentPath !== "/prijava" && user !== null && (
+      {currentPath !== "/prijava" && isAuthenticated && (
         <div>
           <header className={mobileNav ? "header header--active" : "header"}>
             <div className="nav__wrapper py-1 px-2">
@@ -161,7 +166,7 @@ const Header = () => {
                       Preduzeća
                     </Link>
                   </li>
-                  {user.role === "ADMIN" && (
+                  {userRole === "ADMIN" && (
                     <li className="nav__list-item">
                       <Link
                         className={
@@ -180,7 +185,7 @@ const Header = () => {
                       </Link>
                     </li>
                   )}
-                  {user.role === "ADMIN" && (
+                  {userRole === "ADMIN" && (
                     <li className="nav__list-item">
                       <Link
                         className={
@@ -217,9 +222,9 @@ const Header = () => {
                           ? "nav__link nav__link--active"
                           : "nav__link"
                       }
-                      data-content={capitalize(user.username)}
+                      data-content={capitalize(username || "")}
                     >
-                      {capitalize(user.username)}{" "}
+                      {capitalize(username || "")}{" "}
                     </span>
                     <i className="arrow arrow--down"></i>
                   </div>
@@ -324,7 +329,7 @@ const Header = () => {
                   Preduzeća
                 </Link>
               </li>
-              {user.role === "ADMIN" && (
+              {userRole === "ADMIN" && (
                 <li className="nav__list-item">
                   <Link
                     className={
@@ -343,7 +348,7 @@ const Header = () => {
                   </Link>
                 </li>
               )}
-              {user.role === "ADMIN" && (
+              {userRole === "ADMIN" && (
                 <li className="nav__list-item">
                   <Link
                     className={
@@ -378,7 +383,7 @@ const Header = () => {
                         : "nav__link"
                     }
                   >
-                    {capitalize(user.username)}{" "}
+                    {capitalize(username || "")}{" "}
                   </span>
                   <i className="arrow arrow--down"></i>
                   <div className="mobile-nav__dropdown-items">

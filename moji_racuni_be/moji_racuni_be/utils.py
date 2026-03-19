@@ -1,7 +1,11 @@
 from bs4 import BeautifulSoup
 import requests
+from urllib.parse import urlparse
+import ipaddress
 from srtools import cyrillic_to_latin
 from django.db import connection
+
+REQUEST_TIMEOUT_SECONDS = 10
 
 # ==========================================================
 #                        WEB-SCRAPING
@@ -320,10 +324,56 @@ def get_items(receipt, receipt_id):
             else:
                 item["measurementUnit"] = "KG"
     return items
+
+
+def _is_public_fetch_url(url):
+    parsed = urlparse(url)
+    if parsed.scheme not in ["http", "https"]:
+        return False
+
+    host = parsed.hostname
+    if not host:
+        return False
+
+    if host in ["localhost", "127.0.0.1", "::1"]:
+        return False
+
+    try:
+        ip = ipaddress.ip_address(host)
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_multicast
+            or ip.is_reserved
+        ):
+            return False
+    except ValueError:
+        # Host is not a direct IP literal, allow DNS hostname.
+        pass
+
+    return True
+
+
+def _fetch_url_text(url):
+    if not _is_public_fetch_url(url):
+        return None
+    try:
+        response = requests.get(
+            url,
+            timeout=REQUEST_TIMEOUT_SECONDS,
+            allow_redirects=False,
+        )
+        response.raise_for_status()
+        return response.text
+    except requests.RequestException:
+        return None
     
 
 def retrieve_company(url):
-    html_text = requests.get(url).text
+    html_text = _fetch_url_text(url)
+    if html_text is None:
+        return False
     soup = BeautifulSoup(html_text, 'lxml')
     
     try:
@@ -338,7 +388,9 @@ def retrieve_company(url):
     return company
     
 def retrieve_company_unit(url, company_tin):
-    html_text = requests.get(url).text
+    html_text = _fetch_url_text(url)
+    if html_text is None:
+        return False
     soup = BeautifulSoup(html_text, 'lxml')
     info_panels = soup.find_all('div', class_='panel-info')
     info_groups_first = info_panels[0].select('.panel-body .form-group div')
@@ -346,7 +398,9 @@ def retrieve_company_unit(url, company_tin):
     return company_unit
 
 def retrieve_receipt(url, company_unit_id, user_id):
-    html_text = requests.get(url).text
+    html_text = _fetch_url_text(url)
+    if html_text is None:
+        return False
     soup = BeautifulSoup(html_text, 'lxml')
     info_panels = soup.find_all('div', class_='panel-info')
     info_groups_second = info_panels[1].select('.panel-body .form-group div')
@@ -362,7 +416,9 @@ def retrieve_receipt(url, company_unit_id, user_id):
     return receipt_obj
     
 def retrieve_items(url, receipt_id):
-    html_text = requests.get(url).text
+    html_text = _fetch_url_text(url)
+    if html_text is None:
+        return False
     soup = BeautifulSoup(html_text, 'lxml')
     
     try:
@@ -385,6 +441,21 @@ def dictfetchall(cursor):
         dict(zip(columns, row))
         for row in cursor.fetchall()
     ]
+
+
+def _sanitize_order_column(order_by, allowed_columns, default_key):
+    return allowed_columns.get(order_by, allowed_columns[default_key])
+
+
+def _sanitize_order_direction(ascending_order):
+    if ascending_order is None:
+        return "ASC"
+    normalized = str(ascending_order).strip().lower()
+    if normalized in ["asc", "true", "1"]:
+        return "ASC"
+    if normalized in ["desc", "false", "0"]:
+        return "DESC"
+    return "ASC"
     
 def fill_empty_hours(hours_list, type):
     new_hours_list = hours_list
@@ -440,7 +511,17 @@ def fill_empty_months(months_list, type):
     
 def get_distinct_receipts():
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM receipt_receipt GROUP BY link")
+        cursor.execute(
+            '''
+            SELECT rr.*
+                FROM receipt_receipt rr
+                JOIN (
+                    SELECT MIN(id) AS id
+                        FROM receipt_receipt
+                        GROUP BY link
+                ) dedup ON dedup.id = rr.id
+            '''
+        )
         receipts = dictfetchall(cursor)
     return receipts
     
@@ -489,7 +570,15 @@ def get_total_spent(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT SUM(totalPrice), SUM(totalVat), count(*), max(totalPrice), avg(totalPrice) 
-                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r
+                    FROM (
+                        SELECT rr.*
+                            FROM receipt_receipt rr
+                            JOIN (
+                                SELECT MIN(id) AS id
+                                    FROM receipt_receipt
+                                    GROUP BY link
+                            ) dedup ON dedup.id = rr.id
+                    ) r
                     WHERE r.date BETWEEN %s AND %s
                 ''', 
                 [dateFrom, dateTo])
@@ -520,7 +609,15 @@ def get_receipts_sum_by_hours(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT HOUR(date) hourNum, count(*) count
-                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r
+                    FROM (
+                        SELECT rr.*
+                            FROM receipt_receipt rr
+                            JOIN (
+                                SELECT MIN(id) AS id
+                                    FROM receipt_receipt
+                                    GROUP BY link
+                            ) dedup ON dedup.id = rr.id
+                    ) r
                     WHERE r.date BETWEEN %s AND %s
                     GROUP BY HOUR(r.date)
                 ''',
@@ -546,7 +643,15 @@ def get_receipts_sum_by_weekdays(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT (DAYOFWEEK(date)+5)%%7+1 dayofweek, count(*) count 
-                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r 
+                    FROM (
+                        SELECT rr.*
+                            FROM receipt_receipt rr
+                            JOIN (
+                                SELECT MIN(id) AS id
+                                    FROM receipt_receipt
+                                    GROUP BY link
+                            ) dedup ON dedup.id = rr.id
+                    ) r 
                     WHERE r.date BETWEEN %s AND %s 
                     GROUP BY (DAYOFWEEK(r.date)+5)%%7+1
                 ''',
@@ -572,7 +677,15 @@ def get_receipts_sum_by_months(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT MONTH(date) monthNum, count(*) count 
-                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r 
+                    FROM (
+                        SELECT rr.*
+                            FROM receipt_receipt rr
+                            JOIN (
+                                SELECT MIN(id) AS id
+                                    FROM receipt_receipt
+                                    GROUP BY link
+                            ) dedup ON dedup.id = rr.id
+                    ) r 
                     WHERE r.date BETWEEN %s AND %s 
                     GROUP BY MONTH(r.date)
                 ''',
@@ -598,7 +711,15 @@ def get_money_spent_by_hours(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT HOUR(date) hourNum, sum(r.totalPrice) spent
-                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r
+                    FROM (
+                        SELECT rr.*
+                            FROM receipt_receipt rr
+                            JOIN (
+                                SELECT MIN(id) AS id
+                                    FROM receipt_receipt
+                                    GROUP BY link
+                            ) dedup ON dedup.id = rr.id
+                    ) r
                     WHERE r.date BETWEEN %s AND %s
                     GROUP BY HOUR(r.date)
                 ''',
@@ -624,7 +745,15 @@ def get_money_spent_by_weekdays(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT (DAYOFWEEK(date)+5)%%7+1 dayofweek, sum(r.totalPrice) spent 
-                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r 
+                    FROM (
+                        SELECT rr.*
+                            FROM receipt_receipt rr
+                            JOIN (
+                                SELECT MIN(id) AS id
+                                    FROM receipt_receipt
+                                    GROUP BY link
+                            ) dedup ON dedup.id = rr.id
+                    ) r 
                     WHERE r.date BETWEEN %s AND %s 
                     GROUP BY (DAYOFWEEK(r.date)+5)%%7+1
                 ''',
@@ -650,7 +779,15 @@ def get_money_spent_by_months(user, dateFrom, dateTo):
             cursor.execute(
                 '''
                 SELECT MONTH(date) monthNum, sum(r.totalPrice) spent 
-                    FROM (SELECT * FROM receipt_receipt GROUP BY link) r 
+                    FROM (
+                        SELECT rr.*
+                            FROM receipt_receipt rr
+                            JOIN (
+                                SELECT MIN(id) AS id
+                                    FROM receipt_receipt
+                                    GROUP BY link
+                            ) dedup ON dedup.id = rr.id
+                    ) r 
                     WHERE r.date BETWEEN %s AND %s 
                     GROUP BY MONTH(r.date)
                 ''',
@@ -675,13 +812,20 @@ def get_most_spent_in_a_day(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT max(innerQuery.sumPrice) FROM (
-                    SELECT sum(r.totalPrice) sumPrice, r.date foundDate FROM (
-                        SELECT * FROM receipt_receipt r GROUP BY link
+                SELECT MAX(innerQuery.sumPrice) FROM (
+                    SELECT DATE(r.date) foundDate, SUM(r.totalPrice) sumPrice
+                        FROM (
+                            SELECT rr.*
+                                FROM receipt_receipt rr
+                                JOIN (
+                                    SELECT MIN(id) AS id
+                                        FROM receipt_receipt
+                                        GROUP BY link
+                                ) dedup ON dedup.id = rr.id
                         ) r
                         WHERE r.date BETWEEN %s AND %s
-                        GROUP BY CAST(r.date AS DATE)
-                    ) innerQuery
+                        GROUP BY DATE(r.date)
+                ) innerQuery
                 ''', 
                 [dateFrom, dateTo])
             row = cursor.fetchone()
@@ -689,13 +833,12 @@ def get_most_spent_in_a_day(user, dateFrom, dateTo):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT max(innerQuery.sumPrice) FROM (
-                    SELECT sum(r.totalPrice) sumPrice, r.date foundDate FROM (
-                        SELECT * FROM receipt_receipt r
-                        ) r
+                SELECT MAX(innerQuery.sumPrice) FROM (
+                    SELECT DATE(r.date) foundDate, SUM(r.totalPrice) sumPrice
+                        FROM receipt_receipt r
                         WHERE r.user = %s AND r.date BETWEEN %s AND %s
-                        GROUP BY CAST(r.date AS DATE)
-                    ) innerQuery
+                        GROUP BY DATE(r.date)
+                ) innerQuery
                 ''', 
                 [user.id, dateFrom, dateTo])
             row = cursor.fetchone()
@@ -710,27 +853,55 @@ def get_most_valuable_items(user, dateFrom, dateTo, limit):
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT i.* FROM receipt_item i 
-                    JOIN (SELECT * FROM receipt_receipt GROUP BY link) r ON i.receipt = r.id 
-                    WHERE r.date BETWEEN %s AND %s 
-                    GROUP BY i.name 
-                    ORDER BY price DESC 
+                SELECT i.* FROM receipt_item i
+                    JOIN (
+                        SELECT rr.*
+                            FROM receipt_receipt rr
+                            JOIN (
+                                SELECT MIN(id) AS id
+                                    FROM receipt_receipt
+                                    GROUP BY link
+                            ) dedup ON dedup.id = rr.id
+                    ) r ON i.receipt = r.id
+                    WHERE r.date BETWEEN %s AND %s
+                    AND i.id = (
+                        SELECT i2.id FROM receipt_item i2
+                            JOIN (
+                                SELECT rr2.*
+                                    FROM receipt_receipt rr2
+                                    JOIN (
+                                        SELECT MIN(id) AS id
+                                            FROM receipt_receipt
+                                            GROUP BY link
+                                    ) dedup2 ON dedup2.id = rr2.id
+                            ) r2 ON i2.receipt = r2.id
+                            WHERE i2.name = i.name AND r2.date BETWEEN %s AND %s
+                            ORDER BY i2.price DESC, i2.id DESC
+                            LIMIT 1
+                    )
+                    ORDER BY i.price DESC, i.id DESC
                     LIMIT %s
                 ''', 
-                [dateFrom, dateTo, limit])
+                [dateFrom, dateTo, dateFrom, dateTo, limit])
             items = dictfetchall(cursor)
     else:
         with connection.cursor() as cursor:
             cursor.execute(
                 '''
-                SELECT i.* FROM receipt_item i 
-                    JOIN receipt_receipt r ON i.receipt = r.id 
-                    WHERE r.user = %s AND r.date BETWEEN %s AND %s 
-                    GROUP BY i.name 
-                    ORDER BY price DESC 
+                SELECT i.* FROM receipt_item i
+                    JOIN receipt_receipt r ON i.receipt = r.id
+                    WHERE r.user = %s AND r.date BETWEEN %s AND %s
+                    AND i.id = (
+                        SELECT i2.id FROM receipt_item i2
+                            JOIN receipt_receipt r2 ON i2.receipt = r2.id
+                            WHERE r2.user = %s AND r2.date BETWEEN %s AND %s AND i2.name = i.name
+                            ORDER BY i2.price DESC, i2.id DESC
+                            LIMIT 1
+                    )
+                    ORDER BY i.price DESC, i.id DESC
                     LIMIT %s
                 ''', 
-                [user.id, dateFrom, dateTo, limit])
+                [user.id, dateFrom, dateTo, user.id, dateFrom, dateTo, limit])
             items = dictfetchall(cursor)
     return items
 
@@ -813,7 +984,15 @@ def get_most_spent_companies(user, dateFrom, dateTo, limit):
                 '''
                 SELECT innerQuery.receiptCount AS receiptCount, innerQuery.priceSum, innerQuery.unitCount, innerQuery.companyTin, innerQuery.companyName FROM (
                     SELECT COUNT(r.id) AS receiptCount, SUM(r.totalPrice) AS priceSum, COUNT(DISTINCT u.id) AS unitCount, c.tin AS companyTin, c.name AS companyName
-                        FROM (SELECT * FROM receipt_receipt GROUP BY link) r
+                        FROM (
+                            SELECT rr.*
+                                FROM receipt_receipt rr
+                                JOIN (
+                                    SELECT MIN(id) AS id
+                                        FROM receipt_receipt
+                                        GROUP BY link
+                                ) dedup ON dedup.id = rr.id
+                        ) r
                         JOIN company_companyunit u ON r.companyUnit = u.id
                         JOIN company_company c ON u.company = c.tin
                         WHERE r.date BETWEEN %s AND %s
@@ -850,7 +1029,15 @@ def get_most_visited_companies(user, dateFrom, dateTo, limit):
                 '''
                 SELECT innerQuery.receiptCount AS receiptCount, innerQuery.priceSum, innerQuery.unitCount, innerQuery.companyTin, innerQuery.companyName FROM (
                     SELECT COUNT(r.id) AS receiptCount, SUM(r.totalPrice) AS priceSum, COUNT(DISTINCT u.id) AS unitCount, c.tin AS companyTin, c.name AS companyName
-                        FROM (SELECT * FROM receipt_receipt GROUP BY link) r
+                        FROM (
+                            SELECT rr.*
+                                FROM receipt_receipt rr
+                                JOIN (
+                                    SELECT MIN(id) AS id
+                                        FROM receipt_receipt
+                                        GROUP BY link
+                                ) dedup ON dedup.id = rr.id
+                        ) r
                         JOIN company_companyunit u ON r.companyUnit = u.id
                         JOIN company_company c ON u.company = c.tin
                         WHERE r.date BETWEEN %s AND %s
@@ -887,7 +1074,15 @@ def get_most_spent_types(user, dateFrom, dateTo, limit):
                 '''
                 SELECT innerQuery.companyType, innerQuery.receiptCount AS receiptCount, innerQuery.priceSum FROM (
                     SELECT t.name AS companyType, COUNT(r.id) AS receiptCount, SUM(r.totalPrice) AS priceSum 
-                        FROM (SELECT * FROM receipt_receipt GROUP BY link) r
+                        FROM (
+                            SELECT rr.*
+                                FROM receipt_receipt rr
+                                JOIN (
+                                    SELECT MIN(id) AS id
+                                        FROM receipt_receipt
+                                        GROUP BY link
+                                ) dedup ON dedup.id = rr.id
+                        ) r
                         JOIN company_companyunit u ON r.companyUnit = u.id
                         JOIN company_company c ON u.company = c.tin
                         JOIN company_company_type ct ON c.tin = ct.company_id
@@ -907,7 +1102,16 @@ def get_most_spent_types(user, dateFrom, dateTo, limit):
                 '''
                 SELECT innerQuery.companyType, innerQuery.receiptCount AS receiptCount, innerQuery.priceSum FROM (
                     SELECT t.name AS companyType, COUNT(r.id) AS receiptCount, SUM(r.totalPrice) AS priceSum 
-                        FROM (SELECT * FROM receipt_receipt WHERE user = %s GROUP BY link) r
+                        FROM (
+                            SELECT rr.*
+                                FROM receipt_receipt rr
+                                JOIN (
+                                    SELECT MIN(id) AS id
+                                        FROM receipt_receipt
+                                        WHERE user = %s
+                                        GROUP BY link
+                                ) dedup ON dedup.id = rr.id
+                        ) r
                         JOIN company_companyunit u ON r.companyUnit = u.id
                         JOIN company_company c ON u.company = c.tin
                         JOIN company_company_type ct ON c.tin = ct.company_id
@@ -930,7 +1134,15 @@ def get_most_visited_types(user, dateFrom, dateTo, limit):
                 '''
                 SELECT innerQuery.companyType, innerQuery.receiptCount AS receiptCount, innerQuery.priceSum FROM (
                     SELECT t.name AS companyType, COUNT(r.id) AS receiptCount, SUM(r.totalPrice) AS priceSum 
-                        FROM (SELECT * FROM receipt_receipt GROUP BY link) r
+                        FROM (
+                            SELECT rr.*
+                                FROM receipt_receipt rr
+                                JOIN (
+                                    SELECT MIN(id) AS id
+                                        FROM receipt_receipt
+                                        GROUP BY link
+                                ) dedup ON dedup.id = rr.id
+                        ) r
                         JOIN company_companyunit u ON r.companyUnit = u.id
                         JOIN company_company c ON u.company = c.tin
                         JOIN company_company_type ct ON c.tin = ct.company_id
@@ -950,7 +1162,16 @@ def get_most_visited_types(user, dateFrom, dateTo, limit):
                 '''
                 SELECT innerQuery.companyType, innerQuery.receiptCount AS receiptCount, innerQuery.priceSum FROM (
                     SELECT t.name AS companyType, COUNT(r.id) AS receiptCount, SUM(r.totalPrice) AS priceSum 
-                        FROM (SELECT * FROM receipt_receipt WHERE user = %s GROUP BY link) r
+                        FROM (
+                            SELECT rr.*
+                                FROM receipt_receipt rr
+                                JOIN (
+                                    SELECT MIN(id) AS id
+                                        FROM receipt_receipt
+                                        WHERE user = %s
+                                        GROUP BY link
+                                ) dedup ON dedup.id = rr.id
+                        ) r
                         JOIN company_companyunit u ON r.companyUnit = u.id
                         JOIN company_company c ON u.company = c.tin
                         JOIN company_company_type ct ON c.tin = ct.company_id
@@ -995,47 +1216,214 @@ def get_company_visits(user, tin):
     return company_visits
 
 def filter_receipts(user, dateFrom, dateTo, id, unitName, tin, priceFrom, priceTo, orderBy, ascendingOrder):
+    allowed_order_columns = {
+        "id": "r.id",
+        "date": "r.date",
+        "totalPrice": "r.totalPrice",
+        "totalVat": "r.totalVat",
+        "unitName": "u.name",
+        "tin": "u.company",
+    }
+    safe_order_column = _sanitize_order_column(orderBy, allowed_order_columns, "date")
+    safe_order_direction = _sanitize_order_direction(ascendingOrder)
+    id_like = id
+    unit_name_like = f"%{unitName}%"
+    tin_like = f"{tin}%"
+
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.id LIKE "{id}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} GROUP BY r.link ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(
+                f'''
+                SELECT r.* FROM receipt_receipt r
+                    JOIN (
+                        SELECT MIN(id) AS id
+                            FROM receipt_receipt
+                            GROUP BY link
+                    ) dedup ON dedup.id = r.id
+                    JOIN company_companyunit u ON r.companyUnit = u.id
+                    WHERE r.date BETWEEN %s AND %s
+                    AND CAST(r.id AS CHAR) LIKE %s
+                    AND u.name LIKE %s
+                    AND CAST(u.company AS CHAR) LIKE %s
+                    AND r.totalPrice BETWEEN %s AND %s
+                    ORDER BY {safe_order_column} {safe_order_direction}
+                ''',
+                [dateFrom, dateTo, id_like, unit_name_like, tin_like, priceFrom, priceTo]
+            )
             filtered_receipts = dictfetchall(cursor)
     else:
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_receipt r JOIN company_companyunit u ON r.companyUnit = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.id LIKE "{id}" AND u.name LIKE "%{unitName}%" AND u.company LIKE "{tin}%" AND r.totalPrice BETWEEN {priceFrom} AND {priceTo} AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(
+                f'''
+                SELECT r.* FROM receipt_receipt r
+                    JOIN company_companyunit u ON r.companyUnit = u.id
+                    WHERE r.date BETWEEN %s AND %s
+                    AND CAST(r.id AS CHAR) LIKE %s
+                    AND u.name LIKE %s
+                    AND CAST(u.company AS CHAR) LIKE %s
+                    AND r.totalPrice BETWEEN %s AND %s
+                    AND r.user = %s
+                    ORDER BY {safe_order_column} {safe_order_direction}
+                ''',
+                [dateFrom, dateTo, id_like, unit_name_like, tin_like, priceFrom, priceTo, user.id]
+            )
             filtered_receipts = dictfetchall(cursor)
     return filtered_receipts
 
 def filter_reports(user, dateFrom, dateTo, id, receipt, username, request, orderBy, ascendingOrder):
+    allowed_order_columns = {
+        "id": "r.id",
+        "date": "r.date",
+        "receipt": "r.receipt",
+        "username": "u.username",
+        "request": "r.request",
+        "seen": "r.seen",
+        "closed": "r.closed",
+    }
+    safe_order_column = _sanitize_order_column(orderBy, allowed_order_columns, "date")
+    safe_order_direction = _sanitize_order_direction(ascendingOrder)
+    id_like = id
+    receipt_like = receipt
+    username_like = f"%{username}%"
+    request_like = f"%{request}%"
+
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_report r JOIN account_user u ON r.user = u.id WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.id LIKE "{id}" AND r.receipt LIKE "{receipt}" AND u.username LIKE "%{username}%" AND r.request LIKE "%{request}%" ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(
+                f'''
+                SELECT r.* FROM receipt_report r
+                    JOIN account_user u ON r.user = u.id
+                    WHERE r.date BETWEEN %s AND %s
+                    AND CAST(r.id AS CHAR) LIKE %s
+                    AND CAST(r.receipt AS CHAR) LIKE %s
+                    AND u.username LIKE %s
+                    AND r.request LIKE %s
+                    ORDER BY {safe_order_column} {safe_order_direction}
+                ''',
+                [dateFrom, dateTo, id_like, receipt_like, username_like, request_like]
+            )
             filtered_reports = dictfetchall(cursor)
     else:
+        allowed_order_columns_regular = {
+            "id": "r.id",
+            "date": "r.date",
+            "receipt": "r.receipt",
+            "request": "r.request",
+            "seen": "r.seen",
+            "closed": "r.closed",
+        }
+        safe_order_column_regular = _sanitize_order_column(orderBy, allowed_order_columns_regular, "date")
         with connection.cursor() as cursor:
-            cursor.execute(f'SELECT r.* FROM receipt_report r WHERE r.date BETWEEN "{dateFrom}" AND "{dateTo}" AND r.id LIKE "{id}" AND r.receipt LIKE "{receipt}" AND r.request LIKE "%{request}%" AND r.user = {user.id} ORDER BY {orderBy} {ascendingOrder}')
+            cursor.execute(
+                f'''
+                SELECT r.* FROM receipt_report r
+                    WHERE r.date BETWEEN %s AND %s
+                    AND CAST(r.id AS CHAR) LIKE %s
+                    AND CAST(r.receipt AS CHAR) LIKE %s
+                    AND r.request LIKE %s
+                    AND r.user = %s
+                    ORDER BY {safe_order_column_regular} {safe_order_direction}
+                ''',
+                [dateFrom, dateTo, id_like, receipt_like, request_like, user.id]
+            )
             filtered_reports = dictfetchall(cursor)
     return filtered_reports
 
 def filter_companies(user, name, tin, type, orderBy, ascendingOrder):
+    allowed_order_columns = {
+        "tin": "c.tin",
+        "name": "c.name",
+    }
+    safe_order_column = _sanitize_order_column(orderBy, allowed_order_columns, "name")
+    safe_order_direction = _sanitize_order_direction(ascendingOrder)
+    name_like = f"%{name}%"
+    tin_like = f"%{tin}%"
+
     if (user.role == "ADMIN"):
         with connection.cursor() as cursor:
             if (type == "%"):
-                cursor.execute(f'SELECT c.* FROM company_company c LEFT JOIN company_company_type ct ON c.tin = ct.company_id LEFT JOIN company_companytype t ON ct.companytype_id = t.id WHERE c.name LIKE "%{name}%" AND c.tin LIKE "%{tin}%" AND (t.name LIKE "%" OR t.name IS NULL) GROUP BY c.tin ORDER BY {orderBy} {ascendingOrder}')
+                cursor.execute(
+                    f'''
+                    SELECT DISTINCT c.* FROM company_company c
+                        LEFT JOIN company_company_type ct ON c.tin = ct.company_id
+                        LEFT JOIN company_companytype t ON ct.companytype_id = t.id
+                        WHERE c.name LIKE %s
+                        AND CAST(c.tin AS CHAR) LIKE %s
+                        ORDER BY {safe_order_column} {safe_order_direction}
+                    ''',
+                    [name_like, tin_like]
+                )
             else:
-                cursor.execute(f'SELECT c.* FROM company_company c LEFT JOIN company_company_type ct ON c.tin = ct.company_id LEFT JOIN company_companytype t ON ct.companytype_id = t.id WHERE c.name LIKE "%{name}%" AND c.tin LIKE "%{tin}%" AND t.name LIKE "%{type}%" GROUP BY c.tin ORDER BY {orderBy} {ascendingOrder}')
+                cursor.execute(
+                    f'''
+                    SELECT DISTINCT c.* FROM company_company c
+                        LEFT JOIN company_company_type ct ON c.tin = ct.company_id
+                        LEFT JOIN company_companytype t ON ct.companytype_id = t.id
+                        WHERE c.name LIKE %s
+                        AND CAST(c.tin AS CHAR) LIKE %s
+                        AND t.name LIKE %s
+                        ORDER BY {safe_order_column} {safe_order_direction}
+                    ''',
+                    [name_like, tin_like, f"%{type}%"]
+                )
             filtered_reports = dictfetchall(cursor)
     else:
         with connection.cursor() as cursor:
             if (type == "%"):
-                cursor.execute(f'SELECT c.* FROM company_company c LEFT JOIN company_company_type ct ON c.tin = ct.company_id LEFT JOIN company_companytype t ON ct.companytype_id = t.id JOIN company_companyunit u ON c.tin = u.company JOIN receipt_receipt r ON u.id = r.companyUnit WHERE c.name LIKE "%{name}%" AND c.tin LIKE "%{tin}%" AND (t.name LIKE "%" OR t.name IS NULL) AND r.user = {user.id}  GROUP BY c.tin ORDER BY {orderBy} {ascendingOrder}')
+                cursor.execute(
+                    f'''
+                    SELECT DISTINCT c.* FROM company_company c
+                        LEFT JOIN company_company_type ct ON c.tin = ct.company_id
+                        LEFT JOIN company_companytype t ON ct.companytype_id = t.id
+                        JOIN company_companyunit u ON c.tin = u.company
+                        JOIN receipt_receipt r ON u.id = r.companyUnit
+                        WHERE c.name LIKE %s
+                        AND CAST(c.tin AS CHAR) LIKE %s
+                        AND r.user = %s
+                        ORDER BY {safe_order_column} {safe_order_direction}
+                    ''',
+                    [name_like, tin_like, user.id]
+                )
             else:
-                cursor.execute(f'SELECT c.* FROM company_company c LEFT JOIN company_company_type ct ON c.tin = ct.company_id LEFT JOIN company_companytype t ON ct.companytype_id = t.id JOIN company_companyunit u ON c.tin = u.company JOIN receipt_receipt r ON u.id = r.companyUnit WHERE c.name LIKE "%{name}%" AND c.tin LIKE "%{tin}%" AND t.name LIKE "%{type}%" AND r.user = {user.id}  GROUP BY c.tin ORDER BY {orderBy} {ascendingOrder}')
+                cursor.execute(
+                    f'''
+                    SELECT DISTINCT c.* FROM company_company c
+                        LEFT JOIN company_company_type ct ON c.tin = ct.company_id
+                        LEFT JOIN company_companytype t ON ct.companytype_id = t.id
+                        JOIN company_companyunit u ON c.tin = u.company
+                        JOIN receipt_receipt r ON u.id = r.companyUnit
+                        WHERE c.name LIKE %s
+                        AND CAST(c.tin AS CHAR) LIKE %s
+                        AND t.name LIKE %s
+                        AND r.user = %s
+                        ORDER BY {safe_order_column} {safe_order_direction}
+                    ''',
+                    [name_like, tin_like, f"%{type}%", user.id]
+                )
             filtered_reports = dictfetchall(cursor)
     return filtered_reports
 
 def filter_users(id, username, email, orderBy, ascendingOrder):
+    allowed_order_columns = {
+        "id": "id",
+        "username": "username",
+        "email": "email",
+    }
+    safe_order_column = _sanitize_order_column(orderBy, allowed_order_columns, "id")
+    safe_order_direction = _sanitize_order_direction(ascendingOrder)
+
     with connection.cursor() as cursor:
-        cursor.execute(f'SELECT * FROM account_user WHERE id LIKE "%{id}%" AND username LIKE "%{username}%" AND email LIKE "%{email}%" AND role = "REGULAR" ORDER BY {orderBy} {ascendingOrder}')
+        cursor.execute(
+            f'''
+            SELECT * FROM account_user
+                WHERE CAST(id AS CHAR) LIKE %s
+                AND username LIKE %s
+                AND email LIKE %s
+                AND role = %s
+                ORDER BY {safe_order_column} {safe_order_direction}
+            ''',
+            [f"%{id}%", f"%{username}%", f"%{email}%", "REGULAR"]
+        )
         filtered_users = dictfetchall(cursor)
     return filtered_users
 

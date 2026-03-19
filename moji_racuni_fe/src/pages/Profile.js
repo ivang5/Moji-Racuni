@@ -1,15 +1,8 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { TypeAnimation } from "react-type-animation";
 import FormGroup from "../components/FormGroup";
 import Toast from "../components/Toast";
-import AuthContext from "../context/AuthContext";
 import useApi from "../utils/useApi";
 import { dateFormatter } from "../utils/utils";
 import {
@@ -17,6 +10,7 @@ import {
   validateProfileInfoForm,
 } from "../utils/validators";
 import useModalDismiss from "../hooks/useModalDismiss";
+import useAuthUser from "../hooks/useAuthUser";
 
 const Profile = () => {
   const [userInfo, setUserInfo] = useState({});
@@ -34,16 +28,20 @@ const Profile = () => {
   });
   const api = useApi();
   const apiRef = useRef(api);
-  const { user } = useContext(AuthContext);
+  const { userId, userRole } = useAuthUser();
 
   useEffect(() => {
     apiRef.current = api;
   }, [api]);
 
   const getUserInfo = useCallback(async () => {
-    const userInfo = await apiRef.current.getUser(user.user_id);
+    if (!userId) {
+      return;
+    }
+
+    const userInfo = await apiRef.current.getUser(userId);
     setUserInfo(userInfo);
-  }, [user.user_id]);
+  }, [userId]);
 
   useEffect(() => {
     getUserInfo();
@@ -51,6 +49,10 @@ const Profile = () => {
 
   const saveChanges = async (e) => {
     e.preventDefault();
+    if (!userId) {
+      return;
+    }
+
     let validationObj = validateProfileInfoForm({
       username: e.target.username.value,
       email: e.target.email.value,
@@ -65,7 +67,7 @@ const Profile = () => {
       username: e.target.username.value,
       email: e.target.email.value,
     };
-    const response = await api.updateUser(user.user_id, userInfo);
+    const response = await api.updateUser(userId, userInfo);
 
     if (response === 409) {
       validationObj.username = "Korisničko ime već postoji!";
@@ -84,6 +86,10 @@ const Profile = () => {
 
   const saveChangesPass = async (e) => {
     e.preventDefault();
+    if (!userId) {
+      return;
+    }
+
     let validationObj = validatePasswordUpdateForm({
       password: e.target.pass.value,
       passwordRepeat: e.target.passRepeat.value,
@@ -98,7 +104,7 @@ const Profile = () => {
       password: e.target.pass.value,
       passRepeat: e.target.passRepeat.value,
     };
-    await api.updateUserPassword(user.user_id, newPasswordInfo);
+    await api.updateUserPassword(userId, newPasswordInfo);
 
     setFormValidPass(validationObj);
     setModalOpenPass(false);
@@ -156,7 +162,7 @@ const Profile = () => {
                     {dateFormatter(userInfo.date_joined)}
                   </span>
                 </h5>
-                {user.role === "REGULAR" && (
+                {userRole === "REGULAR" && (
                   <h5 className="profile__info-title">
                     <Link className="profile__info-link" to="/prijave">
                       Moje prijave <span className="arrow arrow--right"></span>

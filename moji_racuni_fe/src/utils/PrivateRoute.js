@@ -1,10 +1,9 @@
 import { Outlet, Navigate } from "react-router-dom";
-import { useContext } from "react";
-import AuthContext from "../context/AuthContext";
+import useAuthUser from "../hooks/useAuthUser";
 
 const PrivateRoute = () => {
-  const { user } = useContext(AuthContext);
-  return user ? <Outlet /> : <Navigate to="/prijava" />;
+  const { isAuthenticated } = useAuthUser();
+  return isAuthenticated ? <Outlet /> : <Navigate to="/prijava" />;
 };
 
 export default PrivateRoute;

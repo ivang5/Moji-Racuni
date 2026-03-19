@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useContext } from "react";
-import AuthContext from "../context/AuthContext";
 import useApi from "../utils/useApi";
 import { dateTimeFormatter } from "../utils/utils";
 import BellIcon from "../icons/bell-icon.svg";
+import useAuthUser from "../hooks/useAuthUser";
 
 const ReportCard = ({
   id,
@@ -16,7 +15,7 @@ const ReportCard = ({
   openModal,
 }) => {
   const [reportUser, setReportUser] = useState({});
-  const { user } = useContext(AuthContext);
+  const { userRole } = useAuthUser();
   const api = useApi();
   const apiRef = useRef(api);
 
@@ -39,14 +38,14 @@ const ReportCard = ({
         <div
           className={
             closed
-              ? !seen && user.role === "REGULAR"
+              ? !seen && userRole === "REGULAR"
                 ? "report-card report-card--unseen"
                 : "report-card report-card--closed"
               : "report-card"
           }
           onClick={() => openModal(id)}
         >
-          {user.role === "REGULAR" && closed && !seen ? (
+          {userRole === "REGULAR" && closed && !seen ? (
             <img
               className="report-card__icon"
               src={BellIcon}
@@ -63,7 +62,7 @@ const ReportCard = ({
             <span className={closed ? "c-red d-block" : "c-green-4 d-block"}>
               {closed ? "Zatvorena" : "Otvorena"}
             </span>
-            {user.role === "ADMIN" && (
+            {userRole === "ADMIN" && (
               <span className="d-block report-card__user">
                 Prijavio: {reportUser.username}
               </span>

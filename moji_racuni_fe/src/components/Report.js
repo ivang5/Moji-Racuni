@@ -1,12 +1,12 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import AuthContext from "../context/AuthContext";
 import useApi from "../utils/useApi";
 import { dateTimeFormatter } from "../utils/utils";
+import useAuthUser from "../hooks/useAuthUser";
 
 const Report = ({ reportInfo, hasLink }) => {
   const [reportUser, setReportUser] = useState({});
-  const { user } = useContext(AuthContext);
+  const { userRole } = useAuthUser();
   const api = useApi();
   const apiRef = useRef(api);
 
@@ -43,7 +43,7 @@ const Report = ({ reportInfo, hasLink }) => {
             {reportInfo.closed ? "Zatvorena" : "Otvorena"}
           </span>
         </div>
-        {user.role === "ADMIN" && (
+        {userRole === "ADMIN" && (
           <div className="report-details__user">
             Prijavio:
             <span className="fw-bold">

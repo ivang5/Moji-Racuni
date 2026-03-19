@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Dropdown from "react-dropdown";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
 import EditIcon from "../icons/edit-icon.svg";
-import AuthContext from "../context/AuthContext";
 import { formatPrice } from "../utils/utils";
+import useAuthUser from "../hooks/useAuthUser";
 
 const Company = ({
   companyInfo,
@@ -15,7 +15,7 @@ const Company = ({
     companyInfo.type && companyInfo.type.name,
   );
   let companyTypeOptions = ["Bez tipa"];
-  const { user } = useContext(AuthContext);
+  const { userRole } = useAuthUser();
   const imgInput = useRef();
   const firstUpdate = useRef(true);
 
@@ -38,7 +38,7 @@ const Company = ({
   }, [changeCompanyType, companyTypeOption, companyTypes]);
 
   const handleClick = () => {
-    user.role !== "REGULAR" && imgInput.current.click();
+    userRole !== "REGULAR" && imgInput.current.click();
   };
 
   return (
@@ -51,7 +51,7 @@ const Company = ({
           <div className="company__body">
             <div
               className={
-                user.role === "REGULAR"
+                userRole === "REGULAR"
                   ? "company__img-wrapper"
                   : "company__img-wrapper company__img-wrapper--editable"
               }
@@ -78,7 +78,7 @@ const Company = ({
                 }
                 alt="logo preduzeća"
               />
-              {user.role !== "REGULAR" && (
+              {userRole !== "REGULAR" && (
                 <img className="company__img-icon" src={EditIcon} alt="edit" />
               )}
             </div>

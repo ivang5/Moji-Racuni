@@ -212,10 +212,10 @@ const StatPanel = ({
                   Najskuplji proizvod
                 </h6>
                 <h3 className="stat-panel__item-val">
-                  {stats.mostValuableItems[0].name}
+                  {stats.mostValuableItems?.[0].name}
                 </h3>
                 <span className="stat-panel__item-val fs-2 fw-bold">
-                  {formatPrice(stats.mostValuableItems[0].price)} RSD
+                  {formatPrice(stats.mostValuableItems?.[0].price)} RSD
                 </span>
                 {timeSpan !== "all" &&
                   percentageChanges.mostSpentReceipt !== null &&

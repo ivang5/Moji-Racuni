@@ -1,13 +1,6 @@
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  useRef,
-  useCallback,
-} from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Receipt from "../components/Receipt";
 import StatPanel from "../components/StatPanel";
-import AuthContext from "../context/AuthContext";
 import useApi from "../utils/useApi";
 import {
   getThisMonth,
@@ -25,6 +18,7 @@ import Toast from "../components/Toast";
 import Report from "../components/Report";
 import useToast from "../hooks/useToast";
 import { validateReceiptLink } from "../utils/validators";
+import useAuthUser from "../hooks/useAuthUser";
 
 const Home = () => {
   const [lastReceiptInfo, setLastReceiptInfo] = useState({});
@@ -35,61 +29,84 @@ const Home = () => {
   const [previousStats, setPreviousStats] = useState({});
   const [statsLoading, setStatsLoading] = useState(true);
   const [addingReceipt, setAddingReceipt] = useState(false);
-  const [date, setDate] = useState(getThisMonth());
-  const [previousDate, setPreviousDate] = useState(getLastMonth());
   const [timeSpan, setTimeSpan] = useState("month");
   const [percentageChanges, setPercentageChanges] = useState({});
   const [receiptLinkValid, setReceiptLinkValid] = useState("");
   const [successText, setSuccessText] = useState("");
+  const statsRequestIdRef = useRef(0);
   const receiptInputRef = useRef(null);
   const api = useApi();
   const apiRef = useRef(api);
-  const { user } = useContext(AuthContext);
+  const { userRole, username } = useAuthUser();
   const { toast, toastOpen, showToast, closeToast } = useToast(10000);
 
   useEffect(() => {
     apiRef.current = api;
   }, [api]);
 
-  const getStats = useCallback(async () => {
+  const loadStatsForTimeSpan = useCallback(async () => {
+    const requestId = ++statsRequestIdRef.current;
     setStatsLoading(true);
-    const baseStats = await apiRef.current.getBaseStats(
-      date.dateFrom,
-      date.dateTo,
-      1,
-    );
-    setStats(baseStats);
-    setStatsLoading(false);
-  }, [date.dateFrom, date.dateTo]);
+    setPercentageChanges({});
 
-  const getPreviousStats = useCallback(async () => {
-    const baseStats = await apiRef.current.getBaseStats(
-      previousDate.dateFrom,
-      previousDate.dateTo,
+    const currentDate =
+      timeSpan === "month"
+        ? getThisMonth()
+        : timeSpan === "year"
+          ? getThisYear()
+          : getAllTime();
+
+    const currentPreviousDate =
+      timeSpan === "month" ? getLastMonth() : getLastYear();
+
+    const statsPromise = apiRef.current.getBaseStats(
+      currentDate.dateFrom,
+      currentDate.dateTo,
       1,
     );
-    setPreviousStats(baseStats);
-  }, [previousDate.dateFrom, previousDate.dateTo]);
+
+    const previousStatsPromise =
+      timeSpan === "all"
+        ? Promise.resolve(null)
+        : apiRef.current.getBaseStats(
+            currentPreviousDate.dateFrom,
+            currentPreviousDate.dateTo,
+            1,
+          );
+
+    const [baseStats, basePreviousStats] = await Promise.all([
+      statsPromise,
+      previousStatsPromise,
+    ]);
+
+    if (requestId !== statsRequestIdRef.current) {
+      return;
+    }
+
+    setStats(baseStats || {});
+    setPreviousStats(basePreviousStats || {});
+    setStatsLoading(false);
+  }, [timeSpan]);
 
   const getLastReceipt = useCallback(async () => {
-    if (user.role !== "REGULAR") {
+    if (userRole !== "REGULAR") {
       return;
     }
     setReceiptLoading(true);
     const receiptInfo = await apiRef.current.getLastReceiptFull();
     setLastReceiptInfo(receiptInfo);
     setReceiptLoading(false);
-  }, [user.role]);
+  }, [userRole]);
 
   const getLastReport = useCallback(async () => {
-    if (user.role !== "ADMIN") {
+    if (userRole !== "ADMIN") {
       return;
     }
     setReportLoading(true);
     const report = await apiRef.current.getLastReport();
     setLastReport(report);
     setReportLoading(false);
-  }, [user.role]);
+  }, [userRole]);
 
   useEffect(() => {
     getLastReceipt();
@@ -97,23 +114,8 @@ const Home = () => {
   }, [getLastReceipt, getLastReport]);
 
   useEffect(() => {
-    if (timeSpan === "month") {
-      setDate(getThisMonth);
-      setPreviousDate(getLastMonth);
-    } else if (timeSpan === "year") {
-      setDate(getThisYear);
-      setPreviousDate(getLastYear);
-    } else {
-      setDate(getAllTime);
-    }
-  }, [timeSpan]);
-
-  useEffect(() => {
-    if (timeSpan !== "all") {
-      getPreviousStats();
-    }
-    getStats();
-  }, [date, getPreviousStats, getStats, timeSpan]);
+    loadStatsForTimeSpan();
+  }, [loadStatsForTimeSpan]);
 
   useEffect(() => {
     if (stats.totalSpent && previousStats.totalSpent && timeSpan !== "all") {
@@ -176,7 +178,7 @@ const Home = () => {
     } else if (response === 409) {
       setReceiptLinkValid("Ovaj račun ste već uneli!");
     } else {
-      getStats();
+      loadStatsForTimeSpan();
       getLastReceipt();
       showToast({
         title: "Uspešno",
@@ -194,12 +196,12 @@ const Home = () => {
       <div className="l-container">
         <TypeAnimation
           className="text-animator py-1"
-          sequence={[`${capitalize(user.username)}, dobrodošli nazad!`]}
+          sequence={[`${capitalize(username || "")}, dobrodošli nazad!`]}
           wrapper="h1"
           speed={20}
           cursor={false}
         />
-        {user.role === "REGULAR" && (
+        {userRole === "REGULAR" && (
           <>
             <h2 className="pt-4 pt-lg-4">
               Dodajte račun{" "}
@@ -267,7 +269,7 @@ const Home = () => {
             </div>
           </>
         )}
-        {user.role === "REGULAR" ? (
+        {userRole === "REGULAR" ? (
           <div className="pb-4 pt-2">
             <h2>Poslednji račun</h2>
             {receiptLoading ? (

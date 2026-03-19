@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
 import useApi from "../utils/useApi";
@@ -16,12 +16,12 @@ import Paginator from "../components/Paginator";
 import Receipt from "../components/Receipt";
 import Toast from "../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
-import AuthContext from "../context/AuthContext";
 import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
+import useAuthUser from "../hooks/useAuthUser";
 
 const Receipts = () => {
   const { page } = useParams();
@@ -68,7 +68,7 @@ const Receipts = () => {
   const sortByOptions = ["Datum", "Prodavnica", "PIB", "Cena", "PDV"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
-  const { user } = useContext(AuthContext);
+  const { userRole } = useAuthUser();
   const navigate = useNavigate();
 
   const fetchSortedPage = useCallback(
@@ -393,7 +393,7 @@ const Receipts = () => {
           {modalReceipt.receipt ? (
             <div className="modal__content">
               <Receipt receiptInfo={modalReceipt} />
-              {user.role === "REGULAR" && (
+              {userRole === "REGULAR" && (
                 <div className="modal__options">
                   {!reportOpen && !deletionOpen ? (
                     <>

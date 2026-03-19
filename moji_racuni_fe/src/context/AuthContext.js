@@ -6,27 +6,40 @@ const AuthContext = createContext();
 
 export default AuthContext;
 
+const getStoredTokens = () => {
+  try {
+    const rawTokens = localStorage.getItem("authTokens");
+    return rawTokens ? JSON.parse(rawTokens) : null;
+  } catch (error) {
+    localStorage.removeItem("authTokens");
+    return null;
+  }
+};
+
+const decodeAccessToken = (tokens) => {
+  if (!tokens?.access) {
+    return null;
+  }
+
+  try {
+    return jwt_decode(tokens.access);
+  } catch (error) {
+    localStorage.removeItem("authTokens");
+    return null;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
-  const [authTokens, setAuthTokens] = useState(() =>
-    localStorage.getItem("authTokens")
-      ? JSON.parse(localStorage.getItem("authTokens"))
-      : null
-  );
-  const [user, setUser] = useState(() =>
-    localStorage.getItem("authTokens")
-      ? jwt_decode(localStorage.getItem("authTokens"))
-      : null
-  );
+  const [authTokens, setAuthTokens] = useState(() => getStoredTokens());
+  const [user, setUser] = useState(() => decodeAccessToken(getStoredTokens()));
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (authTokens) {
-      setUser(jwt_decode(authTokens.access));
-    }
+    setUser(decodeAccessToken(authTokens));
     setLoading(false);
-  }, [authTokens, loading]);
+  }, [authTokens]);
 
   const callLogin = async (username, password) => {
     try {
@@ -41,7 +54,7 @@ export const AuthProvider = ({ children }) => {
             username: username,
             password: password,
           }),
-        }
+        },
       );
       const data = await response.json();
 
@@ -64,7 +77,7 @@ export const AuthProvider = ({ children }) => {
         return 404;
       }
       const response = await fetch(
-        `${process.env.REACT_APP_BASE_URL}/api/users/${username}/`
+        `${process.env.REACT_APP_BASE_URL}/api/users/${username}/`,
       );
       return response.status;
     } catch (error) {
@@ -106,7 +119,7 @@ export const AuthProvider = ({ children }) => {
             date_joined: "2022-11-12",
             is_active: true,
           }),
-        }
+        },
       );
 
       if (response.status === 201) {

@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import { getCompanyOrderCode } from "../utils/utils";
@@ -13,7 +7,6 @@ import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
 import Toast from "../components/Toast";
 import { useNavigate, useParams } from "react-router-dom";
-import AuthContext from "../context/AuthContext";
 import CompanyCard from "../components/CompanyCard";
 import Company from "../components/Company";
 import useToast from "../hooks/useToast";
@@ -21,6 +14,7 @@ import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
+import useAuthUser from "../hooks/useAuthUser";
 
 const Companies = () => {
   const { page } = useParams();
@@ -73,7 +67,7 @@ const Companies = () => {
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
   const apiRef = useRef(api);
-  const { user } = useContext(AuthContext);
+  const { userId } = useAuthUser();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -207,6 +201,10 @@ const Companies = () => {
 
   const createCompanyType = async (e) => {
     e.preventDefault();
+    if (!userId) {
+      return;
+    }
+
     let valid = true;
     let validationObj = { name: "", description: "" };
 
@@ -230,7 +228,7 @@ const Companies = () => {
     const companyTypeInfo = {
       name: e.target.name.value.trim(),
       description: e.target.description.value.trim(),
-      user: user.user_id,
+      user: userId,
     };
 
     const companyType = await api.createCompanyType(companyTypeInfo);
@@ -251,6 +249,10 @@ const Companies = () => {
 
   const changeType = async (e) => {
     e.preventDefault();
+    if (!userId) {
+      return;
+    }
+
     let valid = true;
     let validationObj = { name: "", description: "" };
 
@@ -272,7 +274,7 @@ const Companies = () => {
     const typeInfo = {
       name: e.target.name.value.trim(),
       description: e.target.description.value.trim(),
-      user: user.user_id,
+      user: userId,
     };
 
     const companyType = await api.changeType(selectedType.id, typeInfo);

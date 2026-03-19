@@ -462,6 +462,10 @@ export const getMonthsFromNumbers = (monthsList, type) => {
 };
 
 export const getSpendingsPieFormatData = (data, isCompany) => {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
   const newList = [];
 
   data.forEach((obj) => {
@@ -476,6 +480,10 @@ export const getSpendingsPieFormatData = (data, isCompany) => {
 };
 
 export const getVisitsPieFormatData = (data, isCompany) => {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
   const newList = [];
 
   data.forEach((obj) => {
@@ -490,6 +498,10 @@ export const getVisitsPieFormatData = (data, isCompany) => {
 };
 
 export const getMostValItemsFormat = (itemsList) => {
+  if (!Array.isArray(itemsList)) {
+    return [];
+  }
+
   const newList = [];
 
   itemsList.forEach((obj) => {
@@ -549,6 +561,10 @@ export const countReceipts = (visitedList) => {
 };
 
 export const isChartEmpty = (data, type) => {
+  if (!Array.isArray(data)) {
+    return true;
+  }
+
   let isEmpty = true;
 
   if (type === "count") {

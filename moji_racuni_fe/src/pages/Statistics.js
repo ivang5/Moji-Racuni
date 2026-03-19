@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import DatePicker from "react-datepicker";
@@ -18,7 +17,6 @@ import {
   getMostValItemsFormat,
   formatPrice,
 } from "../utils/utils";
-import { useEffect } from "react";
 import Chart from "../components/Chart";
 import InfoIcon from "../icons/info-icon.png";
 import { saveAs } from "file-saver";
@@ -49,51 +47,50 @@ const Statistics = () => {
   const [plotsLoading, setPlotsLoading] = useState(true);
   const [PDFBlob, setPDFBlob] = useState(null);
   const api = useApi();
-
-  let worker = new Worker(new URL("../workers/WorkerPDF.js", import.meta.url));
-
-  worker.onmessage = (e) => {
-    setPDFBlob(e.data);
-  };
+  const apiRef = useRef(api);
+  const workerRef = useRef(null);
+  const fromDateStr = dateBEFormatter(fromDate);
+  const toDateStr = dateBEFormatter(toDate);
 
   useEffect(() => {
-    applyFilters();
-    getStatPlots();
-    setPlotsLoading(true);
-  }, [fromDate, toDate]);
+    apiRef.current = api;
+  }, [api]);
 
   useEffect(() => {
-    getMostSpentCompanies();
-    getMostVisitedCompanies();
-    getMostSpentTypes();
-    getMostVisitedTypes();
-  }, [receiptsInfo]);
+    const worker = new Worker(
+      new URL("../workers/WorkerPDF.js", import.meta.url),
+    );
+    worker.onmessage = (e) => {
+      setPDFBlob(e.data);
+    };
+    workerRef.current = worker;
 
-  useEffect(() => {
-    baseStats.totalSpent && statPlots.spending && generatePdf();
-  }, [statPlots]);
+    return () => {
+      worker.terminate();
+    };
+  }, []);
 
-  const getBaseStats = async () => {
-    const baseStats = await api.getBaseStats(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getBaseStats = useCallback(async () => {
+    const baseStats = await apiRef.current.getBaseStats(
+      fromDateStr,
+      toDateStr,
       1,
     );
     setBaseStats(baseStats);
-  };
+  }, [fromDateStr, toDateStr]);
 
-  const getReceiptsInfo = async () => {
-    const receiptsInfo = await api.getTotalSpent(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getReceiptsInfo = useCallback(async () => {
+    const receiptsInfo = await apiRef.current.getTotalSpent(
+      fromDateStr,
+      toDateStr,
     );
     setReceiptsInfo(receiptsInfo);
-  };
+  }, [fromDateStr, toDateStr]);
 
-  const getReceiptsByHour = async () => {
-    const receiptsCount = await api.getReceiptsByHour(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getReceiptsByHour = useCallback(async () => {
+    const receiptsCount = await apiRef.current.getReceiptsByHour(
+      fromDateStr,
+      toDateStr,
     );
     if (isChartEmpty(receiptsCount, "count")) {
       setReceiptsByHour([]);
@@ -101,12 +98,12 @@ const Statistics = () => {
     }
     const receiptsCountFormatted = getHoursFromNumbers(receiptsCount, "count");
     setReceiptsByHour(receiptsCountFormatted);
-  };
+  }, [fromDateStr, toDateStr]);
 
-  const getReceiptsByWeekday = async () => {
-    const receiptsCount = await api.getReceiptsByWeekday(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getReceiptsByWeekday = useCallback(async () => {
+    const receiptsCount = await apiRef.current.getReceiptsByWeekday(
+      fromDateStr,
+      toDateStr,
     );
     if (isChartEmpty(receiptsCount, "count")) {
       setReceiptsByWeekday([]);
@@ -117,12 +114,12 @@ const Statistics = () => {
       "count",
     );
     setReceiptsByWeekday(receiptsCountFormatted);
-  };
+  }, [fromDateStr, toDateStr]);
 
-  const getReceiptsByMonth = async () => {
-    const receiptsCount = await api.getReceiptsByMonth(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getReceiptsByMonth = useCallback(async () => {
+    const receiptsCount = await apiRef.current.getReceiptsByMonth(
+      fromDateStr,
+      toDateStr,
     );
     if (isChartEmpty(receiptsCount, "count")) {
       setReceiptsByMonth([]);
@@ -130,12 +127,12 @@ const Statistics = () => {
     }
     const receiptsCountFormatted = getMonthsFromNumbers(receiptsCount, "count");
     setReceiptsByMonth(receiptsCountFormatted);
-  };
+  }, [fromDateStr, toDateStr]);
 
-  const getSpentByHour = async () => {
-    const moneySpent = await api.getSpentByHour(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getSpentByHour = useCallback(async () => {
+    const moneySpent = await apiRef.current.getSpentByHour(
+      fromDateStr,
+      toDateStr,
     );
     if (isChartEmpty(moneySpent, "spent")) {
       setSpentByHour([]);
@@ -143,12 +140,12 @@ const Statistics = () => {
     }
     const moneySpentFormatted = getHoursFromNumbers(moneySpent, "spent");
     setSpentByHour(moneySpentFormatted);
-  };
+  }, [fromDateStr, toDateStr]);
 
-  const getSpentByWeekday = async () => {
-    const moneySpent = await api.getSpentByWeekday(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getSpentByWeekday = useCallback(async () => {
+    const moneySpent = await apiRef.current.getSpentByWeekday(
+      fromDateStr,
+      toDateStr,
     );
     if (isChartEmpty(moneySpent, "spent")) {
       setSpentByWeekday([]);
@@ -156,12 +153,12 @@ const Statistics = () => {
     }
     const moneySpentFormatted = getWeekdaysFromNumbers(moneySpent, "spent");
     setSpentByWeekday(moneySpentFormatted);
-  };
+  }, [fromDateStr, toDateStr]);
 
-  const getSpentByMonth = async () => {
-    const moneySpent = await api.getSpentByMonth(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getSpentByMonth = useCallback(async () => {
+    const moneySpent = await apiRef.current.getSpentByMonth(
+      fromDateStr,
+      toDateStr,
     );
     if (isChartEmpty(moneySpent, "spent")) {
       setSpentByMonth([]);
@@ -169,15 +166,15 @@ const Statistics = () => {
     }
     const moneySpentFormatted = getMonthsFromNumbers(moneySpent, "spent");
     setSpentByMonth(moneySpentFormatted);
-  };
+  }, [fromDateStr, toDateStr]);
 
-  const getMostSpentCompanies = async () => {
-    const mostSpentCompanies = await api.getMostSpentCompaniesInfo(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getMostSpentCompanies = useCallback(async () => {
+    const mostSpentCompanies = await apiRef.current.getMostSpentCompaniesInfo(
+      fromDateStr,
+      toDateStr,
       10,
     );
-    if (mostSpentCompanies.length === 0) {
+    if (!Array.isArray(mostSpentCompanies) || mostSpentCompanies.length === 0) {
       setMostSpentCompanies([]);
       return;
     }
@@ -187,18 +184,24 @@ const Statistics = () => {
     );
     spentCompaniesFormatted.push({
       id: "Ostalo",
-      value: receiptsInfo.totalSpent - sumSpendings(spentCompaniesFormatted),
+      value:
+        Number(receiptsInfo.totalSpent || 0) -
+        sumSpendings(spentCompaniesFormatted),
     });
     setMostSpentCompanies(spentCompaniesFormatted);
-  };
+  }, [fromDateStr, toDateStr, receiptsInfo.totalSpent]);
 
-  const getMostVisitedCompanies = async () => {
-    const mostVisitedCompanies = await api.getMostVisitedCompaniesInfo(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
-      10,
-    );
-    if (mostVisitedCompanies.length === 0) {
+  const getMostVisitedCompanies = useCallback(async () => {
+    const mostVisitedCompanies =
+      await apiRef.current.getMostVisitedCompaniesInfo(
+        fromDateStr,
+        toDateStr,
+        10,
+      );
+    if (
+      !Array.isArray(mostVisitedCompanies) ||
+      mostVisitedCompanies.length === 0
+    ) {
       setMostVisitedCompanies([]);
       return;
     }
@@ -209,18 +212,19 @@ const Statistics = () => {
     visitedCompaniesFormatted.push({
       id: "Ostalo",
       value:
-        receiptsInfo.receiptsCount - countReceipts(visitedCompaniesFormatted),
+        Number(receiptsInfo.receiptsCount || 0) -
+        countReceipts(visitedCompaniesFormatted),
     });
     setMostVisitedCompanies(visitedCompaniesFormatted);
-  };
+  }, [fromDateStr, toDateStr, receiptsInfo.receiptsCount]);
 
-  const getMostSpentTypes = async () => {
-    const mostSpentTypes = await api.getMostSpentTypesInfo(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getMostSpentTypes = useCallback(async () => {
+    const mostSpentTypes = await apiRef.current.getMostSpentTypesInfo(
+      fromDateStr,
+      toDateStr,
       10,
     );
-    if (mostSpentTypes.length === 0) {
+    if (!Array.isArray(mostSpentTypes) || mostSpentTypes.length === 0) {
       setMostSpentTypes([]);
       return;
     }
@@ -230,18 +234,20 @@ const Statistics = () => {
     );
     spentTypesFormatted.push({
       id: "Ostalo",
-      value: receiptsInfo.totalSpent - sumSpendings(spentTypesFormatted),
+      value:
+        Number(receiptsInfo.totalSpent || 0) -
+        sumSpendings(spentTypesFormatted),
     });
     setMostSpentTypes(spentTypesFormatted);
-  };
+  }, [fromDateStr, toDateStr, receiptsInfo.totalSpent]);
 
-  const getMostVisitedTypes = async () => {
-    const mostVisitedTypes = await api.getMostVisitedTypesInfo(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getMostVisitedTypes = useCallback(async () => {
+    const mostVisitedTypes = await apiRef.current.getMostVisitedTypesInfo(
+      fromDateStr,
+      toDateStr,
       10,
     );
-    if (mostVisitedTypes.length === 0) {
+    if (!Array.isArray(mostVisitedTypes) || mostVisitedTypes.length === 0) {
       setMostVisitedTypes([]);
       return;
     }
@@ -251,36 +257,34 @@ const Statistics = () => {
     );
     visitedTypesFormatted.push({
       id: "Ostalo",
-      value: receiptsInfo.receiptsCount - countReceipts(visitedTypesFormatted),
+      value:
+        Number(receiptsInfo.receiptsCount || 0) -
+        countReceipts(visitedTypesFormatted),
     });
     setMostVisitedTypes(visitedTypesFormatted);
-  };
+  }, [fromDateStr, toDateStr, receiptsInfo.receiptsCount]);
 
-  const getMostValuableItems = async () => {
-    const mostValuableItems = await api.getValuableItems(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
+  const getMostValuableItems = useCallback(async () => {
+    const mostValuableItems = await apiRef.current.getValuableItems(
+      fromDateStr,
+      toDateStr,
       10,
     );
-    if (mostValuableItems.length === 0) {
+    if (!Array.isArray(mostValuableItems) || mostValuableItems.length === 0) {
       setMostValuableItems([]);
       return;
     }
     const mostValuableItemsFormatted = getMostValItemsFormat(mostValuableItems);
     setMostValuableItems(mostValuableItemsFormatted);
-  };
+  }, [fromDateStr, toDateStr]);
 
-  const getStatPlots = async () => {
-    const plots = await api.getStatPlots(
-      dateBEFormatter(fromDate),
-      dateBEFormatter(toDate),
-      10,
-    );
+  const getStatPlots = useCallback(async () => {
+    const plots = await apiRef.current.getStatPlots(fromDateStr, toDateStr, 10);
     setStatPlots(plots);
-    await new Promise(() => setTimeout(setPlotsLoading(false), 500));
-  };
+    setPlotsLoading(false);
+  }, [fromDateStr, toDateStr]);
 
-  const applyFilters = async () => {
+  const applyFilters = useCallback(async () => {
     setStatsLoading(true);
     getBaseStats();
     getReceiptsInfo();
@@ -296,17 +300,58 @@ const Statistics = () => {
     getMostVisitedTypes();
     getMostValuableItems();
     setStatsLoading(false);
-  };
+  }, [
+    getBaseStats,
+    getMostSpentCompanies,
+    getMostSpentTypes,
+    getMostValuableItems,
+    getMostVisitedCompanies,
+    getMostVisitedTypes,
+    getReceiptsByHour,
+    getReceiptsByMonth,
+    getReceiptsByWeekday,
+    getReceiptsInfo,
+    getSpentByHour,
+    getSpentByMonth,
+    getSpentByWeekday,
+  ]);
 
-  const generatePdf = () => {
-    worker.postMessage({
+  const generatePdf = useCallback(() => {
+    if (!workerRef.current) {
+      return;
+    }
+
+    workerRef.current.postMessage({
       statPlots: statPlots,
       baseStats: baseStats,
       fromDate: fromDate,
       toDate: toDate,
       mostSpentTypes: mostSpentTypes,
     });
-  };
+  }, [baseStats, fromDate, mostSpentTypes, statPlots, toDate]);
+
+  useEffect(() => {
+    applyFilters();
+    getStatPlots();
+    setPlotsLoading(true);
+  }, [fromDate, toDate, applyFilters, getStatPlots]);
+
+  useEffect(() => {
+    getMostSpentCompanies();
+    getMostVisitedCompanies();
+    getMostSpentTypes();
+    getMostVisitedTypes();
+  }, [
+    receiptsInfo,
+    getMostSpentCompanies,
+    getMostSpentTypes,
+    getMostVisitedCompanies,
+    getMostVisitedTypes,
+  ]);
+
+  useEffect(() => {
+    baseStats.totalSpent && statPlots?.spending && generatePdf();
+  }, [baseStats.totalSpent, generatePdf, statPlots?.spending]);
 
   return (
     <div className="l-container">
@@ -502,8 +547,8 @@ const Statistics = () => {
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Najviše potrošeno u jednom danu</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {baseStats.mostSpentInADay.mostSpent
-                      ? formatPrice(baseStats.mostSpentInADay.mostSpent)
+                    {baseStats.mostSpentInADay?.mostSpent
+                      ? formatPrice(baseStats.mostSpentInADay?.mostSpent)
                       : 0}{" "}
                     RSD
                   </span>
@@ -639,8 +684,8 @@ const Statistics = () => {
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Najposećenije preduzeće</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {baseStats.MostVisitedCompaniesInfo[0]
-                      ? baseStats.MostVisitedCompaniesInfo[0].companyName
+                    {baseStats.MostVisitedCompaniesInfo?.[0]
+                      ? baseStats.MostVisitedCompaniesInfo?.[0].companyName
                       : "Nedovoljno podataka"}
                   </span>
                 </div>
@@ -720,8 +765,8 @@ const Statistics = () => {
                 <div className="statistics__panel-item">
                   <h6 className="c-gray">Najskuplja stavka</h6>
                   <span className="stat-panel__item-val fs-3 fw-bold">
-                    {baseStats.mostValuableItems[0]
-                      ? baseStats.mostValuableItems[0].name
+                    {baseStats.mostValuableItems?.[0]
+                      ? baseStats.mostValuableItems?.[0].name
                       : "Nedovoljno podataka"}
                   </span>
                 </div>
