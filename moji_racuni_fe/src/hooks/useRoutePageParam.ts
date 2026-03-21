@@ -1,5 +1,14 @@
 import { useEffect } from "react";
 
+type RoutePageParamOptions = {
+  page?: string;
+  setPageNum: (page: number) => void;
+  navigate: (to: string) => void;
+  isBlocked?: boolean;
+  defaultPage?: number;
+  notFoundPath?: string;
+};
+
 const useRoutePageParam = ({
   page,
   setPageNum,
@@ -7,7 +16,7 @@ const useRoutePageParam = ({
   isBlocked = false,
   defaultPage = 1,
   notFoundPath = "/not-found",
-}) => {
+}: RoutePageParamOptions) => {
   useEffect(() => {
     if (isBlocked) {
       navigate(notFoundPath);

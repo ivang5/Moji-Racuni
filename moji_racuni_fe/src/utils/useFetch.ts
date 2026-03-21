@@ -2,6 +2,7 @@ import { useContext } from "react";
 import jwt_decode from "jwt-decode";
 import dayjs from "dayjs";
 import AuthContext from "../context/AuthContext";
+import type { AuthTokens, JwtPayload } from "../types/models";
 
 type RequestConfig = RequestInit & {
   headers?: HeadersInit;
@@ -37,7 +38,7 @@ const useFetch = () => {
     return { response, data };
   };
 
-  const refreshToken = async (authTokens) => {
+  const refreshToken = async (authTokens: AuthTokens) => {
     isRefreshing = true;
     const response = await fetch(
       `${process.env.REACT_APP_BASE_URL}/api/token/refresh/`,
@@ -68,15 +69,15 @@ const useFetch = () => {
     const storedTokens = getStoredTokens();
     if (!storedTokens?.access || !storedTokens?.refresh) {
       logoutUser();
-      return { response: { status: 401 }, data: null };
+      return { response: { status: 401 } as Response, data: null as any };
     }
 
-    let user;
+    let user: JwtPayload;
     try {
-      user = jwt_decode(storedTokens.access);
+      user = jwt_decode<JwtPayload>(storedTokens.access);
     } catch (error) {
       logoutUser();
-      return { response: { status: 401 }, data: null };
+      return { response: { status: 401 } as Response, data: null as any };
     }
 
     const isExpired = dayjs.unix(user.exp).diff(dayjs()) < 1;
@@ -85,7 +86,7 @@ const useFetch = () => {
       if (!isRefreshing) {
         const refreshedTokens = await refreshToken(storedTokens);
         if (!refreshedTokens?.access) {
-          return { response: { status: 401 }, data: null };
+          return { response: { status: 401 } as Response, data: null as any };
         }
       } else {
         while (isRefreshing) {
@@ -97,7 +98,7 @@ const useFetch = () => {
     const latestTokens = getStoredTokens();
     if (!latestTokens?.access) {
       logoutUser();
-      return { response: { status: 401 }, data: null };
+      return { response: { status: 401 } as Response, data: null as any };
     }
 
     config["headers"] = {

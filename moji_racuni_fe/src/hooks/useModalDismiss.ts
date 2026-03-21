@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const useModalDismiss = (onDismiss) => {
+const useModalDismiss = (onDismiss: () => void) => {
   const dismissRef = useRef(onDismiss);
 
   useEffect(() => {
@@ -8,16 +8,16 @@ const useModalDismiss = (onDismiss) => {
   }, [onDismiss]);
 
   useEffect(() => {
-    const handleModalClick = (e) => {
+    const handleModalClick = (e: MouseEvent) => {
       if (
-        e.target.className === "modal" ||
-        e.target.className === "modal__content"
+        (e.target as Element | null)?.className === "modal" ||
+        (e.target as Element | null)?.className === "modal__content"
       ) {
         dismissRef.current?.();
       }
     };
 
-    const handleModalKeydown = (e) => {
+    const handleModalKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         dismissRef.current?.();
       }

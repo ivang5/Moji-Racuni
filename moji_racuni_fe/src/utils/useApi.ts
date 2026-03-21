@@ -9,7 +9,7 @@ import createItemService from "../services/itemService";
 const useApi = () => {
   const api = useFetch();
 
-  const getResponse = (response, data, status = 200) => {
+  const getResponse = (response: Response, data: any, status = 200) => {
     let toReturn;
     if (response.status === 409) {
       return 409;
@@ -100,7 +100,7 @@ const useApi = () => {
     return receiptFull;
   };
 
-  const getFullReceiptInfo = async (id) => {
+  const getFullReceiptInfo = async (id: number) => {
     const receipt = await getReceipt(id);
     if (receipt === 404) {
       return receipt;
@@ -117,7 +117,7 @@ const useApi = () => {
     return receiptFull;
   };
 
-  const getFullCompanyInfo = async (tin) => {
+  const getFullCompanyInfo = async (tin: string) => {
     const company = await getCompany(tin);
     if (company === 404) {
       return company;
@@ -134,7 +134,11 @@ const useApi = () => {
     return companyFull;
   };
 
-  const getBaseStats = async (dateFrom, dateTo, limit) => {
+  const getBaseStats = async (
+    dateFrom: string,
+    dateTo: string,
+    limit: number,
+  ) => {
     const totalSpent = await getTotalSpent(dateFrom, dateTo);
     const visitedCompaniesInfo = await getVisitedCompaniesInfo(
       dateFrom,
@@ -159,7 +163,7 @@ const useApi = () => {
     return baseStats;
   };
 
-  const addFullReceipt = async (url) => {
+  const addFullReceipt = async (url: string) => {
     const company = await createCompany(url);
     if (company === null) {
       return null;

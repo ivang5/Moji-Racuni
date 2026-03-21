@@ -1,5 +1,24 @@
 import { useCallback, useEffect, useRef } from "react";
 
+type PaginatedSortingFetchOptions = {
+  api: any;
+  sortBy: string;
+  sortType: string;
+  searchObj: any;
+  pageNum: number;
+  getOrderBy: (sortBy: string) => string;
+  fetchSortedPage: (args: {
+    api: any;
+    searchObj: any;
+    orderBy: string;
+    ascendingOrder: "asc" | "desc";
+    pageNum: number;
+  }) => Promise<{ pageCount: number; items: any[] } | null>;
+  setLoading: (value: boolean) => void;
+  setPageCount: (value: number) => void;
+  setItems: (items: any[]) => void;
+};
+
 const usePaginatedSortingFetch = ({
   api,
   sortBy,
@@ -11,7 +30,7 @@ const usePaginatedSortingFetch = ({
   setLoading,
   setPageCount,
   setItems,
-}) => {
+}: PaginatedSortingFetchOptions) => {
   const apiRef = useRef(api);
   const filtersRef = useRef({ sortBy, sortType, searchObj, pageNum });
 

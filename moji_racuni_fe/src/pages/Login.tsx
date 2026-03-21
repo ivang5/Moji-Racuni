@@ -7,6 +7,18 @@ import {
   validateRegistrationForm,
 } from "../utils/validators";
 
+type LoginForm = HTMLFormElement & {
+  username: HTMLInputElement;
+  password: HTMLInputElement;
+};
+
+type RegistrationForm = HTMLFormElement & {
+  regEmail: HTMLInputElement;
+  regUsername: HTMLInputElement;
+  regPassword: HTMLInputElement;
+  regPassword1: HTMLInputElement;
+};
+
 type LoginValidation = {
   username: string;
   password: string;
@@ -48,7 +60,7 @@ const Login = () => {
 
   const initiateLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget as any;
+    const form = e.currentTarget as LoginForm;
     let validationObj = validateLoginForm({
       username: form.username.value,
       password: form.password.value,
@@ -75,7 +87,7 @@ const Login = () => {
 
   const initiateRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget as any;
+    const form = e.currentTarget as RegistrationForm;
     let validationObj = validateRegistrationForm({
       email: form.regEmail.value,
       username: form.regUsername.value,

@@ -1,16 +1,16 @@
-const createUserService = (api, getResponse) => {
-  const getUser = async (id) => {
+const createUserService = (api: any, getResponse: any) => {
+  const getUser = async (id: number) => {
     const { response, data } = await api(`/api/users/${id}/`);
     return getResponse(response, data);
   };
 
   const filterUsers = async (
-    id,
-    username,
-    email,
-    orderBy,
-    ascendingOrder,
-    page,
+    id: string,
+    username: string,
+    email: string,
+    orderBy: string,
+    ascendingOrder: "asc" | "desc",
+    page: number,
   ) => {
     const { response, data } = await api(
       `/api/users/filter/?id=${id}&username=${username}&email=${email}&orderBy=${orderBy}&ascendingOrder=${ascendingOrder}&page=${page}`,
@@ -18,7 +18,7 @@ const createUserService = (api, getResponse) => {
     return getResponse(response, data);
   };
 
-  const updateUser = async (id, userInfo) => {
+  const updateUser = async (id: number, userInfo: any) => {
     const { response, data } = await api(`/api/users/${id}/`, {
       method: "PUT",
       body: JSON.stringify(userInfo),
@@ -26,7 +26,7 @@ const createUserService = (api, getResponse) => {
     return getResponse(response, data, 200);
   };
 
-  const updateUserPassword = async (id, passInfo) => {
+  const updateUserPassword = async (id: number, passInfo: any) => {
     const { response, data } = await api(`/api/users/update-password/${id}/`, {
       method: "PUT",
       body: JSON.stringify(passInfo),

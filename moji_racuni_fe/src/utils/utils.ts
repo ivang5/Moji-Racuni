@@ -3,19 +3,36 @@ import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 
-export const dateFormatter = (date) => {
+type NumericLike = number | string;
+type CountOrSpent = "count" | "spent";
+type VisitPoint = { value: number };
+type PlotAgg = {
+  hourNum?: number;
+  dayofweek?: number;
+  monthNum?: number;
+  count?: number;
+  spent?: number;
+  companyName?: string;
+  companyType?: string;
+  priceSum?: number;
+  receiptCount?: number;
+  name?: string;
+  price?: number;
+};
+
+export const dateFormatter = (date: Date | string) => {
   return dayjs(date).format("DD/MM/YYYY");
 };
 
-export const dateBEFormatter = (date) => {
+export const dateBEFormatter = (date: Date | string) => {
   return dayjs(date).format("YYYY-MM-DD");
 };
 
-export const dateTimeFormatter = (date) => {
+export const dateTimeFormatter = (date: Date | string) => {
   return dayjs.utc(date).format("DD/MM/YYYY - HH:mm:ss");
 };
 
-export const dateTimeBEFormatter = (date) => {
+export const dateTimeBEFormatter = (date: Date | string) => {
   return dayjs(date).format("YYYY-MM-DD HH:mm:ss");
 };
 
@@ -80,7 +97,10 @@ export const getTenYearsAgo = () => {
   return new Date(date.getFullYear() - 10, date.getMonth(), date.getDate());
 };
 
-export const getPercentageChange = (oldNum, newNum) => {
+export const getPercentageChange = (
+  oldNum: number | null | undefined,
+  newNum: number | null | undefined,
+) => {
   if (
     oldNum === null ||
     oldNum === undefined ||
@@ -95,22 +115,22 @@ export const getPercentageChange = (oldNum, newNum) => {
   return (((newNum - oldNum) / oldNum) * 100).toFixed(2);
 };
 
-export const validateEmail = (email) => {
+export const validateEmail = (email: string) => {
   return email.match(
     /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
   );
 };
 
-export const noDecimalNum = (number) => {
+export const noDecimalNum = (number: number) => {
   return Math.round(number);
 };
 
-export const twoDecimalNum = (number) => {
-  return parseFloat(number).toFixed(2);
+export const twoDecimalNum = (number: NumericLike) => {
+  return parseFloat(String(number)).toFixed(2);
 };
 
-export const formatPrice = (number) => {
-  const twoDecimalNum = parseFloat(number).toFixed(2);
+export const formatPrice = (number: NumericLike) => {
+  const twoDecimalNum = parseFloat(String(number)).toFixed(2);
   let strNum = twoDecimalNum.toString();
   strNum = strNum.replace(".", ",");
 
@@ -124,11 +144,11 @@ export const formatPrice = (number) => {
   return strNum;
 };
 
-export const capitalize = (text) => {
+export const capitalize = (text: string) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
-export const getPageFromPathname = (pathname) => {
+export const getPageFromPathname = (pathname: string) => {
   let page;
 
   switch (pathname) {
@@ -161,7 +181,7 @@ export const getPageFromPathname = (pathname) => {
   return page;
 };
 
-export const getReceiptOrderCode = (orderBy) => {
+export const getReceiptOrderCode = (orderBy: string) => {
   let orderByCode;
 
   switch (orderBy) {
@@ -188,7 +208,7 @@ export const getReceiptOrderCode = (orderBy) => {
   return orderByCode;
 };
 
-export const getReportOrderCode = (orderBy) => {
+export const getReportOrderCode = (orderBy: string) => {
   let orderByCode;
 
   switch (orderBy) {
@@ -206,7 +226,7 @@ export const getReportOrderCode = (orderBy) => {
   return orderByCode;
 };
 
-export const getCompanyOrderCode = (orderBy) => {
+export const getCompanyOrderCode = (orderBy: string) => {
   let orderByCode;
 
   switch (orderBy) {
@@ -227,7 +247,7 @@ export const getCompanyOrderCode = (orderBy) => {
   return orderByCode;
 };
 
-export const getUserOrderCode = (orderBy) => {
+export const getUserOrderCode = (orderBy: string) => {
   let orderByCode;
 
   switch (orderBy) {
@@ -257,7 +277,7 @@ export const getUserOrderCode = (orderBy) => {
   return orderByCode;
 };
 
-const numberToHour = (number) => {
+const numberToHour = (number: number) => {
   let hour;
   switch (number) {
     case 0:
@@ -339,7 +359,7 @@ const numberToHour = (number) => {
   return hour;
 };
 
-const numberToWeekday = (number) => {
+const numberToWeekday = (number: number) => {
   let weekday;
   switch (number) {
     case 1:
@@ -370,7 +390,7 @@ const numberToWeekday = (number) => {
   return weekday;
 };
 
-const numberToMonth = (number) => {
+const numberToMonth = (number: number) => {
   let month;
   switch (number) {
     case 1:
@@ -416,10 +436,13 @@ const numberToMonth = (number) => {
   return month;
 };
 
-export const getHoursFromNumbers = (hoursList, type) => {
-  const newList = [];
+export const getHoursFromNumbers = (
+  hoursList: PlotAgg[],
+  type: CountOrSpent,
+) => {
+  const newList: Array<{ hour: string; count: number; spent: number }> = [];
 
-  hoursList.forEach((obj) => {
+  hoursList.forEach((obj: PlotAgg) => {
     const newObj = {
       hour: numberToHour(obj.hourNum),
       count: type === "count" ? obj.count : 0,
@@ -431,10 +454,14 @@ export const getHoursFromNumbers = (hoursList, type) => {
   return newList;
 };
 
-export const getWeekdaysFromNumbers = (weekdaysList, type) => {
-  const newList = [];
+export const getWeekdaysFromNumbers = (
+  weekdaysList: PlotAgg[],
+  type: CountOrSpent,
+) => {
+  const newList: Array<{ dayofweek: string; count: number; spent: number }> =
+    [];
 
-  weekdaysList.forEach((obj) => {
+  weekdaysList.forEach((obj: PlotAgg) => {
     const newObj = {
       dayofweek: numberToWeekday(obj.dayofweek),
       count: type === "count" ? obj.count : 0,
@@ -446,10 +473,13 @@ export const getWeekdaysFromNumbers = (weekdaysList, type) => {
   return newList;
 };
 
-export const getMonthsFromNumbers = (monthsList, type) => {
-  const newList = [];
+export const getMonthsFromNumbers = (
+  monthsList: PlotAgg[],
+  type: CountOrSpent,
+) => {
+  const newList: Array<{ month: string; count: number; spent: number }> = [];
 
-  monthsList.forEach((obj) => {
+  monthsList.forEach((obj: PlotAgg) => {
     const newObj = {
       month: numberToMonth(obj.monthNum),
       count: type === "count" ? obj.count : 0,
@@ -461,14 +491,17 @@ export const getMonthsFromNumbers = (monthsList, type) => {
   return newList;
 };
 
-export const getSpendingsPieFormatData = (data, isCompany) => {
+export const getSpendingsPieFormatData = (
+  data: PlotAgg[],
+  isCompany: boolean,
+) => {
   if (!Array.isArray(data)) {
     return [];
   }
 
-  const newList = [];
+  const newList: Array<{ id: string; value: number }> = [];
 
-  data.forEach((obj) => {
+  data.forEach((obj: PlotAgg) => {
     const newObj = {
       id: isCompany ? obj.companyName : obj.companyType,
       value: obj.priceSum,
@@ -479,14 +512,14 @@ export const getSpendingsPieFormatData = (data, isCompany) => {
   return newList;
 };
 
-export const getVisitsPieFormatData = (data, isCompany) => {
+export const getVisitsPieFormatData = (data: PlotAgg[], isCompany: boolean) => {
   if (!Array.isArray(data)) {
     return [];
   }
 
-  const newList = [];
+  const newList: Array<{ id: string; value: number }> = [];
 
-  data.forEach((obj) => {
+  data.forEach((obj: PlotAgg) => {
     const newObj = {
       id: isCompany ? obj.companyName : obj.companyType,
       value: obj.receiptCount,
@@ -497,14 +530,14 @@ export const getVisitsPieFormatData = (data, isCompany) => {
   return newList;
 };
 
-export const getMostValItemsFormat = (itemsList) => {
+export const getMostValItemsFormat = (itemsList: PlotAgg[]) => {
   if (!Array.isArray(itemsList)) {
     return [];
   }
 
-  const newList = [];
+  const newList: Array<{ name: string; price: number }> = [];
 
-  itemsList.forEach((obj) => {
+  itemsList.forEach((obj: PlotAgg) => {
     const newObj = {
       name: obj.name,
       price: obj.price,
@@ -515,7 +548,7 @@ export const getMostValItemsFormat = (itemsList) => {
   return newList;
 };
 
-export const formatChartVal = (number) => {
+export const formatChartVal = (number: number) => {
   const numToStr = Math.round(number).toString();
   if (numToStr.length === 4) {
     const val = `${numToStr.charAt(0)}k`;
@@ -544,23 +577,23 @@ export const formatChartVal = (number) => {
   return number;
 };
 
-export const sumSpendings = (visitedList) => {
+export const sumSpendings = (visitedList: VisitPoint[]) => {
   let sum = 0;
-  visitedList.forEach((obj) => {
+  visitedList.forEach((obj: VisitPoint) => {
     sum += obj.value;
   });
   return sum;
 };
 
-export const countReceipts = (visitedList) => {
+export const countReceipts = (visitedList: VisitPoint[]) => {
   let counter = 0;
-  visitedList.forEach((obj) => {
+  visitedList.forEach((obj: VisitPoint) => {
     counter += obj.value;
   });
   return counter;
 };
 
-export const isChartEmpty = (data, type) => {
+export const isChartEmpty = (data: PlotAgg[], type: CountOrSpent) => {
   if (!Array.isArray(data)) {
     return true;
   }
@@ -568,13 +601,13 @@ export const isChartEmpty = (data, type) => {
   let isEmpty = true;
 
   if (type === "count") {
-    data.forEach((obj) => {
+    data.forEach((obj: PlotAgg) => {
       if (obj.count !== 0) {
         isEmpty = false;
       }
     });
   } else if (type === "spent") {
-    data.forEach((obj) => {
+    data.forEach((obj: PlotAgg) => {
       if (obj.spent !== 0) {
         isEmpty = false;
       }
@@ -584,7 +617,7 @@ export const isChartEmpty = (data, type) => {
   return isEmpty;
 };
 
-export const getPageNumberList = (pageCount, activePage) => {
+export const getPageNumberList = (pageCount: number, activePage: number) => {
   if (pageCount < 9) {
     const pages = [];
 

@@ -97,7 +97,7 @@ const Receipts = () => {
   const navigate = useNavigate();
 
   const fetchSortedPage = useCallback(
-    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }: any) => {
       const filters = searchObj as ReceiptSearch;
       const receipts = await api.filterReceipts(
         filters.dateFrom,

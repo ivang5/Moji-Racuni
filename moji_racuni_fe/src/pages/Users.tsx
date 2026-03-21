@@ -75,7 +75,7 @@ const Users = () => {
   const navigate = useNavigate();
 
   const fetchSortedPage = useCallback(
-    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }: any) => {
       const users = await api.filterUsers(
         (searchObj as UsersSearch).id,
         (searchObj as UsersSearch).username,

@@ -12,7 +12,7 @@ type PieChartSettings = {
 };
 
 type ChartItem = {
-  [key: string]: any;
+  [key: string]: string | number | null | undefined;
   id?: string;
   name?: string;
   value?: number;
@@ -250,9 +250,9 @@ const Chart = ({
             enableArcLinkLabels={false}
             arcLabel={(e) => {
               if (e.value > 999) {
-                return formatChartVal(e.value);
+                return String(formatChartVal(e.value));
               }
-              return e.value;
+              return String(e.value);
             }}
             arcLinkLabelsSkipAngle={10}
             arcLinkLabelsTextColor="#333333"

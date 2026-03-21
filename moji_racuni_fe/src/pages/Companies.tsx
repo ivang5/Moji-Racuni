@@ -107,7 +107,7 @@ const Companies = () => {
   }, [api]);
 
   const fetchSortedPage = useCallback(
-    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }: any) => {
       const filters = searchObj as CompanySearch;
       const companies = await api.filterCompanies(
         filters.name,

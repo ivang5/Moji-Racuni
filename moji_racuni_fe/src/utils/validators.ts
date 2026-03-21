@@ -1,6 +1,6 @@
 import { validateEmail } from "./utils";
 
-export const validateReceiptLink = (receiptLink) => {
+export const validateReceiptLink = (receiptLink: string) => {
   const trimmedValue = receiptLink.trim();
 
   if (trimmedValue === "") {
@@ -14,7 +14,7 @@ export const validateReceiptLink = (receiptLink) => {
   return "";
 };
 
-export const validateUsernameField = (username) => {
+export const validateUsernameField = (username: string) => {
   const trimmedValue = username.trim();
 
   if (trimmedValue === "") {
@@ -25,14 +25,14 @@ export const validateUsernameField = (username) => {
     return "Korisničko ime je previše kratko!";
   }
 
-  if (!isNaN(trimmedValue)) {
+  if (!Number.isNaN(Number(trimmedValue))) {
     return "Korisničko ime mora sadržati barem jedno slovo!";
   }
 
   return "";
 };
 
-export const validateEmailField = (email) => {
+export const validateEmailField = (email: string) => {
   const trimmedValue = email.trim();
 
   if (trimmedValue === "") {
@@ -46,7 +46,7 @@ export const validateEmailField = (email) => {
   return "";
 };
 
-export const validateRequiredPassword = (password) => {
+export const validateRequiredPassword = (password: string) => {
   if (password.trim() === "") {
     return "Lozinka ne može biti prazna!";
   }
@@ -54,7 +54,10 @@ export const validateRequiredPassword = (password) => {
   return "";
 };
 
-export const validatePasswordRepeatRules = (password, passwordRepeat) => {
+export const validatePasswordRepeatRules = (
+  password: string,
+  passwordRepeat: string,
+) => {
   const passwordValue = password.trim();
   const repeatValue = passwordRepeat.trim();
 
@@ -69,7 +72,13 @@ export const validatePasswordRepeatRules = (password, passwordRepeat) => {
   return "";
 };
 
-export const validateLoginForm = ({ username, password }) => {
+export const validateLoginForm = ({
+  username,
+  password,
+}: {
+  username: string;
+  password: string;
+}) => {
   const validation = {
     username: "",
     password: "",
@@ -83,7 +92,13 @@ export const validateLoginForm = ({ username, password }) => {
   return validation;
 };
 
-export const validateProfileInfoForm = ({ username, email }) => {
+export const validateProfileInfoForm = ({
+  username,
+  email,
+}: {
+  username: string;
+  email: string;
+}) => {
   return {
     username: validateUsernameField(username),
     email: validateEmailField(email),
@@ -95,6 +110,11 @@ export const validateRegistrationForm = ({
   username,
   password,
   passwordRepeat,
+}: {
+  email: string;
+  username: string;
+  password: string;
+  passwordRepeat: string;
 }) => {
   const validation = {
     email: validateEmailField(email),
@@ -113,7 +133,13 @@ export const validateRegistrationForm = ({
   return validation;
 };
 
-export const validatePasswordUpdateForm = ({ password, passwordRepeat }) => {
+export const validatePasswordUpdateForm = ({
+  password,
+  passwordRepeat,
+}: {
+  password: string;
+  passwordRepeat: string;
+}) => {
   const validation = {
     password: "",
     passwordRepeat: validatePasswordRepeatRules(password, passwordRepeat),

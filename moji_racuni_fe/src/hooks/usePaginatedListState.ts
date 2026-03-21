@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { getPageNumberList } from "../utils/utils";
 
+type PaginatedListStateOptions<TSearch> = {
+  initialPage?: number;
+  initialSortBy: string;
+  initialSortType: string;
+  initialSearchObj: TSearch;
+};
+
 const usePaginatedListState = ({
   initialPage = 1,
   initialSortBy,
   initialSortType,
   initialSearchObj,
-}) => {
+}: PaginatedListStateOptions<any>) => {
   const [pageNum, setPageNum] = useState(initialPage);
   const [pageNumbers, setPageNumbers] = useState([]);
   const [pageCount, setPageCount] = useState(10000);

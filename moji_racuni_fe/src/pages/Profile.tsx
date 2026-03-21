@@ -34,6 +34,16 @@ type PasswordValidation = {
   passwordRepeat: string;
 };
 
+type ProfileInfoForm = HTMLFormElement & {
+  username: HTMLInputElement;
+  email: HTMLInputElement;
+};
+
+type PasswordForm = HTMLFormElement & {
+  pass: HTMLInputElement;
+  passRepeat: HTMLInputElement;
+};
+
 const Profile = () => {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -74,7 +84,7 @@ const Profile = () => {
     if (!userId) {
       return;
     }
-    const form = e.currentTarget as any;
+    const form = e.currentTarget as ProfileInfoForm;
 
     let validationObj = validateProfileInfoForm({
       username: form.username.value,
@@ -112,7 +122,7 @@ const Profile = () => {
     if (!userId) {
       return;
     }
-    const form = e.currentTarget as any;
+    const form = e.currentTarget as PasswordForm;
 
     let validationObj = validatePasswordUpdateForm({
       password: form.pass.value,
