@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import logging
 import requests
 from urllib.parse import urlparse
 import ipaddress
@@ -6,6 +7,7 @@ from srtools import cyrillic_to_latin
 from django.db import connection
 
 REQUEST_TIMEOUT_SECONDS = 10
+logger = logging.getLogger(__name__)
 
 # ==========================================================
 #                        WEB-SCRAPING
@@ -444,7 +446,16 @@ def dictfetchall(cursor):
 
 
 def _sanitize_order_column(order_by, allowed_columns, default_key):
-    return allowed_columns.get(order_by, allowed_columns[default_key])
+    if order_by in allowed_columns:
+        return allowed_columns[order_by]
+
+    logger.warning(
+        "Unsupported orderBy value '%s'. Falling back to '%s'. Allowed values: %s",
+        order_by,
+        default_key,
+        ", ".join(allowed_columns.keys()),
+    )
+    return allowed_columns[default_key]
 
 
 def _sanitize_order_direction(ascending_order):
@@ -455,6 +466,11 @@ def _sanitize_order_direction(ascending_order):
         return "ASC"
     if normalized in ["desc", "false", "0"]:
         return "DESC"
+
+    logger.warning(
+        "Unsupported ascendingOrder value '%s'. Falling back to 'ASC'.",
+        ascending_order,
+    )
     return "ASC"
     
 def fill_empty_hours(hours_list, type):
