@@ -315,7 +315,7 @@ const Receipts = () => {
                   <FormGroup name="id" text="ID" type="number" inline={true} />
                   <FormGroup
                     name="unit"
-                    text="Prodajno mesto"
+                    text="Preduzeće/Prodajno mesto"
                     type="text"
                     inline={true}
                   />

@@ -1243,7 +1243,7 @@ def filter_receipts(user, dateFrom, dateTo, id, unitName, tin, priceFrom, priceT
     safe_order_column = _sanitize_order_column(orderBy, allowed_order_columns, "date")
     safe_order_direction = _sanitize_order_direction(ascendingOrder)
     id_like = id
-    unit_name_like = f"%{unitName}%"
+    unit_or_company_name_like = f"%{unitName}%"
     tin_like = f"{tin}%"
 
     if (user.role == "ADMIN"):
@@ -1257,14 +1257,18 @@ def filter_receipts(user, dateFrom, dateTo, id, unitName, tin, priceFrom, priceT
                             GROUP BY link
                     ) dedup ON dedup.id = r.id
                     JOIN company_companyunit u ON r.companyUnit = u.id
+                    JOIN company_company c ON u.company = c.tin
                     WHERE r.date BETWEEN %s AND %s
                     AND CAST(r.id AS CHAR) LIKE %s
-                    AND LOWER(u.name) LIKE LOWER(%s)
+                    AND (
+                        LOWER(u.name) LIKE LOWER(%s)
+                        OR LOWER(c.name) LIKE LOWER(%s)
+                    )
                     AND CAST(u.company AS CHAR) LIKE %s
                     AND r.totalPrice BETWEEN %s AND %s
                     ORDER BY {safe_order_column} {safe_order_direction}
                 ''',
-                [dateFrom, dateTo, id_like, unit_name_like, tin_like, priceFrom, priceTo]
+                [dateFrom, dateTo, id_like, unit_or_company_name_like, unit_or_company_name_like, tin_like, priceFrom, priceTo]
             )
             filtered_receipts = dictfetchall(cursor)
     else:
@@ -1273,15 +1277,19 @@ def filter_receipts(user, dateFrom, dateTo, id, unitName, tin, priceFrom, priceT
                 f'''
                 SELECT r.* FROM receipt_receipt r
                     JOIN company_companyunit u ON r.companyUnit = u.id
+                    JOIN company_company c ON u.company = c.tin
                     WHERE r.date BETWEEN %s AND %s
                     AND CAST(r.id AS CHAR) LIKE %s
-                    AND LOWER(u.name) LIKE LOWER(%s)
+                    AND (
+                        LOWER(u.name) LIKE LOWER(%s)
+                        OR LOWER(c.name) LIKE LOWER(%s)
+                    )
                     AND CAST(u.company AS CHAR) LIKE %s
                     AND r.totalPrice BETWEEN %s AND %s
                     AND r.user = %s
                     ORDER BY {safe_order_column} {safe_order_direction}
                 ''',
-                [dateFrom, dateTo, id_like, unit_name_like, tin_like, priceFrom, priceTo, user.id]
+                [dateFrom, dateTo, id_like, unit_or_company_name_like, unit_or_company_name_like, tin_like, priceFrom, priceTo, user.id]
             )
             filtered_receipts = dictfetchall(cursor)
     return filtered_receipts
