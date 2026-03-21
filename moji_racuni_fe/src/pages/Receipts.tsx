@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useCallback, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
@@ -23,13 +22,38 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 import useAuthUser from "../hooks/useAuthUser";
+import type { ReceiptInfoView, ReceiptListItemView } from "../types/viewModels";
+
+type ReceiptSearch = {
+  dateFrom: string;
+  dateTo: string;
+  id: string;
+  unit: string;
+  tin: string;
+  priceFrom: number;
+  priceTo: number;
+};
+
+type ReceiptFilterForm = HTMLFormElement & {
+  id: HTMLInputElement;
+  unit: HTMLInputElement;
+  tin: HTMLInputElement;
+  priceFrom: HTMLInputElement;
+  priceTo: HTMLInputElement;
+};
+
+type ReportForm = HTMLFormElement & {
+  repmsg: HTMLTextAreaElement;
+};
 
 const Receipts = () => {
   const { page } = useParams();
-  const [receipts, setReceipts] = useState([]);
+  const [receipts, setReceipts] = useState<ReceiptListItemView[]>([]);
   const [receiptsLoading, setReceiptsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalReceipt, setModalReceipt] = useState({});
+  const [modalReceipt, setModalReceipt] = useState<Partial<ReceiptInfoView>>(
+    {},
+  );
   const [reportOpen, setReportOpen] = useState(false);
   const [reportValidation, setReportValidation] = useState("");
   const [deletionOpen, setDeletionOpen] = useState(false);
@@ -74,14 +98,15 @@ const Receipts = () => {
 
   const fetchSortedPage = useCallback(
     async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+      const filters = searchObj as ReceiptSearch;
       const receipts = await api.filterReceipts(
-        searchObj.dateFrom,
-        searchObj.dateTo,
-        searchObj.id,
-        searchObj.unit,
-        searchObj.tin,
-        searchObj.priceFrom,
-        searchObj.priceTo,
+        filters.dateFrom,
+        filters.dateTo,
+        filters.id,
+        filters.unit,
+        filters.tin,
+        filters.priceFrom,
+        filters.priceTo,
         orderBy,
         ascendingOrder,
         pageNum,
@@ -127,8 +152,9 @@ const Receipts = () => {
     window.scrollTo(0, 0);
   }, [pageNum, applySortingFilters]);
 
-  const applyFilters = async (e) => {
+  const applyFilters = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as ReceiptFilterForm;
     const dateFrom = dateBEFormatter(fromDate);
     const dateTo = dateBEFormatter(toDate);
     let id = "%";
@@ -139,20 +165,20 @@ const Receipts = () => {
     let orderBy = getReceiptOrderCode(sortBy);
     const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-    if (e.target.id.value !== "") {
-      id = e.target.id.value;
+    if (form.id.value !== "") {
+      id = form.id.value;
     }
-    if (e.target.unit.value.trim() !== "") {
-      unit = e.target.unit.value.trim();
+    if (form.unit.value.trim() !== "") {
+      unit = form.unit.value.trim();
     }
-    if (e.target.tin.value.trim() !== "") {
-      tin = e.target.tin.value.trim();
+    if (form.tin.value.trim() !== "") {
+      tin = form.tin.value.trim();
     }
-    if (e.target.priceFrom.value !== "") {
-      priceFrom = e.target.priceFrom.value;
+    if (form.priceFrom.value !== "") {
+      priceFrom = Number(form.priceFrom.value);
     }
-    if (e.target.priceTo.value !== "") {
-      priceTo = e.target.priceTo.value;
+    if (form.priceTo.value !== "") {
+      priceTo = Number(form.priceTo.value);
     }
 
     setReceiptsLoading(true);
@@ -189,10 +215,12 @@ const Receipts = () => {
     }
   };
 
-  const openModal = async (receiptId) => {
+  const openModal = async (receiptId: number) => {
     setModalOpen(true);
 
-    const receipt = await api.getFullReceiptInfo(receiptId);
+    const receipt = (await api.getFullReceiptInfo(
+      receiptId,
+    )) as ReceiptInfoView | null;
 
     if (receipt) {
       setModalReceipt(receipt);
@@ -209,14 +237,19 @@ const Receipts = () => {
     document.body.style.overflow = "auto";
   };
 
-  const sendReport = async (e) => {
+  const sendReport = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as ReportForm;
 
-    if (e.target.repmsg.value.trim() === "") {
+    if (form.repmsg.value.trim() === "") {
       setReportValidation("Polje za opis ne sme biti prazno!");
       return;
-    } else if (e.target.repmsg.value.trim().length < 10) {
+    } else if (form.repmsg.value.trim().length < 10) {
       setReportValidation("Opis mora sadržati bar 10 karaktera!");
+      return;
+    }
+
+    if (!modalReceipt.receipt) {
       return;
     }
 
@@ -226,7 +259,7 @@ const Receipts = () => {
     const report = {
       date: formattedDate,
       receipt: modalReceipt.receipt.id,
-      request: e.target.repmsg.value.trim(),
+      request: form.repmsg.value.trim(),
     };
 
     await api.createReport(report);
@@ -239,7 +272,7 @@ const Receipts = () => {
     });
   };
 
-  const deleteReceipt = async (id) => {
+  const deleteReceipt = async (id: number) => {
     await api.deleteReceipt(id);
     applySortingFilters();
     setDeletionOpen(false);
@@ -303,7 +336,11 @@ const Receipts = () => {
                     <span className="receipts__search-lbl">Datum od</span>
                     <DatePicker
                       selected={fromDate}
-                      onChange={(date) => setFromDate(date)}
+                      onChange={(date) => {
+                        if (date) {
+                          setFromDate(date);
+                        }
+                      }}
                       selectsStart
                       startDate={fromDate}
                       endDate={toDate}
@@ -314,7 +351,11 @@ const Receipts = () => {
                     <span className="receipts__search-lbl">Datum do</span>
                     <DatePicker
                       selected={toDate}
-                      onChange={(date) => setToDate(date)}
+                      onChange={(date) => {
+                        if (date) {
+                          setToDate(date);
+                        }
+                      }}
                       selectsEnd
                       startDate={fromDate}
                       endDate={toDate}
@@ -364,20 +405,19 @@ const Receipts = () => {
             </div>
           ) : (
             <div className="receipts__items">
-              {receipts &&
-                receipts.map((receipt) => {
-                  return (
-                    <ReceiptCard
-                      key={receipt.id}
-                      id={receipt.id}
-                      date={receipt.date}
-                      totalPrice={receipt.totalPrice}
-                      totalVat={receipt.totalVat}
-                      companyUnitId={receipt.companyUnit}
-                      openModal={openModal}
-                    />
-                  );
-                })}
+              {receipts.map((receipt) => {
+                return (
+                  <ReceiptCard
+                    key={receipt.id}
+                    id={receipt.id}
+                    date={receipt.date}
+                    totalPrice={receipt.totalPrice}
+                    totalVat={receipt.totalVat}
+                    companyUnitId={receipt.companyUnit}
+                    openModal={openModal}
+                  />
+                );
+              })}
             </div>
           )}
           {pageNumbers && !receiptsLoading && pageCount > 1 && (
@@ -393,7 +433,7 @@ const Receipts = () => {
         <div className="modal">
           {modalReceipt.receipt ? (
             <div className="modal__content">
-              <Receipt receiptInfo={modalReceipt} />
+              <Receipt receiptInfo={modalReceipt as ReceiptInfoView} />
               {userRole === "REGULAR" && (
                 <div className="modal__options">
                   {!reportOpen && !deletionOpen ? (

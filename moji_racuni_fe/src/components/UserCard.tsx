@@ -1,7 +1,20 @@
-// @ts-nocheck
 import React from "react";
 
-const UserCard = ({ id, username, email, active, openModal }) => {
+type UserCardProps = {
+  id: number;
+  username: string;
+  email: string;
+  active: boolean;
+  openModal: (id: number) => void;
+};
+
+const UserCard = ({
+  id,
+  username,
+  email,
+  active,
+  openModal,
+}: UserCardProps) => {
   return (
     <div
       className={active ? "user-card" : "user-card user-card--blocked"}

@@ -1,12 +1,17 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import useApi from "../utils/useApi";
 import { dateTimeFormatter } from "../utils/utils";
 import useAuthUser from "../hooks/useAuthUser";
+import type { ReportInfoView, ReportUserView } from "../types/viewModels";
 
-const Report = ({ reportInfo, hasLink }) => {
-  const [reportUser, setReportUser] = useState({});
+type ReportProps = {
+  reportInfo: ReportInfoView;
+  hasLink?: boolean;
+};
+
+const Report = ({ reportInfo, hasLink = false }: ReportProps) => {
+  const [reportUser, setReportUser] = useState<Partial<ReportUserView>>({});
   const { userRole } = useAuthUser();
   const api = useApi();
   const apiRef = useRef(api);

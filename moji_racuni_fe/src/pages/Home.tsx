@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Receipt from "../components/Receipt";
 import StatPanel from "../components/StatPanel";
@@ -20,22 +19,54 @@ import Report from "../components/Report";
 import useToast from "../hooks/useToast";
 import { validateReceiptLink } from "../utils/validators";
 import useAuthUser from "../hooks/useAuthUser";
+import type {
+  ExtendedStats,
+  PercentageChanges,
+  ReceiptInfoView,
+  ReportInfoView,
+  StatSummary,
+  TimeSpan,
+} from "../types/viewModels";
+
+type AddReceiptForm = HTMLFormElement & {
+  receiptLink: HTMLInputElement;
+};
+
+const toNullableNumber = (value: string | null): number | null => {
+  if (value === null) {
+    return null;
+  }
+
+  return Number(value);
+};
 
 const Home = () => {
-  const [lastReceiptInfo, setLastReceiptInfo] = useState({});
+  const [lastReceiptInfo, setLastReceiptInfo] = useState<
+    Partial<ReceiptInfoView>
+  >({});
   const [receiptLoading, setReceiptLoading] = useState(true);
-  const [lastReport, setLastReport] = useState({});
+  const [lastReport, setLastReport] = useState<Partial<ReportInfoView>>({});
   const [reportLoading, setReportLoading] = useState(true);
-  const [stats, setStats] = useState({});
-  const [previousStats, setPreviousStats] = useState({});
+  const [stats, setStats] = useState<Partial<ExtendedStats>>({});
+  const [previousStats, setPreviousStats] = useState<Partial<ExtendedStats>>(
+    {},
+  );
   const [statsLoading, setStatsLoading] = useState(true);
   const [addingReceipt, setAddingReceipt] = useState(false);
-  const [timeSpan, setTimeSpan] = useState("month");
-  const [percentageChanges, setPercentageChanges] = useState({});
+  const [timeSpan, setTimeSpan] = useState<TimeSpan>("month");
+  const [percentageChanges, setPercentageChanges] = useState<PercentageChanges>(
+    {
+      totalSpent: null,
+      unitCount: null,
+      mostVisitedCompanyReceiptCount: null,
+      mostVisitedCompanyPriceSum: null,
+      mostSpentReceipt: null,
+    },
+  );
   const [receiptLinkValid, setReceiptLinkValid] = useState("");
   const [successText, setSuccessText] = useState("");
   const statsRequestIdRef = useRef(0);
-  const receiptInputRef = useRef(null);
+  const receiptInputRef = useRef<HTMLInputElement | null>(null);
   const api = useApi();
   const apiRef = useRef(api);
   const { userRole, username } = useAuthUser();
@@ -48,7 +79,13 @@ const Home = () => {
   const loadStatsForTimeSpan = useCallback(async () => {
     const requestId = ++statsRequestIdRef.current;
     setStatsLoading(true);
-    setPercentageChanges({});
+    setPercentageChanges({
+      totalSpent: null,
+      unitCount: null,
+      mostVisitedCompanyReceiptCount: null,
+      mostVisitedCompanyPriceSum: null,
+      mostSpentReceipt: null,
+    });
 
     const currentDate =
       timeSpan === "month"
@@ -121,25 +158,35 @@ const Home = () => {
   useEffect(() => {
     if (stats.totalSpent && previousStats.totalSpent && timeSpan !== "all") {
       const changes = {
-        totalSpent: getPercentageChange(
-          previousStats.totalSpent.totalSpent,
-          stats.totalSpent.totalSpent,
+        totalSpent: toNullableNumber(
+          getPercentageChange(
+            previousStats.totalSpent.totalSpent,
+            stats.totalSpent.totalSpent,
+          ),
         ),
-        unitCount: getPercentageChange(
-          previousStats.visitedCompaniesInfo?.unitCount,
-          stats.visitedCompaniesInfo?.unitCount,
+        unitCount: toNullableNumber(
+          getPercentageChange(
+            previousStats.visitedCompaniesInfo?.unitCount,
+            stats.visitedCompaniesInfo?.unitCount,
+          ),
         ),
-        mostVisitedCompanyReceiptCount: getPercentageChange(
-          previousStats.MostVisitedCompaniesInfo[0]?.receiptCount,
-          stats.MostVisitedCompaniesInfo[0]?.receiptCount,
+        mostVisitedCompanyReceiptCount: toNullableNumber(
+          getPercentageChange(
+            previousStats.MostVisitedCompaniesInfo[0]?.receiptCount,
+            stats.MostVisitedCompaniesInfo[0]?.receiptCount,
+          ),
         ),
-        mostVisitedCompanyPriceSum: getPercentageChange(
-          previousStats.MostVisitedCompaniesInfo[0]?.priceSum,
-          stats.MostVisitedCompaniesInfo[0]?.priceSum,
+        mostVisitedCompanyPriceSum: toNullableNumber(
+          getPercentageChange(
+            previousStats.MostVisitedCompaniesInfo[0]?.priceSum,
+            stats.MostVisitedCompaniesInfo[0]?.priceSum,
+          ),
         ),
-        mostSpentReceipt: getPercentageChange(
-          previousStats.totalSpent?.mostSpentReceipt,
-          stats.totalSpent?.mostSpentReceipt,
+        mostSpentReceipt: toNullableNumber(
+          getPercentageChange(
+            previousStats.totalSpent?.mostSpentReceipt,
+            stats.totalSpent?.mostSpentReceipt,
+          ),
         ),
       };
 
@@ -153,11 +200,12 @@ const Home = () => {
     timeSpan,
   ]);
 
-  const addReceipt = async (e) => {
+  const addReceipt = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as AddReceiptForm;
     setReceiptLinkValid("");
     setSuccessText("");
-    const validationMessage = validateReceiptLink(e.target.receiptLink.value);
+    const validationMessage = validateReceiptLink(form.receiptLink.value);
 
     if (validationMessage !== "") {
       setReceiptLinkValid(validationMessage);
@@ -166,9 +214,7 @@ const Home = () => {
 
     setAddingReceipt(true);
 
-    const response = await api.addFullReceipt(
-      e.target.receiptLink.value.trim(),
-    );
+    const response = await api.addFullReceipt(form.receiptLink.value.trim());
 
     setAddingReceipt(false);
 
@@ -251,7 +297,7 @@ const Home = () => {
         )}
         {stats.totalSpent ? (
           <StatPanel
-            stats={stats}
+            stats={stats as StatSummary}
             timeSpan={timeSpan}
             setTimeSpan={setTimeSpan}
             percentageChanges={percentageChanges}
@@ -285,7 +331,10 @@ const Home = () => {
             ) : (
               <>
                 {lastReceiptInfo.receipt ? (
-                  <Receipt receiptInfo={lastReceiptInfo} fullWidth={true} />
+                  <Receipt
+                    receiptInfo={lastReceiptInfo as ReceiptInfoView}
+                    fullWidth={true}
+                  />
                 ) : (
                   <div className="receipt-empty">
                     <h3 className="pb-2">Nije pronađen nijedan račun...</h3>
@@ -313,7 +362,10 @@ const Home = () => {
             ) : (
               <>
                 {lastReport.receipt ? (
-                  <Report reportInfo={lastReport} hasLink={true} />
+                  <Report
+                    reportInfo={lastReport as ReportInfoView}
+                    hasLink={true}
+                  />
                 ) : (
                   <div className="receipt-empty">
                     <h3 className="pb-2">Nije pronađena nijedna prijava...</h3>

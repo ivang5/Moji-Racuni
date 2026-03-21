@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useCallback, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
@@ -22,13 +21,36 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 import useAuthUser from "../hooks/useAuthUser";
+import type { ReportInfoView, ReportListItemView } from "../types/viewModels";
+
+type ReportSearch = {
+  dateFrom: string;
+  dateTo: string;
+  id: string;
+  receipt: string;
+  user: string;
+  request: string;
+};
+
+type ReportFilterForm = HTMLFormElement & {
+  id: HTMLInputElement;
+  request: HTMLInputElement;
+  receipt: HTMLInputElement;
+  user?: HTMLInputElement;
+};
+
+type ResponseForm = HTMLFormElement & {
+  repmsg: HTMLTextAreaElement;
+};
 
 const Reports = () => {
   const { page } = useParams();
-  const [reports, setReports] = useState([]);
+  const [reports, setReports] = useState<ReportListItemView[]>([]);
   const [reportsLoading, setReportsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalReport, setModalReport] = useState({});
+  const [modalReport, setModalReport] = useState<Partial<ReportListItemView>>(
+    {},
+  );
   const [responseOpen, setResponseOpen] = useState(false);
   const [responseValidation, setResponseValidation] = useState("");
   const [deletionOpen, setDeletionOpen] = useState(false);
@@ -72,13 +94,14 @@ const Reports = () => {
 
   const fetchSortedPage = useCallback(
     async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+      const filters = searchObj as ReportSearch;
       const reports = await api.filterReports(
-        searchObj.dateFrom,
-        searchObj.dateTo,
-        searchObj.id,
-        searchObj.receipt,
-        searchObj.user,
-        searchObj.request,
+        filters.dateFrom,
+        filters.dateTo,
+        filters.id,
+        filters.receipt,
+        filters.user,
+        filters.request,
         orderBy,
         ascendingOrder,
         pageNum,
@@ -124,8 +147,9 @@ const Reports = () => {
     window.scrollTo(0, 0);
   }, [pageNum, applySortingFilters]);
 
-  const applyFilters = async (e) => {
+  const applyFilters = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as ReportFilterForm;
     const dateFrom = dateBEFormatter(fromDate);
     const dateTo = dateBEFormatter(toDate);
     let id = "%";
@@ -135,17 +159,17 @@ const Reports = () => {
     let orderBy = getReportOrderCode(sortBy);
     const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-    if (e.target.id.value !== "") {
-      id = e.target.id.value;
+    if (form.id.value !== "") {
+      id = form.id.value;
     }
-    if (e.target.request.value.trim() !== "") {
-      request = e.target.request.value.trim();
+    if (form.request.value.trim() !== "") {
+      request = form.request.value.trim();
     }
-    if (e.target.user && e.target.user.value.trim() !== "") {
-      user = e.target.user.value.trim();
+    if (form.user && form.user.value.trim() !== "") {
+      user = form.user.value.trim();
     }
-    if (e.target.receipt.value.trim() !== "") {
-      receipt = e.target.receipt.value.trim();
+    if (form.receipt.value.trim() !== "") {
+      receipt = form.receipt.value.trim();
     }
 
     setReportsLoading(true);
@@ -180,10 +204,10 @@ const Reports = () => {
     }
   };
 
-  const openModal = async (reportId) => {
+  const openModal = async (reportId: number) => {
     setModalOpen(true);
 
-    let report = await api.getReport(reportId);
+    let report = (await api.getReport(reportId)) as ReportListItemView | null;
 
     if (report) {
       if (userRole === "REGULAR" && report.closed && !report.seen) {
@@ -202,21 +226,26 @@ const Reports = () => {
     document.body.style.overflow = "auto";
   };
 
-  const sendResponse = async (e) => {
+  const sendResponse = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as ResponseForm;
 
-    if (e.target.repmsg.value.trim() === "") {
+    if (form.repmsg.value.trim() === "") {
       setResponseValidation("Polje ne sme biti prazno!");
       return;
-    } else if (e.target.repmsg.value.trim().length < 10) {
+    } else if (form.repmsg.value.trim().length < 10) {
       setResponseValidation("Polje mora sadržati bar 10 karaktera!");
+      return;
+    }
+
+    if (!modalReport.id) {
       return;
     }
 
     const report = {
       date: modalReport.date,
       request: modalReport.request,
-      response: e.target.repmsg.value.trim(),
+      response: form.repmsg.value.trim(),
       closed: true,
       seen: false,
       receipt: modalReport.receipt,
@@ -234,7 +263,7 @@ const Reports = () => {
     });
   };
 
-  const deleteReport = async (id) => {
+  const deleteReport = async (id: number) => {
     await api.deleteReport(id);
     applySortingFilters();
     setDeletionOpen(false);
@@ -303,7 +332,11 @@ const Reports = () => {
                     <span className="reports__search-lbl">Datum od</span>
                     <DatePicker
                       selected={fromDate}
-                      onChange={(date) => setFromDate(date)}
+                      onChange={(date) => {
+                        if (date) {
+                          setFromDate(date);
+                        }
+                      }}
                       selectsStart
                       startDate={fromDate}
                       endDate={toDate}
@@ -314,7 +347,11 @@ const Reports = () => {
                     <span className="reports__search-lbl">Datum do</span>
                     <DatePicker
                       selected={toDate}
-                      onChange={(date) => setToDate(date)}
+                      onChange={(date) => {
+                        if (date) {
+                          setToDate(date);
+                        }
+                      }}
                       selectsEnd
                       startDate={fromDate}
                       endDate={toDate}
@@ -364,22 +401,21 @@ const Reports = () => {
             </div>
           ) : (
             <div className="reports__items">
-              {reports &&
-                reports.map((report) => {
-                  return (
-                    <ReportCard
-                      key={report.id}
-                      id={report.id}
-                      date={report.date}
-                      request={report.request}
-                      closed={report.closed}
-                      seen={report.seen}
-                      receipt={report.receipt}
-                      userId={report.user}
-                      openModal={openModal}
-                    />
-                  );
-                })}
+              {reports.map((report) => {
+                return (
+                  <ReportCard
+                    key={report.id}
+                    id={report.id}
+                    date={report.date}
+                    request={report.request}
+                    closed={report.closed}
+                    seen={report.seen}
+                    receipt={report.receipt}
+                    userId={report.user}
+                    openModal={openModal}
+                  />
+                );
+              })}
             </div>
           )}
           {pageNumbers && !reportsLoading && pageCount > 1 && (
@@ -395,7 +431,7 @@ const Reports = () => {
         <div className="modal">
           {modalReport.request ? (
             <div className="modal__content">
-              <Report reportInfo={modalReport} />
+              <Report reportInfo={modalReport as ReportInfoView} />
               {!modalReport.response && (
                 <>
                   {userRole === "REGULAR" ? (

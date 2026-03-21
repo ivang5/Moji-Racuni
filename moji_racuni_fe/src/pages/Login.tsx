@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useContext, useState } from "react";
 import FormGroup from "../components/FormGroup";
 import AuthContext from "../context/AuthContext";
@@ -8,21 +7,36 @@ import {
   validateRegistrationForm,
 } from "../utils/validators";
 
+type LoginValidation = {
+  username: string;
+  password: string;
+  server: string;
+};
+
+type RegistrationValidation = {
+  email: string;
+  username: string;
+  password: string;
+  passwordRepeat: string;
+  server: string;
+};
+
 const Login = () => {
   const { loginUser, registerUser } = useContext(AuthContext);
   const [registration, setRegistration] = useState(false);
-  const [loginValid, setLoginValid] = useState({
+  const [loginValid, setLoginValid] = useState<LoginValidation>({
     username: "",
     password: "",
     server: "",
   });
-  const [registrationValid, setRegistrationValid] = useState({
-    email: "",
-    username: "",
-    password: "",
-    passwordRepeat: "",
-    server: "",
-  });
+  const [registrationValid, setRegistrationValid] =
+    useState<RegistrationValidation>({
+      email: "",
+      username: "",
+      password: "",
+      passwordRepeat: "",
+      server: "",
+    });
 
   const goToLogin = () => {
     setRegistration(false);
@@ -32,11 +46,12 @@ const Login = () => {
     setRegistration(true);
   };
 
-  const initiateLogin = async (e) => {
+  const initiateLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as any;
     let validationObj = validateLoginForm({
-      username: e.target.username.value,
-      password: e.target.password.value,
+      username: form.username.value,
+      password: form.password.value,
     });
 
     if (validationObj.username !== "" || validationObj.password !== "") {
@@ -58,13 +73,14 @@ const Login = () => {
     setLoginValid(validationObj);
   };
 
-  const initiateRegistration = async (e) => {
+  const initiateRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as any;
     let validationObj = validateRegistrationForm({
-      email: e.target.regEmail.value,
-      username: e.target.regUsername.value,
-      password: e.target.regPassword.value,
-      passwordRepeat: e.target.regPassword1.value,
+      email: form.regEmail.value,
+      username: form.regUsername.value,
+      password: form.regPassword.value,
+      passwordRepeat: form.regPassword1.value,
     });
 
     if (

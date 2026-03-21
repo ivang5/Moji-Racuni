@@ -1,9 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 
+type ToastLink = {
+  to: string;
+  text: string;
+};
+
+type ToastData = {
+  title: string;
+  text: string;
+  link?: ToastLink;
+};
+
 const useToast = (defaultDuration = 7000) => {
-  const [toast, setToast] = useState({});
+  const [toast, setToast] = useState<ToastData>({
+    title: "",
+    text: "",
+  });
   const [isOpen, setIsOpen] = useState(false);
-  const timeoutRef = useRef(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearExistingTimeout = () => {
     if (timeoutRef.current) {
@@ -12,7 +26,7 @@ const useToast = (defaultDuration = 7000) => {
     }
   };
 
-  const showToast = (nextToast, duration = defaultDuration) => {
+  const showToast = (nextToast: ToastData, duration = defaultDuration) => {
     setToast(nextToast);
     setIsOpen(true);
     clearExistingTimeout();

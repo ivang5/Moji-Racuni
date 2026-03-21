@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from "react";
 import {
   Page,
@@ -11,6 +10,44 @@ import {
 } from "@react-pdf/renderer";
 import { formatPrice, dateFormatter } from "../utils/utils";
 import Logo from "../icons/logo/Logo_bg_color.png";
+import type { BaseStatsView, StatPlotsView } from "../types/viewModels";
+
+type ReviewBaseStats = BaseStatsView & {
+  totalSpent: {
+    receiptsCount: number;
+    mostSpentReceipt: number;
+    avgSpentReceipt: number;
+    totalSpent: number;
+    totalSpentVat: number;
+  };
+  mostSpentInADay: {
+    mostSpent: number;
+  };
+  MostVisitedCompaniesInfo: Array<{
+    companyName: string;
+  }>;
+  visitedCompaniesInfo: {
+    companyCount: number;
+    unitCount: number;
+  };
+  mostValuableItems: Array<{
+    name: string;
+  }>;
+  mostItems: {
+    mostItems: number;
+    avgItems: number;
+  };
+};
+
+type ReviewStatPlots = Required<StatPlotsView>;
+
+type ReviewProps = {
+  statPlots: ReviewStatPlots;
+  baseStats: ReviewBaseStats;
+  fromDate: Date | string;
+  toDate: Date | string;
+  showCompanyTypes: boolean;
+};
 
 Font.register({
   family: "Roboto",
@@ -149,7 +186,7 @@ const Review = ({
   fromDate,
   toDate,
   showCompanyTypes,
-}) => {
+}: ReviewProps) => {
   return (
     <Document>
       <Page size="A4" style={styles.page}>

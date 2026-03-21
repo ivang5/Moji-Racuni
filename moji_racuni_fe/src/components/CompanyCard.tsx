@@ -1,11 +1,15 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
 import useApi from "../utils/useApi";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
+import type { CompanyListItemView, CompanyTypeView } from "../types/viewModels";
 
-const CompanyCard = ({ tin, name, image, openModal }) => {
+type CompanyCardProps = CompanyListItemView & {
+  openModal: (tin: string) => void;
+};
+
+const CompanyCard = ({ tin, name, image, openModal }: CompanyCardProps) => {
   const [companyVisits, setCompanyVisits] = useState(0);
-  const [companyType, setCompanyType] = useState({});
+  const [companyType, setCompanyType] = useState<Partial<CompanyTypeView>>({});
   const api = useApi();
   const apiRef = useRef(api);
 

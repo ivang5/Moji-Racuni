@@ -1,23 +1,30 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
 import Dropdown from "react-dropdown";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
 import EditIcon from "../icons/edit-icon.svg";
 import { formatPrice } from "../utils/utils";
 import useAuthUser from "../hooks/useAuthUser";
+import type { CompanyInfoView, CompanyTypeView } from "../types/viewModels";
+
+type CompanyProps = {
+  companyInfo: CompanyInfoView;
+  changeCompanyImg: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  companyTypes: CompanyTypeView[];
+  changeCompanyType: (typeId: number | "none") => void;
+};
 
 const Company = ({
   companyInfo,
   changeCompanyImg,
   companyTypes,
   changeCompanyType,
-}) => {
+}: CompanyProps) => {
   const [companyTypeOption, setCompanyTypeOption] = useState(
     companyInfo.type && companyInfo.type.name,
   );
-  let companyTypeOptions = ["Bez tipa"];
+  let companyTypeOptions: string[] = ["Bez tipa"];
   const { userRole } = useAuthUser();
-  const imgInput = useRef();
+  const imgInput = useRef<HTMLInputElement | null>(null);
   const firstUpdate = useRef(true);
 
   companyTypes.forEach((type) => {
@@ -30,16 +37,19 @@ const Company = ({
       return;
     }
     if (companyTypeOption) {
-      const selectedType =
-        companyTypeOption === "Bez tipa"
-          ? "none"
-          : companyTypes.find((type) => type.name === companyTypeOption).id;
+      const matchedType = companyTypes.find(
+        (type) => type.name === companyTypeOption,
+      );
+      const selectedType: number | "none" =
+        companyTypeOption === "Bez tipa" ? "none" : (matchedType?.id ?? "none");
       changeCompanyType(selectedType);
     }
   }, [changeCompanyType, companyTypeOption, companyTypes]);
 
   const handleClick = () => {
-    userRole !== "REGULAR" && imgInput.current.click();
+    if (userRole !== "REGULAR") {
+      imgInput.current?.click();
+    }
   };
 
   return (

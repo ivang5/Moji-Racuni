@@ -1,9 +1,21 @@
-// @ts-nocheck
 import React from "react";
 import { Link } from "react-router-dom";
 import { formatPrice } from "../utils/utils";
 import TrendUp from "../icons/trend-up.png";
 import TrendDown from "../icons/trend-down.png";
+import type {
+  PercentageChanges,
+  StatSummary,
+  TimeSpan,
+} from "../types/viewModels";
+
+type StatPanelProps = {
+  stats: StatSummary;
+  timeSpan: TimeSpan;
+  setTimeSpan: (span: TimeSpan) => void;
+  percentageChanges: PercentageChanges;
+  statsLoading: boolean;
+};
 
 const StatPanel = ({
   stats,
@@ -11,7 +23,7 @@ const StatPanel = ({
   setTimeSpan,
   percentageChanges,
   statsLoading,
-}) => {
+}: StatPanelProps) => {
   return (
     <div className="stat-panel py-4 py-lg-3">
       <div className="stat-panel__header">

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useCallback, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
@@ -16,13 +15,31 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 import useAuthUser from "../hooks/useAuthUser";
+import type { User as UserModel } from "../types/models";
+
+type UsersSearch = {
+  id: string;
+  username: string;
+  email: string;
+};
+
+type UsersFilterForm = HTMLFormElement & {
+  id: HTMLInputElement;
+  username: HTMLInputElement;
+  email: HTMLInputElement;
+};
+
+type ModalUser = UserModel & {
+  first_name?: string;
+  last_name?: string;
+};
 
 const Users = () => {
   const { page } = useParams();
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<ModalUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalUser, setModalUser] = useState({});
+  const [modalUser, setModalUser] = useState<ModalUser | null>(null);
   const [blockingOpen, setBlockingOpen] = useState(false);
 
   const {
@@ -60,9 +77,9 @@ const Users = () => {
   const fetchSortedPage = useCallback(
     async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
       const users = await api.filterUsers(
-        searchObj.id,
-        searchObj.username,
-        searchObj.email,
+        (searchObj as UsersSearch).id,
+        (searchObj as UsersSearch).username,
+        (searchObj as UsersSearch).email,
         orderBy,
         ascendingOrder,
         pageNum,
@@ -109,22 +126,23 @@ const Users = () => {
     window.scrollTo(0, 0);
   }, [pageNum, applySortingFilters]);
 
-  const applyFilters = async (e) => {
+  const applyFilters = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as UsersFilterForm;
     let id = "%";
     let username = "%";
     let email = "%";
     let orderBy = getUserOrderCode(sortBy);
     const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-    if (e.target.id.value !== "") {
-      id = e.target.id.value;
+    if (form.id.value !== "") {
+      id = form.id.value;
     }
-    if (e.target.username.value.trim() !== "") {
-      username = e.target.username.value.trim();
+    if (form.username.value.trim() !== "") {
+      username = form.username.value.trim();
     }
-    if (e.target.email.value.trim() !== "") {
-      email = e.target.email.value.trim();
+    if (form.email.value.trim() !== "") {
+      email = form.email.value.trim();
     }
 
     setUsersLoading(true);
@@ -153,10 +171,10 @@ const Users = () => {
     }
   };
 
-  const openModal = async (userId) => {
+  const openModal = async (userId: number) => {
     setModalOpen(true);
 
-    let user = await api.getUser(userId);
+    const user = (await api.getUser(userId)) as ModalUser | null;
 
     if (user) {
       setModalUser(user);
@@ -166,16 +184,20 @@ const Users = () => {
 
   const resetModal = () => {
     setModalOpen(false);
-    setModalUser({});
+    setModalUser(null);
     setBlockingOpen(false);
     document.body.style.overflow = "auto";
   };
 
-  const toggleUserBlock = async (id) => {
+  const toggleUserBlock = async (id: number) => {
+    if (!modalUser) {
+      return;
+    }
+
     const userInfo = {
       username: modalUser.username,
-      first_name: modalUser.first_name,
-      last_name: modalUser.last_name,
+      first_name: modalUser.first_name || "",
+      last_name: modalUser.last_name || "",
       email: modalUser.email,
       is_active: !modalUser.is_active,
     };
@@ -275,19 +297,18 @@ const Users = () => {
             </div>
           ) : (
             <div className="users__items">
-              {users &&
-                users.map((user) => {
-                  return (
-                    <UserCard
-                      key={user.id}
-                      id={user.id}
-                      username={user.username}
-                      email={user.email}
-                      active={user.is_active}
-                      openModal={openModal}
-                    />
-                  );
-                })}
+              {users.map((user) => {
+                return (
+                  <UserCard
+                    key={user.id}
+                    id={user.id}
+                    username={user.username}
+                    email={user.email}
+                    active={user.is_active}
+                    openModal={openModal}
+                  />
+                );
+              })}
             </div>
           )}
           {pageNumbers && !usersLoading && pageCount > 1 && (
@@ -301,7 +322,7 @@ const Users = () => {
       </div>
       {modalOpen && (
         <div className="modal">
-          {modalUser.id ? (
+          {modalUser?.id ? (
             <div className="modal__content">
               <User userInfo={modalUser} />
               <div className="modal__options modal__options--single">

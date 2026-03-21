@@ -1,7 +1,12 @@
-// @ts-nocheck
 import { dateTimeFormatter, formatPrice, noDecimalNum } from "../utils/utils";
+import type { ReceiptInfoView } from "../types/viewModels";
 
-const Receipt = ({ receiptInfo, fullWidth }) => {
+type ReceiptProps = {
+  receiptInfo: ReceiptInfoView;
+  fullWidth?: boolean;
+};
+
+const Receipt = ({ receiptInfo, fullWidth = false }: ReceiptProps) => {
   return (
     <div className={`receipt${fullWidth ? " receipt--full-width" : ""}`}>
       <h4 className="receipt__title">Račun #{receiptInfo.receipt.id}</h4>

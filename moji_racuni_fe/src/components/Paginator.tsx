@@ -1,17 +1,24 @@
-// @ts-nocheck
 import React from "react";
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-const Paginator = ({ pageNumbers, activePage, path }) => {
+type PaginatorProps = {
+  pageNumbers: number[];
+  activePage: number;
+  path: string;
+};
+
+const Paginator = ({ pageNumbers, activePage, path }: PaginatorProps) => {
   const navigate = useNavigate();
   const { page } = useParams();
+  const lastPage = pageNumbers[pageNumbers.length - 1] ?? 1;
 
   useEffect(() => {
-    if (parseInt(page) > pageNumbers.at(-1)) {
+    const parsedPage = Number.parseInt(page ?? "", 10);
+    if (parsedPage > lastPage) {
       navigate("/not-found");
     }
-  }, [navigate, page, pageNumbers]);
+  }, [lastPage, navigate, page]);
 
   return (
     <div className="paginator">
@@ -47,12 +54,12 @@ const Paginator = ({ pageNumbers, activePage, path }) => {
         })}
       <div
         className={
-          activePage === pageNumbers.at(-1)
+          activePage === lastPage
             ? "paginator__step paginator__step--inactive"
             : "paginator__step"
         }
         onClick={() =>
-          activePage !== pageNumbers.at(-1) &&
+          activePage !== lastPage &&
           navigate(`${path}/strana/${activePage + 1}`)
         }
       >

@@ -1,21 +1,47 @@
-// @ts-nocheck
 import React, { useEffect } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsivePie } from "@nivo/pie";
 import { formatChartVal, formatPrice } from "../utils/utils";
 import { useState } from "react";
 
+type PieChartSettings = {
+  margin?: { top: number; right: number; bottom: number; left: number };
+  anchor?: "bottom" | "right";
+  translateX?: number;
+  translateY?: number;
+};
+
+type ChartItem = {
+  [key: string]: any;
+  id?: string;
+  name?: string;
+  value?: number;
+};
+
+type ChartProps = {
+  type: "bar" | "pie";
+  data: ChartItem[];
+  keys?: string[];
+  index?: string;
+  tooltip?: "cena" | "broj" | string;
+  title: string;
+  desktop?: boolean;
+  customAxis?: boolean;
+};
+
 const Chart = ({
   type,
   data,
-  keys,
-  index,
+  keys = [],
+  index = "",
   tooltip,
   title,
   desktop,
   customAxis,
-}) => {
-  const [pieChartSettings, setPieChartSettings] = useState({});
+}: ChartProps) => {
+  const [pieChartSettings, setPieChartSettings] = useState<PieChartSettings>(
+    {},
+  );
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -248,8 +274,8 @@ const Chart = ({
             )}
             legends={[
               {
-                dataFrom: "data",
                 data: data.map((item, index) => ({
+                  id: item.id ?? index,
                   color: colors[index],
                   item,
                   label:

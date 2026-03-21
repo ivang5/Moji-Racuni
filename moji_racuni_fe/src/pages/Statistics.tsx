@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
@@ -21,6 +20,13 @@ import {
 import Chart from "../components/Chart";
 import InfoIcon from "../icons/info-icon.png";
 import { saveAs } from "file-saver";
+import type {
+  BaseStatsView,
+  ChartBarPoint,
+  ChartPiePoint,
+  ReceiptsInfoView,
+  StatPlotsView,
+} from "../types/viewModels";
 
 const Statistics = () => {
   const [showSpendings, setShowSpendings] = useState(true);
@@ -28,28 +34,36 @@ const Statistics = () => {
   const [showCompanies, setShowCompanies] = useState(false);
   const [showItems, setShowItems] = useState(false);
   const [, setStatsLoading] = useState(true);
-  const [baseStats, setBaseStats] = useState({});
-  const [receiptsByHour, setReceiptsByHour] = useState([]);
-  const [receiptsByWeekday, setReceiptsByWeekday] = useState([]);
-  const [receiptsByMonth, setReceiptsByMonth] = useState([]);
-  const [spentByHour, setSpentByHour] = useState([]);
-  const [spentByWeekday, setSpentByWeekday] = useState([]);
-  const [spentByMonth, setSpentByMonth] = useState([]);
-  const [mostSpentCompanies, setMostSpentCompanies] = useState([]);
-  const [mostVisitedCompanies, setMostVisitedCompanies] = useState([]);
-  const [mostSpentTypes, setMostSpentTypes] = useState([]);
-  const [mostVisitedTypes, setMostVisitedTypes] = useState([]);
-  const [mostValuableItems, setMostValuableItems] = useState([]);
-  const [receiptsInfo, setReceiptsInfo] = useState({});
+  const [baseStats, setBaseStats] = useState<BaseStatsView>({});
+  const [receiptsByHour, setReceiptsByHour] = useState<ChartBarPoint[]>([]);
+  const [receiptsByWeekday, setReceiptsByWeekday] = useState<ChartBarPoint[]>(
+    [],
+  );
+  const [receiptsByMonth, setReceiptsByMonth] = useState<ChartBarPoint[]>([]);
+  const [spentByHour, setSpentByHour] = useState<ChartBarPoint[]>([]);
+  const [spentByWeekday, setSpentByWeekday] = useState<ChartBarPoint[]>([]);
+  const [spentByMonth, setSpentByMonth] = useState<ChartBarPoint[]>([]);
+  const [mostSpentCompanies, setMostSpentCompanies] = useState<ChartPiePoint[]>(
+    [],
+  );
+  const [mostVisitedCompanies, setMostVisitedCompanies] = useState<
+    ChartPiePoint[]
+  >([]);
+  const [mostSpentTypes, setMostSpentTypes] = useState<ChartPiePoint[]>([]);
+  const [mostVisitedTypes, setMostVisitedTypes] = useState<ChartPiePoint[]>([]);
+  const [mostValuableItems, setMostValuableItems] = useState<ChartBarPoint[]>(
+    [],
+  );
+  const [receiptsInfo, setReceiptsInfo] = useState<ReceiptsInfoView>({});
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(getTomorrow());
   const [searchOpen, setSearchOpen] = useState(false);
-  const [statPlots, setStatPlots] = useState({});
+  const [statPlots, setStatPlots] = useState<StatPlotsView>({});
   const [plotsLoading, setPlotsLoading] = useState(true);
-  const [PDFBlob, setPDFBlob] = useState(null);
+  const [PDFBlob, setPDFBlob] = useState<Blob | null>(null);
   const api = useApi();
   const apiRef = useRef(api);
-  const workerRef = useRef(null);
+  const workerRef = useRef<Worker | null>(null);
   const fromDateStr = dateBEFormatter(fromDate);
   const toDateStr = dateBEFormatter(toDate);
 
@@ -61,7 +75,7 @@ const Statistics = () => {
     const worker = new Worker(
       new URL("../workers/WorkerPDF.ts", import.meta.url),
     );
-    worker.onmessage = (e) => {
+    worker.onmessage = (e: MessageEvent<Blob>) => {
       setPDFBlob(e.data);
     };
     workerRef.current = worker;
@@ -72,19 +86,19 @@ const Statistics = () => {
   }, []);
 
   const getBaseStats = useCallback(async () => {
-    const baseStats = await apiRef.current.getBaseStats(
+    const baseStats = (await apiRef.current.getBaseStats(
       fromDateStr,
       toDateStr,
       1,
-    );
+    )) as BaseStatsView;
     setBaseStats(baseStats);
   }, [fromDateStr, toDateStr]);
 
   const getReceiptsInfo = useCallback(async () => {
-    const receiptsInfo = await apiRef.current.getTotalSpent(
+    const receiptsInfo = (await apiRef.current.getTotalSpent(
       fromDateStr,
       toDateStr,
-    );
+    )) as ReceiptsInfoView;
     setReceiptsInfo(receiptsInfo);
   }, [fromDateStr, toDateStr]);
 
@@ -97,7 +111,10 @@ const Statistics = () => {
       setReceiptsByHour([]);
       return;
     }
-    const receiptsCountFormatted = getHoursFromNumbers(receiptsCount, "count");
+    const receiptsCountFormatted = getHoursFromNumbers(
+      receiptsCount,
+      "count",
+    ) as ChartBarPoint[];
     setReceiptsByHour(receiptsCountFormatted);
   }, [fromDateStr, toDateStr]);
 
@@ -113,7 +130,7 @@ const Statistics = () => {
     const receiptsCountFormatted = getWeekdaysFromNumbers(
       receiptsCount,
       "count",
-    );
+    ) as ChartBarPoint[];
     setReceiptsByWeekday(receiptsCountFormatted);
   }, [fromDateStr, toDateStr]);
 
@@ -126,7 +143,10 @@ const Statistics = () => {
       setReceiptsByMonth([]);
       return;
     }
-    const receiptsCountFormatted = getMonthsFromNumbers(receiptsCount, "count");
+    const receiptsCountFormatted = getMonthsFromNumbers(
+      receiptsCount,
+      "count",
+    ) as ChartBarPoint[];
     setReceiptsByMonth(receiptsCountFormatted);
   }, [fromDateStr, toDateStr]);
 
@@ -139,7 +159,10 @@ const Statistics = () => {
       setSpentByHour([]);
       return;
     }
-    const moneySpentFormatted = getHoursFromNumbers(moneySpent, "spent");
+    const moneySpentFormatted = getHoursFromNumbers(
+      moneySpent,
+      "spent",
+    ) as ChartBarPoint[];
     setSpentByHour(moneySpentFormatted);
   }, [fromDateStr, toDateStr]);
 
@@ -152,7 +175,10 @@ const Statistics = () => {
       setSpentByWeekday([]);
       return;
     }
-    const moneySpentFormatted = getWeekdaysFromNumbers(moneySpent, "spent");
+    const moneySpentFormatted = getWeekdaysFromNumbers(
+      moneySpent,
+      "spent",
+    ) as ChartBarPoint[];
     setSpentByWeekday(moneySpentFormatted);
   }, [fromDateStr, toDateStr]);
 
@@ -165,7 +191,10 @@ const Statistics = () => {
       setSpentByMonth([]);
       return;
     }
-    const moneySpentFormatted = getMonthsFromNumbers(moneySpent, "spent");
+    const moneySpentFormatted = getMonthsFromNumbers(
+      moneySpent,
+      "spent",
+    ) as ChartBarPoint[];
     setSpentByMonth(moneySpentFormatted);
   }, [fromDateStr, toDateStr]);
 
@@ -182,7 +211,7 @@ const Statistics = () => {
     const spentCompaniesFormatted = getSpendingsPieFormatData(
       mostSpentCompanies,
       true,
-    );
+    ) as ChartPiePoint[];
     spentCompaniesFormatted.push({
       id: "Ostalo",
       value:
@@ -209,7 +238,7 @@ const Statistics = () => {
     const visitedCompaniesFormatted = getVisitsPieFormatData(
       mostVisitedCompanies,
       true,
-    );
+    ) as ChartPiePoint[];
     visitedCompaniesFormatted.push({
       id: "Ostalo",
       value:
@@ -232,7 +261,7 @@ const Statistics = () => {
     const spentTypesFormatted = getSpendingsPieFormatData(
       mostSpentTypes,
       false,
-    );
+    ) as ChartPiePoint[];
     spentTypesFormatted.push({
       id: "Ostalo",
       value:
@@ -255,7 +284,7 @@ const Statistics = () => {
     const visitedTypesFormatted = getVisitsPieFormatData(
       mostVisitedTypes,
       false,
-    );
+    ) as ChartPiePoint[];
     visitedTypesFormatted.push({
       id: "Ostalo",
       value:
@@ -275,12 +304,18 @@ const Statistics = () => {
       setMostValuableItems([]);
       return;
     }
-    const mostValuableItemsFormatted = getMostValItemsFormat(mostValuableItems);
+    const mostValuableItemsFormatted = getMostValItemsFormat(
+      mostValuableItems,
+    ) as ChartBarPoint[];
     setMostValuableItems(mostValuableItemsFormatted);
   }, [fromDateStr, toDateStr]);
 
   const getStatPlots = useCallback(async () => {
-    const plots = await apiRef.current.getStatPlots(fromDateStr, toDateStr, 10);
+    const plots = (await apiRef.current.getStatPlots(
+      fromDateStr,
+      toDateStr,
+      10,
+    )) as StatPlotsView;
     setStatPlots(plots);
     setPlotsLoading(false);
   }, [fromDateStr, toDateStr]);
@@ -384,7 +419,11 @@ const Statistics = () => {
                   <span className="statistics__search-lbl">Datum od</span>
                   <DatePicker
                     selected={fromDate}
-                    onChange={(date) => setFromDate(date)}
+                    onChange={(date) => {
+                      if (date) {
+                        setFromDate(date);
+                      }
+                    }}
                     selectsStart
                     startDate={fromDate}
                     endDate={toDate}
@@ -395,7 +434,11 @@ const Statistics = () => {
                   <span className="statistics__search-lbl">Datum do</span>
                   <DatePicker
                     selected={toDate}
-                    onChange={(date) => setToDate(date)}
+                    onChange={(date) => {
+                      if (date) {
+                        setToDate(date);
+                      }
+                    }}
                     selectsEnd
                     startDate={fromDate}
                     endDate={toDate}

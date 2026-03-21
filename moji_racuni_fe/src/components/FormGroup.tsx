@@ -1,8 +1,28 @@
-// @ts-nocheck
 import React, { forwardRef } from "react";
 
+type FormGroupProps = {
+  name: string;
+  text: string;
+  type: string;
+  error?: string;
+  success?: string;
+  inline?: boolean;
+  defaultVal?: string | number;
+};
+
 const FormGroup = forwardRef(
-  ({ name, text, type, error, success, inline, defaultVal }, ref) => {
+  (
+    {
+      name,
+      text,
+      type,
+      error = "",
+      success = "",
+      inline = false,
+      defaultVal,
+    }: FormGroupProps,
+    ref: React.ForwardedRef<HTMLInputElement>,
+  ) => {
     return (
       <div
         className={inline ? "form__group form__group--inline" : "form__group"}
@@ -25,7 +45,7 @@ const FormGroup = forwardRef(
         </span>
       </div>
     );
-  }
+  },
 );
 
 export default FormGroup;

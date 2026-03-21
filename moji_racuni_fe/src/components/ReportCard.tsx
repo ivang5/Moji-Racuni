@@ -1,9 +1,17 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
 import useApi from "../utils/useApi";
 import { dateTimeFormatter } from "../utils/utils";
 import BellIcon from "../icons/bell-icon.svg";
 import useAuthUser from "../hooks/useAuthUser";
+import type { ReportListItemView, ReportUserView } from "../types/viewModels";
+
+type ReportCardProps = Pick<
+  ReportListItemView,
+  "id" | "date" | "request" | "closed" | "seen" | "receipt"
+> & {
+  userId: ReportListItemView["user"];
+  openModal: (id: number) => void;
+};
 
 const ReportCard = ({
   id,
@@ -14,8 +22,8 @@ const ReportCard = ({
   receipt,
   userId,
   openModal,
-}) => {
-  const [reportUser, setReportUser] = useState({});
+}: ReportCardProps) => {
+  const [reportUser, setReportUser] = useState<Partial<ReportUserView>>({});
   const { userRole } = useAuthUser();
   const api = useApi();
   const apiRef = useRef(api);

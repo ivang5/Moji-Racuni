@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { TypeAnimation } from "react-type-animation";
@@ -13,17 +12,39 @@ import {
 import useModalDismiss from "../hooks/useModalDismiss";
 import useAuthUser from "../hooks/useAuthUser";
 
+type UserInfo = {
+  id: number;
+  username: string;
+  email: string;
+  date_joined: string;
+};
+
+type ToastState = {
+  title: string;
+  text: string;
+};
+
+type ProfileValidation = {
+  username: string;
+  email: string;
+};
+
+type PasswordValidation = {
+  password: string;
+  passwordRepeat: string;
+};
+
 const Profile = () => {
-  const [userInfo, setUserInfo] = useState({});
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalOpenPass, setModalOpenPass] = useState(false);
-  const [toast, setToast] = useState({});
+  const [toast, setToast] = useState<ToastState>({ title: "", text: "" });
   const [toastOpen, setToastOpen] = useState(false);
-  const [formValid, setFormValid] = useState({
+  const [formValid, setFormValid] = useState<ProfileValidation>({
     username: "",
     email: "",
   });
-  const [formValidPass, setFormValidPass] = useState({
+  const [formValidPass, setFormValidPass] = useState<PasswordValidation>({
     password: "",
     passwordRepeat: "",
   });
@@ -48,15 +69,16 @@ const Profile = () => {
     getUserInfo();
   }, [getUserInfo]);
 
-  const saveChanges = async (e) => {
+  const saveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!userId) {
       return;
     }
+    const form = e.currentTarget as any;
 
     let validationObj = validateProfileInfoForm({
-      username: e.target.username.value,
-      email: e.target.email.value,
+      username: form.username.value,
+      email: form.email.value,
     });
 
     if (validationObj.username !== "" || validationObj.email !== "") {
@@ -65,8 +87,8 @@ const Profile = () => {
     }
 
     const userInfo = {
-      username: e.target.username.value,
-      email: e.target.email.value,
+      username: form.username.value,
+      email: form.email.value,
     };
     const response = await api.updateUser(userId, userInfo);
 
@@ -85,15 +107,16 @@ const Profile = () => {
     }
   };
 
-  const saveChangesPass = async (e) => {
+  const saveChangesPass = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!userId) {
       return;
     }
+    const form = e.currentTarget as any;
 
     let validationObj = validatePasswordUpdateForm({
-      password: e.target.pass.value,
-      passwordRepeat: e.target.passRepeat.value,
+      password: form.pass.value,
+      passwordRepeat: form.passRepeat.value,
     });
 
     if (validationObj.password !== "" || validationObj.passwordRepeat !== "") {
@@ -102,8 +125,8 @@ const Profile = () => {
     }
 
     const newPasswordInfo = {
-      password: e.target.pass.value,
-      passRepeat: e.target.passRepeat.value,
+      password: form.pass.value,
+      passRepeat: form.passRepeat.value,
     };
     await api.updateUserPassword(userId, newPasswordInfo);
 

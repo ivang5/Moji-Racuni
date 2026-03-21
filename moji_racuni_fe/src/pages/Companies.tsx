@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
@@ -16,25 +15,57 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 import useAuthUser from "../hooks/useAuthUser";
+import type {
+  CompanyInfoView,
+  CompanyListItemView,
+  CompanyTypeView,
+} from "../types/viewModels";
+
+type TypeValidation = {
+  name: string;
+  description: string;
+};
+
+type CompanySearch = {
+  name: string;
+  tin: string;
+  type: string;
+};
+
+type CompanyFilterForm = HTMLFormElement & {
+  name: HTMLInputElement;
+  tin: HTMLInputElement;
+  type: HTMLInputElement;
+};
+
+type CompanyTypeForm = HTMLFormElement & {
+  name: HTMLInputElement;
+  description: HTMLTextAreaElement;
+};
 
 const Companies = () => {
   const { page } = useParams();
-  const [companies, setCompanies] = useState([]);
-  const [companyTypes, setCompanyTypes] = useState([]);
-  const [selectedType, setSelectedType] = useState({});
+  const [companies, setCompanies] = useState<CompanyListItemView[]>([]);
+  const [companyTypes, setCompanyTypes] = useState<CompanyTypeView[]>([]);
+  const [selectedType, setSelectedType] = useState<Partial<CompanyTypeView>>(
+    {},
+  );
   const [companiesLoading, setCompaniesLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalCompany, setModalCompany] = useState({});
+  const [modalCompany, setModalCompany] = useState<Partial<CompanyInfoView>>(
+    {},
+  );
   const [modalOpenType, setModalOpenType] = useState(false);
   const [typeModalMain, setTypeModalMain] = useState(true);
-  const [typeValidation, setTypeValidation] = useState({
+  const [typeValidation, setTypeValidation] = useState<TypeValidation>({
     name: "",
     description: "",
   });
-  const [typeValidationSecondary, setTypeValidationSecondary] = useState({
-    name: "",
-    description: "",
-  });
+  const [typeValidationSecondary, setTypeValidationSecondary] =
+    useState<TypeValidation>({
+      name: "",
+      description: "",
+    });
   const [typeCreationOpen, setTypeCreationOpen] = useState(false);
   const [typeDeletionOpen, setTypeDeletionOpen] = useState(false);
 
@@ -77,10 +108,11 @@ const Companies = () => {
 
   const fetchSortedPage = useCallback(
     async ({ api, searchObj, orderBy, ascendingOrder, pageNum }) => {
+      const filters = searchObj as CompanySearch;
       const companies = await api.filterCompanies(
-        searchObj.name,
-        searchObj.tin,
-        searchObj.type,
+        filters.name,
+        filters.tin,
+        filters.type,
         orderBy,
         ascendingOrder,
         pageNum,
@@ -135,22 +167,23 @@ const Companies = () => {
     window.scrollTo(0, 0);
   }, [pageNum, applySortingFilters]);
 
-  const applyFilters = async (e) => {
+  const applyFilters = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as CompanyFilterForm;
     let name = "%";
     let tin = "%";
     let type = "%";
     let orderBy = getCompanyOrderCode(sortBy);
     const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-    if (e.target.name.value.trim() !== "") {
-      name = e.target.name.value.trim();
+    if (form.name.value.trim() !== "") {
+      name = form.name.value.trim();
     }
-    if (e.target.tin.value.trim() !== "") {
-      tin = e.target.tin.value.trim();
+    if (form.tin.value.trim() !== "") {
+      tin = form.tin.value.trim();
     }
-    if (e.target.type.value !== "") {
-      type = e.target.type.value;
+    if (form.type.value !== "") {
+      type = form.type.value;
     }
 
     setCompaniesLoading(true);
@@ -179,10 +212,12 @@ const Companies = () => {
     }
   };
 
-  const openModal = async (companyId) => {
+  const openModal = async (companyTin: string) => {
     setModalOpen(true);
 
-    const company = await api.getFullCompanyInfo(companyId);
+    const company = (await api.getFullCompanyInfo(
+      companyTin,
+    )) as CompanyInfoView | null;
 
     if (company) {
       setModalCompany(company);
@@ -200,23 +235,24 @@ const Companies = () => {
     document.body.style.overflow = "auto";
   };
 
-  const createCompanyType = async (e) => {
+  const createCompanyType = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as CompanyTypeForm;
     if (!userId) {
       return;
     }
 
     let valid = true;
-    let validationObj = { name: "", description: "" };
+    const validationObj: TypeValidation = { name: "", description: "" };
 
-    if (e.target.name.value.trim() === "") {
+    if (form.name.value.trim() === "") {
       validationObj.name = "Naziv tipa ne sme biti prazan!";
       valid = false;
-    } else if (e.target.name.value.trim().length > 11) {
+    } else if (form.name.value.trim().length > 11) {
       validationObj.name = "Naziv tipa ne sme sadržati više od 11 karaktera!";
       valid = false;
     }
-    if (e.target.description.value.trim() === "") {
+    if (form.description.value.trim() === "") {
       validationObj.description = "Opis tipa ne sme biti prazan!";
       valid = false;
     }
@@ -227,8 +263,8 @@ const Companies = () => {
     }
 
     const companyTypeInfo = {
-      name: e.target.name.value.trim(),
-      description: e.target.description.value.trim(),
+      name: form.name.value.trim(),
+      description: form.description.value.trim(),
       user: userId,
     };
 
@@ -248,21 +284,22 @@ const Companies = () => {
     });
   };
 
-  const changeType = async (e) => {
+  const changeType = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget as CompanyTypeForm;
     if (!userId) {
       return;
     }
 
     let valid = true;
-    let validationObj = { name: "", description: "" };
+    const validationObj: TypeValidation = { name: "", description: "" };
 
-    if (e.target.name.value.trim() === "") {
+    if (form.name.value.trim() === "") {
       validationObj.name = "Naziv tipa ne sme biti prazan!";
       valid = false;
     }
 
-    if (e.target.description.value.trim() === "") {
+    if (form.description.value.trim() === "") {
       validationObj.description = "Opis tipa ne sme biti prazan!";
       valid = false;
     }
@@ -273,10 +310,14 @@ const Companies = () => {
     }
 
     const typeInfo = {
-      name: e.target.name.value.trim(),
-      description: e.target.description.value.trim(),
+      name: form.name.value.trim(),
+      description: form.description.value.trim(),
       user: userId,
     };
+
+    if (!selectedType.id) {
+      return;
+    }
 
     const companyType = await api.changeType(selectedType.id, typeInfo);
     if (companyType) {
@@ -304,7 +345,11 @@ const Companies = () => {
     });
   };
 
-  const changeCompanyType = async (id) => {
+  const changeCompanyType = async (id: number | "none") => {
+    if (!modalCompany.company) {
+      return;
+    }
+
     const typeInfo = {
       type: id,
     };
@@ -316,8 +361,12 @@ const Companies = () => {
     });
   };
 
-  const changeCompanyImg = async (e) => {
-    const image = e.target.files[0];
+  const changeCompanyImg = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const image = e.target.files?.[0];
+    if (!image || !modalCompany.company) {
+      return;
+    }
+
     const company = await api.changeCompanyImage(
       modalCompany.company.tin,
       image,
@@ -428,18 +477,17 @@ const Companies = () => {
             </div>
           ) : (
             <div className="companies__items">
-              {companies &&
-                companies.map((company) => {
-                  return (
-                    <CompanyCard
-                      key={company.tin}
-                      tin={company.tin}
-                      name={company.name}
-                      image={company.image}
-                      openModal={openModal}
-                    />
-                  );
-                })}
+              {companies.map((company) => {
+                return (
+                  <CompanyCard
+                    key={company.tin}
+                    tin={company.tin}
+                    name={company.name}
+                    image={company.image}
+                    openModal={openModal}
+                  />
+                );
+              })}
             </div>
           )}
           {pageNumbers && !companiesLoading && pageCount > 1 && (
@@ -456,7 +504,7 @@ const Companies = () => {
           {modalCompany.company ? (
             <div className="modal__content">
               <Company
-                companyInfo={modalCompany}
+                companyInfo={modalCompany as CompanyInfoView}
                 changeCompanyImg={changeCompanyImg}
                 companyTypes={companyTypes}
                 changeCompanyType={changeCompanyType}

@@ -1,7 +1,16 @@
-// @ts-nocheck
 import React, { useEffect, useRef, useState } from "react";
 import useApi from "../utils/useApi";
 import { dateTimeFormatter, formatPrice } from "../utils/utils";
+import type { CompanyUnit } from "../types/models";
+import type { ReceiptListItemView } from "../types/viewModels";
+
+type ReceiptCardProps = Pick<
+  ReceiptListItemView,
+  "id" | "date" | "totalPrice" | "totalVat"
+> & {
+  companyUnitId: ReceiptListItemView["companyUnit"];
+  openModal: (id: number) => void;
+};
 
 const ReceiptCard = ({
   id,
@@ -10,8 +19,8 @@ const ReceiptCard = ({
   totalVat,
   companyUnitId,
   openModal,
-}) => {
-  const [companyUnit, setCompanyUnit] = useState({});
+}: ReceiptCardProps) => {
+  const [companyUnit, setCompanyUnit] = useState<Partial<CompanyUnit>>({});
   const [itemsCount, setItemsCount] = useState(0);
   const api = useApi();
   const apiRef = useRef(api);

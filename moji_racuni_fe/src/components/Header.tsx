@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useCallback, useContext, useState } from "react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -7,17 +6,28 @@ import AuthContext from "../context/AuthContext";
 import useAuthUser from "../hooks/useAuthUser";
 import Logo from "../icons/logo/Logo_bg_color.svg";
 
+type HeaderPage =
+  | "Home"
+  | "Stats"
+  | "Receipts"
+  | "Companies"
+  | "Users"
+  | "Reports"
+  | "Profile";
+
 const Header = () => {
   const { logoutUser } = useContext(AuthContext);
   const { userRole, username, isAuthenticated } = useAuthUser();
   const [mobileNav, setMobileNav] = useState(false);
-  const [activePage, setActivePage] = useState();
+  const [activePage, setActivePage] = useState<HeaderPage>("Home");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const currentPath = window.location.pathname;
 
-  const handleMouseClick = useCallback((e) => {
+  const handleMouseClick = useCallback((e: MouseEvent) => {
     const targetClassName =
-      typeof e.target.className === "string" ? e.target.className : "";
+      typeof (e.target as Element | null)?.className === "string"
+        ? ((e.target as Element).className as string)
+        : "";
 
     if (
       !targetClassName.startsWith("nav__") &&
@@ -30,7 +40,7 @@ const Header = () => {
   useEffect(() => {
     const pathname = window.location.pathname;
     const page = getPageFromPathname(pathname);
-    setActivePage(page);
+    setActivePage(page as HeaderPage);
 
     window.addEventListener("click", handleMouseClick);
 

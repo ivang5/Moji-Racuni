@@ -1,8 +1,12 @@
-// @ts-nocheck
 import React from "react";
 import { dateFormatter } from "../utils/utils";
+import type { User as UserModel } from "../types/models";
 
-const User = ({ userInfo }) => {
+type UserProps = {
+  userInfo: UserModel;
+};
+
+const User = ({ userInfo }: UserProps) => {
   return (
     <div className="user">
       <h4 className="user__title">Korisnik #{userInfo.id}</h4>

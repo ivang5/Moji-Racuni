@@ -1,9 +1,20 @@
-// @ts-nocheck
 import React from "react";
 import { Link } from "react-router-dom";
 import checkIcon from "../icons/checkmark_circle.svg";
 
-const Toast = ({ title, text, link, close }) => {
+type ToastLink = {
+  to: string;
+  text: string;
+};
+
+type ToastProps = {
+  title: string;
+  text: string;
+  link?: ToastLink;
+  close: () => void;
+};
+
+const Toast = ({ title, text, link, close }: ToastProps) => {
   return (
     <div className="toast">
       <img className="toast__icon" src={checkIcon} alt="checkmark" />
