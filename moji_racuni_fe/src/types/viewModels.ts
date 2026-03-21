@@ -72,7 +72,7 @@ export type PercentageChanges = {
   unitCount: number | null;
   mostVisitedCompanyReceiptCount: number | null;
   mostVisitedCompanyPriceSum: number | null;
-  mostSpentReceipt: number | null;
+  mostValuableItemPrice: number | null;
 };
 
 export type StatSummary = {

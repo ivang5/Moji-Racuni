@@ -106,8 +106,7 @@ export const getPercentageChange = (
     oldNum === undefined ||
     oldNum === 0 ||
     newNum === null ||
-    newNum === undefined ||
-    newNum === 0
+    newNum === undefined
   ) {
     return null;
   }

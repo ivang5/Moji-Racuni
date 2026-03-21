@@ -231,28 +231,28 @@ const StatPanel = ({
                   {formatPrice(stats.mostValuableItems?.[0].price ?? 0)} RSD
                 </span>
                 {timeSpan !== "all" &&
-                  percentageChanges.mostSpentReceipt !== null &&
-                  percentageChanges.mostSpentReceipt !== 0 && (
+                  percentageChanges.mostValuableItemPrice !== null &&
+                  percentageChanges.mostValuableItemPrice !== 0 && (
                     <div
                       className={`stat-panel__item-trend ${
-                        percentageChanges.mostSpentReceipt < 0 &&
+                        percentageChanges.mostValuableItemPrice < 0 &&
                         "stat-panel__item-trend--down"
                       }`}
                     >
                       <img
                         className="stat-panel__item-trend-img"
                         src={
-                          percentageChanges.mostSpentReceipt >= 0
+                          percentageChanges.mostValuableItemPrice >= 0
                             ? TrendUp
                             : TrendDown
                         }
                         alt={
-                          percentageChanges.mostSpentReceipt >= 0
+                          percentageChanges.mostValuableItemPrice >= 0
                             ? "uptrend"
                             : "downtrend"
                         }
                       />
-                      {percentageChanges.mostSpentReceipt}%
+                      {percentageChanges.mostValuableItemPrice}%
                     </div>
                   )}
               </div>

@@ -60,7 +60,7 @@ const Home = () => {
       unitCount: null,
       mostVisitedCompanyReceiptCount: null,
       mostVisitedCompanyPriceSum: null,
-      mostSpentReceipt: null,
+      mostValuableItemPrice: null,
     },
   );
   const [receiptLinkValid, setReceiptLinkValid] = useState("");
@@ -84,7 +84,7 @@ const Home = () => {
       unitCount: null,
       mostVisitedCompanyReceiptCount: null,
       mostVisitedCompanyPriceSum: null,
-      mostSpentReceipt: null,
+      mostValuableItemPrice: null,
     });
 
     const currentDate =
@@ -182,10 +182,10 @@ const Home = () => {
             stats.MostVisitedCompaniesInfo?.[0]?.priceSum,
           ),
         ),
-        mostSpentReceipt: toNullableNumber(
+        mostValuableItemPrice: toNullableNumber(
           getPercentageChange(
-            previousStats.totalSpent?.mostSpentReceipt,
-            stats.totalSpent?.mostSpentReceipt,
+            previousStats.mostValuableItems?.[0]?.price,
+            stats.mostValuableItems?.[0]?.price,
           ),
         ),
       };
@@ -194,6 +194,7 @@ const Home = () => {
     }
   }, [
     previousStats.MostVisitedCompaniesInfo,
+    previousStats.mostValuableItems,
     previousStats.totalSpent,
     previousStats.visitedCompaniesInfo?.unitCount,
     stats,
