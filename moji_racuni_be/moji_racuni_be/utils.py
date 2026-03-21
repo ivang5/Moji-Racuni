@@ -1333,6 +1333,7 @@ def filter_companies(user, name, tin, type, orderBy, ascendingOrder):
     allowed_order_columns = {
         "tin": "c.tin",
         "name": "c.name",
+        "type": "t.name",
     }
     safe_order_column = _sanitize_order_column(orderBy, allowed_order_columns, "name")
     safe_order_direction = _sanitize_order_direction(ascendingOrder)

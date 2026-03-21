@@ -185,22 +185,22 @@ export const getReceiptOrderCode = (orderBy: string) => {
 
   switch (orderBy) {
     case "Datum":
-      orderByCode = "r.date";
+      orderByCode = "date";
       break;
     case "Prodavnica":
-      orderByCode = "u.name";
+      orderByCode = "unitName";
       break;
     case "PIB":
-      orderByCode = "u.company";
+      orderByCode = "tin";
       break;
     case "Cena":
-      orderByCode = "r.totalPrice";
+      orderByCode = "totalPrice";
       break;
     case "PDV":
-      orderByCode = "r.totalVat";
+      orderByCode = "totalVat";
       break;
     default:
-      orderByCode = "r.date";
+      orderByCode = "date";
       break;
   }
 
@@ -230,16 +230,16 @@ export const getCompanyOrderCode = (orderBy: string) => {
 
   switch (orderBy) {
     case "Naziv":
-      orderByCode = "c.name";
+      orderByCode = "name";
       break;
     case "PIB":
-      orderByCode = "c.tin";
+      orderByCode = "tin";
       break;
     case "Tip":
-      orderByCode = "t.name";
+      orderByCode = "type";
       break;
     default:
-      orderByCode = "c.name";
+      orderByCode = "name";
       break;
   }
 
