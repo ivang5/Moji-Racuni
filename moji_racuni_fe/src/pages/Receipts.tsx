@@ -507,9 +507,11 @@ const Receipts = () => {
                             </button>
                             <button
                               className="btn btn-primary btn-primary--red btn-round"
-                              onClick={() =>
-                                deleteReceipt(modalReceipt.receipt.id)
-                              }
+                              onClick={() => {
+                                if (modalReceipt.receipt) {
+                                  deleteReceipt(modalReceipt.receipt.id);
+                                }
+                              }}
                             >
                               Obriši
                             </button>

@@ -211,7 +211,12 @@ const Reports = () => {
 
     if (report) {
       if (userRole === "REGULAR" && report.closed && !report.seen) {
-        report = await api.setReportSeen(reportId);
+        const seenReport = (await api.setReportSeen(
+          reportId,
+        )) as ReportListItemView | null;
+        if (seenReport) {
+          report = seenReport;
+        }
         applySortingFilters();
       }
       setModalReport(report);
@@ -460,7 +465,11 @@ const Reports = () => {
                             </button>
                             <button
                               className="btn btn-primary btn-primary--red btn-round"
-                              onClick={() => deleteReport(modalReport.id)}
+                              onClick={() => {
+                                if (modalReport.id !== undefined) {
+                                  deleteReport(modalReport.id);
+                                }
+                              }}
                             >
                               Obriši
                             </button>

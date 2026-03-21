@@ -23,6 +23,11 @@ const useRoutePageParam = ({
       return;
     }
 
+    if (page === undefined) {
+      setPageNum(defaultPage);
+      return;
+    }
+
     const parsedPage = parseInt(page, 10);
 
     if (parsedPage) {
@@ -32,7 +37,7 @@ const useRoutePageParam = ({
       return;
     }
 
-    page === undefined ? setPageNum(defaultPage) : navigate(notFoundPath);
+    navigate(notFoundPath);
   }, [defaultPage, isBlocked, navigate, notFoundPath, page, setPageNum]);
 };
 

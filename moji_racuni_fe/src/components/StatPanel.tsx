@@ -228,7 +228,7 @@ const StatPanel = ({
                   {stats.mostValuableItems?.[0].name}
                 </h3>
                 <span className="stat-panel__item-val fs-2 fw-bold">
-                  {formatPrice(stats.mostValuableItems?.[0].price)} RSD
+                  {formatPrice(stats.mostValuableItems?.[0].price ?? 0)} RSD
                 </span>
                 {timeSpan !== "all" &&
                   percentageChanges.mostSpentReceipt !== null &&

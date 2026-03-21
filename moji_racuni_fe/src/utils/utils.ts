@@ -444,9 +444,9 @@ export const getHoursFromNumbers = (
 
   hoursList.forEach((obj: PlotAgg) => {
     const newObj = {
-      hour: numberToHour(obj.hourNum),
-      count: type === "count" ? obj.count : 0,
-      spent: type === "spent" ? obj.spent : 0,
+      hour: numberToHour(obj.hourNum ?? 0),
+      count: type === "count" ? (obj.count ?? 0) : 0,
+      spent: type === "spent" ? (obj.spent ?? 0) : 0,
     };
     newList.push(newObj);
   });
@@ -463,9 +463,9 @@ export const getWeekdaysFromNumbers = (
 
   weekdaysList.forEach((obj: PlotAgg) => {
     const newObj = {
-      dayofweek: numberToWeekday(obj.dayofweek),
-      count: type === "count" ? obj.count : 0,
-      spent: type === "spent" ? obj.spent : 0,
+      dayofweek: numberToWeekday(obj.dayofweek ?? 7),
+      count: type === "count" ? (obj.count ?? 0) : 0,
+      spent: type === "spent" ? (obj.spent ?? 0) : 0,
     };
     newList.push(newObj);
   });
@@ -481,9 +481,9 @@ export const getMonthsFromNumbers = (
 
   monthsList.forEach((obj: PlotAgg) => {
     const newObj = {
-      month: numberToMonth(obj.monthNum),
-      count: type === "count" ? obj.count : 0,
-      spent: type === "spent" ? obj.spent : 0,
+      month: numberToMonth(obj.monthNum ?? 12),
+      count: type === "count" ? (obj.count ?? 0) : 0,
+      spent: type === "spent" ? (obj.spent ?? 0) : 0,
     };
     newList.push(newObj);
   });
@@ -503,8 +503,10 @@ export const getSpendingsPieFormatData = (
 
   data.forEach((obj: PlotAgg) => {
     const newObj = {
-      id: isCompany ? obj.companyName : obj.companyType,
-      value: obj.priceSum,
+      id: isCompany
+        ? (obj.companyName ?? "Nepoznato")
+        : (obj.companyType ?? "Nepoznato"),
+      value: obj.priceSum ?? 0,
     };
     newList.push(newObj);
   });
@@ -521,8 +523,10 @@ export const getVisitsPieFormatData = (data: PlotAgg[], isCompany: boolean) => {
 
   data.forEach((obj: PlotAgg) => {
     const newObj = {
-      id: isCompany ? obj.companyName : obj.companyType,
-      value: obj.receiptCount,
+      id: isCompany
+        ? (obj.companyName ?? "Nepoznato")
+        : (obj.companyType ?? "Nepoznato"),
+      value: obj.receiptCount ?? 0,
     };
     newList.push(newObj);
   });
@@ -539,8 +543,8 @@ export const getMostValItemsFormat = (itemsList: PlotAgg[]) => {
 
   itemsList.forEach((obj: PlotAgg) => {
     const newObj = {
-      name: obj.name,
-      price: obj.price,
+      name: obj.name ?? "Nepoznato",
+      price: obj.price ?? 0,
     };
     newList.push(newObj);
   });

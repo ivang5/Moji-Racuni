@@ -172,14 +172,14 @@ const Home = () => {
         ),
         mostVisitedCompanyReceiptCount: toNullableNumber(
           getPercentageChange(
-            previousStats.MostVisitedCompaniesInfo[0]?.receiptCount,
-            stats.MostVisitedCompaniesInfo[0]?.receiptCount,
+            previousStats.MostVisitedCompaniesInfo?.[0]?.receiptCount,
+            stats.MostVisitedCompaniesInfo?.[0]?.receiptCount,
           ),
         ),
         mostVisitedCompanyPriceSum: toNullableNumber(
           getPercentageChange(
-            previousStats.MostVisitedCompaniesInfo[0]?.priceSum,
-            stats.MostVisitedCompaniesInfo[0]?.priceSum,
+            previousStats.MostVisitedCompaniesInfo?.[0]?.priceSum,
+            stats.MostVisitedCompaniesInfo?.[0]?.priceSum,
           ),
         ),
         mostSpentReceipt: toNullableNumber(

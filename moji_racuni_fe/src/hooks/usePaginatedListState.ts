@@ -15,7 +15,7 @@ const usePaginatedListState = ({
   initialSearchObj,
 }: PaginatedListStateOptions<any>) => {
   const [pageNum, setPageNum] = useState(initialPage);
-  const [pageNumbers, setPageNumbers] = useState([]);
+  const [pageNumbers, setPageNumbers] = useState<number[]>([]);
   const [pageCount, setPageCount] = useState(10000);
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortBy, setSortBy] = useState(initialSortBy);

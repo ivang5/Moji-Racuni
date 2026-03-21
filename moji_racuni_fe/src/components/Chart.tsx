@@ -12,10 +12,7 @@ type PieChartSettings = {
 };
 
 type ChartItem = {
-  [key: string]: string | number | null | undefined;
-  id?: string;
-  name?: string;
-  value?: number;
+  [key: string]: string | number;
 };
 
 type ChartProps = {
@@ -194,7 +191,7 @@ const Chart = ({
                 <strong>
                   {keys[0] === "price" && (
                     <>
-                      {data[index].name}
+                      {String(data[index]["name"] ?? "")}
                       <br />
                     </>
                   )}
@@ -275,19 +272,21 @@ const Chart = ({
             legends={[
               {
                 data: data.map((item, index) => ({
-                  id: item.id ?? index,
+                  id: String(item["id"] ?? index),
                   color: colors[index],
                   item,
-                  label:
-                    item.id.length > 37
-                      ? item.id.substring(0, 35) + "..."
-                      : item.id,
+                  label: (() => {
+                    const itemId = String(item["id"] ?? index);
+                    return itemId.length > 37
+                      ? itemId.substring(0, 35) + "..."
+                      : itemId;
+                  })(),
                 })),
-                anchor: pieChartSettings.anchor,
+                anchor: pieChartSettings.anchor ?? "right",
                 direction: "column",
                 justify: false,
-                translateX: pieChartSettings.translateX,
-                translateY: pieChartSettings.translateY,
+                translateX: pieChartSettings.translateX ?? 50,
+                translateY: pieChartSettings.translateY ?? 0,
                 itemsSpacing: 0,
                 itemWidth: 40,
                 itemHeight: 25,
