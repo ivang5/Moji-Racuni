@@ -1243,7 +1243,7 @@ def filter_receipts(user, dateFrom, dateTo, id, unitName, tin, priceFrom, priceT
                     JOIN company_companyunit u ON r.companyUnit = u.id
                     WHERE r.date BETWEEN %s AND %s
                     AND CAST(r.id AS CHAR) LIKE %s
-                    AND u.name LIKE %s
+                    AND LOWER(u.name) LIKE LOWER(%s)
                     AND CAST(u.company AS CHAR) LIKE %s
                     AND r.totalPrice BETWEEN %s AND %s
                     ORDER BY {safe_order_column} {safe_order_direction}
@@ -1259,7 +1259,7 @@ def filter_receipts(user, dateFrom, dateTo, id, unitName, tin, priceFrom, priceT
                     JOIN company_companyunit u ON r.companyUnit = u.id
                     WHERE r.date BETWEEN %s AND %s
                     AND CAST(r.id AS CHAR) LIKE %s
-                    AND u.name LIKE %s
+                    AND LOWER(u.name) LIKE LOWER(%s)
                     AND CAST(u.company AS CHAR) LIKE %s
                     AND r.totalPrice BETWEEN %s AND %s
                     AND r.user = %s
@@ -1347,7 +1347,7 @@ def filter_companies(user, name, tin, type, orderBy, ascendingOrder):
                     SELECT DISTINCT c.* FROM company_company c
                         LEFT JOIN company_company_type ct ON c.tin = ct.company_id
                         LEFT JOIN company_companytype t ON ct.companytype_id = t.id
-                        WHERE c.name LIKE %s
+                        WHERE LOWER(c.name) LIKE LOWER(%s)
                         AND CAST(c.tin AS CHAR) LIKE %s
                         ORDER BY {safe_order_column} {safe_order_direction}
                     ''',
@@ -1359,9 +1359,9 @@ def filter_companies(user, name, tin, type, orderBy, ascendingOrder):
                     SELECT DISTINCT c.* FROM company_company c
                         LEFT JOIN company_company_type ct ON c.tin = ct.company_id
                         LEFT JOIN company_companytype t ON ct.companytype_id = t.id
-                        WHERE c.name LIKE %s
+                        WHERE LOWER(c.name) LIKE LOWER(%s)
                         AND CAST(c.tin AS CHAR) LIKE %s
-                        AND t.name LIKE %s
+                        AND LOWER(t.name) LIKE LOWER(%s)
                         ORDER BY {safe_order_column} {safe_order_direction}
                     ''',
                     [name_like, tin_like, f"%{type}%"]
@@ -1377,7 +1377,7 @@ def filter_companies(user, name, tin, type, orderBy, ascendingOrder):
                         LEFT JOIN company_companytype t ON ct.companytype_id = t.id
                         JOIN company_companyunit u ON c.tin = u.company
                         JOIN receipt_receipt r ON u.id = r.companyUnit
-                        WHERE c.name LIKE %s
+                        WHERE LOWER(c.name) LIKE LOWER(%s)
                         AND CAST(c.tin AS CHAR) LIKE %s
                         AND r.user = %s
                         ORDER BY {safe_order_column} {safe_order_direction}
@@ -1392,9 +1392,9 @@ def filter_companies(user, name, tin, type, orderBy, ascendingOrder):
                         LEFT JOIN company_companytype t ON ct.companytype_id = t.id
                         JOIN company_companyunit u ON c.tin = u.company
                         JOIN receipt_receipt r ON u.id = r.companyUnit
-                        WHERE c.name LIKE %s
+                        WHERE LOWER(c.name) LIKE LOWER(%s)
                         AND CAST(c.tin AS CHAR) LIKE %s
-                        AND t.name LIKE %s
+                        AND LOWER(t.name) LIKE LOWER(%s)
                         AND r.user = %s
                         ORDER BY {safe_order_column} {safe_order_direction}
                     ''',
