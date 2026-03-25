@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { TypeAnimation } from "react-type-animation";
 import FormGroup from "../components/FormGroup";
 import Toast from "../components/Toast";
-import useApi from "../utils/useApi";
 import { dateFormatter } from "../utils/utils";
 import {
   validatePasswordUpdateForm,
@@ -11,18 +10,11 @@ import {
 } from "../utils/validators";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useAuthUser from "../hooks/useAuthUser";
-
-type UserInfo = {
-  id: number;
-  username: string;
-  email: string;
-  date_joined: string;
-};
-
-type ToastState = {
-  title: string;
-  text: string;
-};
+import useToast from "../hooks/useToast";
+import useUserByIdQuery from "../hooks/queries/useUserByIdQuery";
+import useUpdateUserMutation from "../hooks/mutations/useUpdateUserMutation";
+import useUpdateUserPasswordMutation from "../hooks/mutations/useUpdateUserPasswordMutation";
+import { ApiError } from "../api/errors";
 
 type ProfileValidation = {
   username: string;
@@ -45,11 +37,8 @@ type PasswordForm = HTMLFormElement & {
 };
 
 const Profile = () => {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalOpenPass, setModalOpenPass] = useState(false);
-  const [toast, setToast] = useState<ToastState>({ title: "", text: "" });
-  const [toastOpen, setToastOpen] = useState(false);
   const [formValid, setFormValid] = useState<ProfileValidation>({
     username: "",
     email: "",
@@ -58,26 +47,12 @@ const Profile = () => {
     password: "",
     passwordRepeat: "",
   });
-  const api = useApi();
-  const apiRef = useRef(api);
   const { userId, userRole } = useAuthUser();
-
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
-
-  const getUserInfo = useCallback(async () => {
-    if (!userId) {
-      return;
-    }
-
-    const userInfo = await apiRef.current.getUser(userId);
-    setUserInfo(userInfo);
-  }, [userId]);
-
-  useEffect(() => {
-    getUserInfo();
-  }, [getUserInfo]);
+  const { toast, toastOpen, showToast, closeToast } = useToast(7000);
+  const { data: userInfo, isLoading: userLoading } = useUserByIdQuery(userId);
+  const { mutateAsync: updateUserMutation } = useUpdateUserMutation();
+  const { mutateAsync: updateUserPasswordMutation } =
+    useUpdateUserPasswordMutation();
 
   const saveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -96,25 +71,35 @@ const Profile = () => {
       return;
     }
 
-    const userInfo = {
+    if (!userInfo) {
+      return;
+    }
+
+    const updatedUserInfo = {
       username: form.username.value,
       email: form.email.value,
+      is_active: userInfo.is_active,
     };
-    const response = await api.updateUser(userId, userInfo);
 
-    if (response === 409) {
-      validationObj.username = "Korisničko ime već postoji!";
-      setFormValid(validationObj);
-    } else {
-      setFormValid(validationObj);
-      setModalOpen(false);
-      setToast({
-        title: "Uspešno",
-        text: "Informacije su uspešno promenjene.",
+    try {
+      await updateUserMutation({
+        id: userId,
+        userInfo: updatedUserInfo,
       });
-      openToast();
-      getUserInfo();
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "CONFLICT") {
+        validationObj.username = "Korisničko ime već postoji!";
+        setFormValid(validationObj);
+      }
+      return;
     }
+
+    setFormValid(validationObj);
+    setModalOpen(false);
+    showToast({
+      title: "Uspešno",
+      text: "Informacije su uspešno promenjene.",
+    });
   };
 
   const saveChangesPass = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -138,25 +123,21 @@ const Profile = () => {
       password: form.pass.value,
       passRepeat: form.passRepeat.value,
     };
-    await api.updateUserPassword(userId, newPasswordInfo);
+    try {
+      await updateUserPasswordMutation({
+        id: userId,
+        passwordInfo: newPasswordInfo,
+      });
+    } catch {
+      return;
+    }
 
     setFormValidPass(validationObj);
     setModalOpenPass(false);
-    setToast({
+    showToast({
       title: "Uspešno",
       text: "Lozinka je uspešno promenjena.",
     });
-    openToast();
-    getUserInfo();
-  };
-
-  const openToast = () => {
-    setToastOpen(true);
-    setTimeout(() => setToastOpen(false), 7000);
-  };
-
-  const closeToast = () => {
-    setToastOpen(false);
   };
 
   const resetModal = () => {
@@ -303,10 +284,23 @@ const Profile = () => {
           )}
         </>
       ) : (
-        <h4>
-          Izvinjavamo se, došlo je do greške pri učitavanju korisničkih
-          informacija.
-        </h4>
+        <>
+          {userLoading ? (
+            <div className="stat-panel-empty mb-4">
+              <div className="spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+          ) : (
+            <h4>
+              Izvinjavamo se, došlo je do greške pri učitavanju korisničkih
+              informacija.
+            </h4>
+          )}
+        </>
       )}
       {toastOpen && (
         <Toast title={toast.title} text={toast.text} close={closeToast} />

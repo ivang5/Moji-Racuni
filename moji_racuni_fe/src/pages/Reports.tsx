@@ -24,7 +24,6 @@ import useReportByIdQuery from "../hooks/queries/useReportByIdQuery";
 import useSetReportSeenMutation from "../hooks/mutations/useSetReportSeenMutation";
 import useUpdateReportMutation from "../hooks/mutations/useUpdateReportMutation";
 import useDeleteReportMutation from "../hooks/mutations/useDeleteReportMutation";
-import type { ReportInfoView } from "../types/viewModels";
 
 type ReportFilterForm = HTMLFormElement & {
   id: HTMLInputElement;
@@ -178,7 +177,7 @@ const Reports = () => {
     userRole,
   ]);
 
-  const openModal = async (reportId: number) => {
+  const openModal = (reportId: number) => {
     setModalOpen(true);
     setSelectedReportId(reportId);
     setSeenMarkedReportId(null);
@@ -398,7 +397,7 @@ const Reports = () => {
         <div className="modal">
           {modalReport?.request ? (
             <div className="modal__content">
-              <Report reportInfo={modalReport as ReportInfoView} />
+              <Report reportInfo={modalReport} />
               {!modalReport?.response && (
                 <>
                   {userRole === "REGULAR" ? (

@@ -8,12 +8,12 @@ type PaginatedListStateOptions<TSearch> = {
   initialSearchObj: TSearch;
 };
 
-const usePaginatedListState = ({
+const usePaginatedListState = <TSearch>({
   initialPage = 1,
   initialSortBy,
   initialSortType,
   initialSearchObj,
-}: PaginatedListStateOptions<any>) => {
+}: PaginatedListStateOptions<TSearch>) => {
   const [pageNum, setPageNum] = useState(initialPage);
   const [pageNumbers, setPageNumbers] = useState<number[]>([]);
   const [pageCount, setPageCount] = useState(10000);

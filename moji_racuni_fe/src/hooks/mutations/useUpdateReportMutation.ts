@@ -1,20 +1,28 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../api/errors";
 import { reportKeys } from "../../services/queryKeys";
+import type { ReportInfoView } from "../../types/viewModels";
 import useApi from "../../utils/useApi";
+
+type UpdateReportPayload = {
+  id: number;
+  reportInfo: {
+    date: string;
+    request: string;
+    response: string;
+    closed: boolean;
+    seen: boolean;
+    receipt: number;
+    user: number;
+  };
+};
 
 const useUpdateReportMutation = () => {
   const api = useApi();
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({
-      id,
-      reportInfo,
-    }: {
-      id: number;
-      reportInfo: unknown;
-    }) => {
+  return useMutation<ReportInfoView, ApiError, UpdateReportPayload>({
+    mutationFn: async ({ id, reportInfo }) => {
       const response = await api.updateReport(id, reportInfo);
 
       if (response === 404) {
@@ -37,16 +45,16 @@ const useUpdateReportMutation = () => {
         });
       }
 
-      return response;
+      return response as ReportInfoView;
     },
     onSuccess: (updatedReport, payload) => {
       queryClient.invalidateQueries({ queryKey: reportKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: reportKeys.detail(payload.id),
       });
-      if ((updatedReport as { id?: number })?.id) {
+      if (updatedReport.id) {
         queryClient.invalidateQueries({
-          queryKey: reportKeys.detail((updatedReport as { id: number }).id),
+          queryKey: reportKeys.detail(updatedReport.id),
         });
       }
     },

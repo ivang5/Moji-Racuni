@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
-import useApi from "../utils/useApi";
+import React from "react";
 import { dateTimeFormatter, formatPrice } from "../utils/utils";
-import type { CompanyUnit } from "../types/models";
 import type { ReceiptListItemView } from "../types/viewModels";
+import useReceiptCardMetaQuery from "../hooks/queries/useReceiptCardMetaQuery";
 
 type ReceiptCardProps = Pick<
   ReceiptListItemView,
@@ -20,27 +19,9 @@ const ReceiptCard = ({
   companyUnitId,
   openModal,
 }: ReceiptCardProps) => {
-  const [companyUnit, setCompanyUnit] = useState<Partial<CompanyUnit>>({});
-  const [itemsCount, setItemsCount] = useState(0);
-  const api = useApi();
-  const apiRef = useRef(api);
-
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
-
-  useEffect(() => {
-    const loadReceiptCardData = async () => {
-      const [unit, items] = await Promise.all([
-        apiRef.current.getUnit(companyUnitId),
-        apiRef.current.getItems(id),
-      ]);
-      setCompanyUnit(unit);
-      setItemsCount(items.length);
-    };
-
-    loadReceiptCardData();
-  }, [companyUnitId, id]);
+  const { data } = useReceiptCardMetaQuery(companyUnitId, id);
+  const companyUnit = data?.companyUnit;
+  const itemsCount = data?.itemsCount ?? 0;
 
   return (
     <>

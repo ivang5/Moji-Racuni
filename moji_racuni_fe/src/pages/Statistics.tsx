@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
-import useApi from "../utils/useApi";
 import DatePicker from "react-datepicker";
 import {
   countReceipts,
@@ -24,58 +23,236 @@ import type {
   BaseStatsView,
   ChartBarPoint,
   ChartPiePoint,
-  ReceiptsInfoView,
   StatPlotsView,
 } from "../types/viewModels";
+import useStatisticsBaseStatsQuery from "../hooks/queries/useStatisticsBaseStatsQuery";
+import useStatisticsTotalSpentQuery from "../hooks/queries/useStatisticsTotalSpentQuery";
+import useStatisticsReceiptsByHourQuery from "../hooks/queries/useStatisticsReceiptsByHourQuery";
+import useStatisticsReceiptsByWeekdayQuery from "../hooks/queries/useStatisticsReceiptsByWeekdayQuery";
+import useStatisticsReceiptsByMonthQuery from "../hooks/queries/useStatisticsReceiptsByMonthQuery";
+import useStatisticsSpentByHourQuery from "../hooks/queries/useStatisticsSpentByHourQuery";
+import useStatisticsSpentByWeekdayQuery from "../hooks/queries/useStatisticsSpentByWeekdayQuery";
+import useStatisticsSpentByMonthQuery from "../hooks/queries/useStatisticsSpentByMonthQuery";
+import useStatisticsMostSpentCompaniesQuery from "../hooks/queries/useStatisticsMostSpentCompaniesQuery";
+import useStatisticsMostVisitedCompaniesQuery from "../hooks/queries/useStatisticsMostVisitedCompaniesQuery";
+import useStatisticsMostSpentTypesQuery from "../hooks/queries/useStatisticsMostSpentTypesQuery";
+import useStatisticsMostVisitedTypesQuery from "../hooks/queries/useStatisticsMostVisitedTypesQuery";
+import useStatisticsMostValuableItemsQuery from "../hooks/queries/useStatisticsMostValuableItemsQuery";
+import useStatisticsPlotsQuery from "../hooks/queries/useStatisticsPlotsQuery";
+
+const pdfBlobCache = new Map<string, Blob>();
 
 const Statistics = () => {
   const [showSpendings, setShowSpendings] = useState(true);
   const [showReceipts, setShowReceipts] = useState(false);
   const [showCompanies, setShowCompanies] = useState(false);
   const [showItems, setShowItems] = useState(false);
-  const [, setStatsLoading] = useState(true);
-  const [baseStats, setBaseStats] = useState<BaseStatsView>({});
-  const [receiptsByHour, setReceiptsByHour] = useState<ChartBarPoint[]>([]);
-  const [receiptsByWeekday, setReceiptsByWeekday] = useState<ChartBarPoint[]>(
-    [],
-  );
-  const [receiptsByMonth, setReceiptsByMonth] = useState<ChartBarPoint[]>([]);
-  const [spentByHour, setSpentByHour] = useState<ChartBarPoint[]>([]);
-  const [spentByWeekday, setSpentByWeekday] = useState<ChartBarPoint[]>([]);
-  const [spentByMonth, setSpentByMonth] = useState<ChartBarPoint[]>([]);
-  const [mostSpentCompanies, setMostSpentCompanies] = useState<ChartPiePoint[]>(
-    [],
-  );
-  const [mostVisitedCompanies, setMostVisitedCompanies] = useState<
-    ChartPiePoint[]
-  >([]);
-  const [mostSpentTypes, setMostSpentTypes] = useState<ChartPiePoint[]>([]);
-  const [mostVisitedTypes, setMostVisitedTypes] = useState<ChartPiePoint[]>([]);
-  const [mostValuableItems, setMostValuableItems] = useState<ChartBarPoint[]>(
-    [],
-  );
-  const [receiptsInfo, setReceiptsInfo] = useState<ReceiptsInfoView>({});
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(getTomorrow());
   const [searchOpen, setSearchOpen] = useState(false);
-  const [statPlots, setStatPlots] = useState<StatPlotsView>({});
-  const [plotsLoading, setPlotsLoading] = useState(true);
   const [PDFBlob, setPDFBlob] = useState<Blob | null>(null);
-  const api = useApi();
-  const apiRef = useRef(api);
   const workerRef = useRef<Worker | null>(null);
+  const pendingPdfKeyRef = useRef<string | null>(null);
   const fromDateStr = dateBEFormatter(fromDate);
   const toDateStr = dateBEFormatter(toDate);
 
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
+  const dateParams = useMemo(
+    () => ({ dateFrom: fromDateStr, dateTo: toDateStr }),
+    [fromDateStr, toDateStr],
+  );
+
+  const baseStatsQuery = useStatisticsBaseStatsQuery(dateParams);
+  const totalSpentQuery = useStatisticsTotalSpentQuery(dateParams);
+  const receiptsByHourQuery = useStatisticsReceiptsByHourQuery(dateParams);
+  const receiptsByWeekdayQuery =
+    useStatisticsReceiptsByWeekdayQuery(dateParams);
+  const receiptsByMonthQuery = useStatisticsReceiptsByMonthQuery(dateParams);
+  const spentByHourQuery = useStatisticsSpentByHourQuery(dateParams);
+  const spentByWeekdayQuery = useStatisticsSpentByWeekdayQuery(dateParams);
+  const spentByMonthQuery = useStatisticsSpentByMonthQuery(dateParams);
+  const mostSpentCompaniesQuery =
+    useStatisticsMostSpentCompaniesQuery(dateParams);
+  const mostVisitedCompaniesQuery =
+    useStatisticsMostVisitedCompaniesQuery(dateParams);
+  const mostSpentTypesQuery = useStatisticsMostSpentTypesQuery(dateParams);
+  const mostVisitedTypesQuery = useStatisticsMostVisitedTypesQuery(dateParams);
+  const mostValuableItemsQuery =
+    useStatisticsMostValuableItemsQuery(dateParams);
+  const statPlotsQuery = useStatisticsPlotsQuery(dateParams);
+
+  const baseStats = useMemo(
+    () => (baseStatsQuery.data || {}) as BaseStatsView,
+    [baseStatsQuery.data],
+  );
+  const receiptsInfo = totalSpentQuery.data || {};
+  const statPlots = useMemo(
+    () => (statPlotsQuery.data || {}) as StatPlotsView,
+    [statPlotsQuery.data],
+  );
+  const plotsLoading = statPlotsQuery.isLoading || statPlotsQuery.isFetching;
+  const pdfCacheKey = useMemo(
+    () =>
+      [
+        fromDateStr,
+        toDateStr,
+        String(baseStatsQuery.dataUpdatedAt),
+        String(statPlotsQuery.dataUpdatedAt),
+        String(mostSpentTypesQuery.dataUpdatedAt),
+        String(totalSpentQuery.dataUpdatedAt),
+      ].join("|"),
+    [
+      fromDateStr,
+      toDateStr,
+      baseStatsQuery.dataUpdatedAt,
+      statPlotsQuery.dataUpdatedAt,
+      mostSpentTypesQuery.dataUpdatedAt,
+      totalSpentQuery.dataUpdatedAt,
+    ],
+  );
+
+  const receiptsByHour = useMemo(() => {
+    const source = receiptsByHourQuery.data || [];
+    if (isChartEmpty(source, "count")) {
+      return [];
+    }
+
+    return getHoursFromNumbers(source, "count") as ChartBarPoint[];
+  }, [receiptsByHourQuery.data]);
+
+  const receiptsByWeekday = useMemo(() => {
+    const source = receiptsByWeekdayQuery.data || [];
+    if (isChartEmpty(source, "count")) {
+      return [];
+    }
+
+    return getWeekdaysFromNumbers(source, "count") as ChartBarPoint[];
+  }, [receiptsByWeekdayQuery.data]);
+
+  const receiptsByMonth = useMemo(() => {
+    const source = receiptsByMonthQuery.data || [];
+    if (isChartEmpty(source, "count")) {
+      return [];
+    }
+
+    return getMonthsFromNumbers(source, "count") as ChartBarPoint[];
+  }, [receiptsByMonthQuery.data]);
+
+  const spentByHour = useMemo(() => {
+    const source = spentByHourQuery.data || [];
+    if (isChartEmpty(source, "spent")) {
+      return [];
+    }
+
+    return getHoursFromNumbers(source, "spent") as ChartBarPoint[];
+  }, [spentByHourQuery.data]);
+
+  const spentByWeekday = useMemo(() => {
+    const source = spentByWeekdayQuery.data || [];
+    if (isChartEmpty(source, "spent")) {
+      return [];
+    }
+
+    return getWeekdaysFromNumbers(source, "spent") as ChartBarPoint[];
+  }, [spentByWeekdayQuery.data]);
+
+  const spentByMonth = useMemo(() => {
+    const source = spentByMonthQuery.data || [];
+    if (isChartEmpty(source, "spent")) {
+      return [];
+    }
+
+    return getMonthsFromNumbers(source, "spent") as ChartBarPoint[];
+  }, [spentByMonthQuery.data]);
+
+  const mostSpentCompanies = useMemo(() => {
+    const source = mostSpentCompaniesQuery.data || [];
+    if (!Array.isArray(source) || source.length === 0) {
+      return [];
+    }
+
+    const formatted = getSpendingsPieFormatData(
+      source,
+      true,
+    ) as ChartPiePoint[];
+    formatted.push({
+      id: "Ostalo",
+      value: Number(receiptsInfo.totalSpent || 0) - sumSpendings(formatted),
+    });
+    return formatted;
+  }, [mostSpentCompaniesQuery.data, receiptsInfo.totalSpent]);
+
+  const mostVisitedCompanies = useMemo(() => {
+    const source = mostVisitedCompaniesQuery.data || [];
+    if (!Array.isArray(source) || source.length === 0) {
+      return [];
+    }
+
+    const formatted = getVisitsPieFormatData(source, true) as ChartPiePoint[];
+    formatted.push({
+      id: "Ostalo",
+      value: Number(receiptsInfo.receiptsCount || 0) - countReceipts(formatted),
+    });
+    return formatted;
+  }, [mostVisitedCompaniesQuery.data, receiptsInfo.receiptsCount]);
+
+  const mostSpentTypes = useMemo(() => {
+    const source = mostSpentTypesQuery.data || [];
+    if (!Array.isArray(source) || source.length === 0) {
+      return [];
+    }
+
+    const formatted = getSpendingsPieFormatData(
+      source,
+      false,
+    ) as ChartPiePoint[];
+    formatted.push({
+      id: "Ostalo",
+      value: Number(receiptsInfo.totalSpent || 0) - sumSpendings(formatted),
+    });
+    return formatted;
+  }, [mostSpentTypesQuery.data, receiptsInfo.totalSpent]);
+
+  const mostVisitedTypes = useMemo(() => {
+    const source = mostVisitedTypesQuery.data || [];
+    if (!Array.isArray(source) || source.length === 0) {
+      return [];
+    }
+
+    const formatted = getVisitsPieFormatData(source, false) as ChartPiePoint[];
+    formatted.push({
+      id: "Ostalo",
+      value: Number(receiptsInfo.receiptsCount || 0) - countReceipts(formatted),
+    });
+    return formatted;
+  }, [mostVisitedTypesQuery.data, receiptsInfo.receiptsCount]);
+
+  const mostValuableItems = useMemo(() => {
+    const source = mostValuableItemsQuery.data || [];
+    if (!Array.isArray(source) || source.length === 0) {
+      return [];
+    }
+
+    return getMostValItemsFormat(source) as ChartBarPoint[];
+  }, [mostValuableItemsQuery.data]);
 
   useEffect(() => {
     const worker = new Worker(
       new URL("../workers/WorkerPDF.ts", import.meta.url),
     );
     worker.onmessage = (e: MessageEvent<Blob>) => {
+      const pendingKey = pendingPdfKeyRef.current;
+      if (pendingKey) {
+        pdfBlobCache.set(pendingKey, e.data);
+
+        // Keep cache bounded to avoid unbounded memory growth.
+        if (pdfBlobCache.size > 20) {
+          const oldestKey = pdfBlobCache.keys().next().value;
+          if (oldestKey) {
+            pdfBlobCache.delete(oldestKey);
+          }
+        }
+      }
+
       setPDFBlob(e.data);
     };
     workerRef.current = worker;
@@ -85,277 +262,23 @@ const Statistics = () => {
     };
   }, []);
 
-  const getBaseStats = useCallback(async () => {
-    const baseStats = (await apiRef.current.getBaseStats(
-      fromDateStr,
-      toDateStr,
-      1,
-    )) as BaseStatsView;
-    setBaseStats(baseStats);
-  }, [fromDateStr, toDateStr]);
-
-  const getReceiptsInfo = useCallback(async () => {
-    const receiptsInfo = (await apiRef.current.getTotalSpent(
-      fromDateStr,
-      toDateStr,
-    )) as ReceiptsInfoView;
-    setReceiptsInfo(receiptsInfo);
-  }, [fromDateStr, toDateStr]);
-
-  const getReceiptsByHour = useCallback(async () => {
-    const receiptsCount = await apiRef.current.getReceiptsByHour(
-      fromDateStr,
-      toDateStr,
-    );
-    if (isChartEmpty(receiptsCount, "count")) {
-      setReceiptsByHour([]);
-      return;
-    }
-    const receiptsCountFormatted = getHoursFromNumbers(
-      receiptsCount,
-      "count",
-    ) as ChartBarPoint[];
-    setReceiptsByHour(receiptsCountFormatted);
-  }, [fromDateStr, toDateStr]);
-
-  const getReceiptsByWeekday = useCallback(async () => {
-    const receiptsCount = await apiRef.current.getReceiptsByWeekday(
-      fromDateStr,
-      toDateStr,
-    );
-    if (isChartEmpty(receiptsCount, "count")) {
-      setReceiptsByWeekday([]);
-      return;
-    }
-    const receiptsCountFormatted = getWeekdaysFromNumbers(
-      receiptsCount,
-      "count",
-    ) as ChartBarPoint[];
-    setReceiptsByWeekday(receiptsCountFormatted);
-  }, [fromDateStr, toDateStr]);
-
-  const getReceiptsByMonth = useCallback(async () => {
-    const receiptsCount = await apiRef.current.getReceiptsByMonth(
-      fromDateStr,
-      toDateStr,
-    );
-    if (isChartEmpty(receiptsCount, "count")) {
-      setReceiptsByMonth([]);
-      return;
-    }
-    const receiptsCountFormatted = getMonthsFromNumbers(
-      receiptsCount,
-      "count",
-    ) as ChartBarPoint[];
-    setReceiptsByMonth(receiptsCountFormatted);
-  }, [fromDateStr, toDateStr]);
-
-  const getSpentByHour = useCallback(async () => {
-    const moneySpent = await apiRef.current.getSpentByHour(
-      fromDateStr,
-      toDateStr,
-    );
-    if (isChartEmpty(moneySpent, "spent")) {
-      setSpentByHour([]);
-      return;
-    }
-    const moneySpentFormatted = getHoursFromNumbers(
-      moneySpent,
-      "spent",
-    ) as ChartBarPoint[];
-    setSpentByHour(moneySpentFormatted);
-  }, [fromDateStr, toDateStr]);
-
-  const getSpentByWeekday = useCallback(async () => {
-    const moneySpent = await apiRef.current.getSpentByWeekday(
-      fromDateStr,
-      toDateStr,
-    );
-    if (isChartEmpty(moneySpent, "spent")) {
-      setSpentByWeekday([]);
-      return;
-    }
-    const moneySpentFormatted = getWeekdaysFromNumbers(
-      moneySpent,
-      "spent",
-    ) as ChartBarPoint[];
-    setSpentByWeekday(moneySpentFormatted);
-  }, [fromDateStr, toDateStr]);
-
-  const getSpentByMonth = useCallback(async () => {
-    const moneySpent = await apiRef.current.getSpentByMonth(
-      fromDateStr,
-      toDateStr,
-    );
-    if (isChartEmpty(moneySpent, "spent")) {
-      setSpentByMonth([]);
-      return;
-    }
-    const moneySpentFormatted = getMonthsFromNumbers(
-      moneySpent,
-      "spent",
-    ) as ChartBarPoint[];
-    setSpentByMonth(moneySpentFormatted);
-  }, [fromDateStr, toDateStr]);
-
-  const getMostSpentCompanies = useCallback(async () => {
-    const mostSpentCompanies = await apiRef.current.getMostSpentCompaniesInfo(
-      fromDateStr,
-      toDateStr,
-      10,
-    );
-    if (!Array.isArray(mostSpentCompanies) || mostSpentCompanies.length === 0) {
-      setMostSpentCompanies([]);
-      return;
-    }
-    const spentCompaniesFormatted = getSpendingsPieFormatData(
-      mostSpentCompanies,
-      true,
-    ) as ChartPiePoint[];
-    spentCompaniesFormatted.push({
-      id: "Ostalo",
-      value:
-        Number(receiptsInfo.totalSpent || 0) -
-        sumSpendings(spentCompaniesFormatted),
-    });
-    setMostSpentCompanies(spentCompaniesFormatted);
-  }, [fromDateStr, toDateStr, receiptsInfo.totalSpent]);
-
-  const getMostVisitedCompanies = useCallback(async () => {
-    const mostVisitedCompanies =
-      await apiRef.current.getMostVisitedCompaniesInfo(
-        fromDateStr,
-        toDateStr,
-        10,
-      );
-    if (
-      !Array.isArray(mostVisitedCompanies) ||
-      mostVisitedCompanies.length === 0
-    ) {
-      setMostVisitedCompanies([]);
-      return;
-    }
-    const visitedCompaniesFormatted = getVisitsPieFormatData(
-      mostVisitedCompanies,
-      true,
-    ) as ChartPiePoint[];
-    visitedCompaniesFormatted.push({
-      id: "Ostalo",
-      value:
-        Number(receiptsInfo.receiptsCount || 0) -
-        countReceipts(visitedCompaniesFormatted),
-    });
-    setMostVisitedCompanies(visitedCompaniesFormatted);
-  }, [fromDateStr, toDateStr, receiptsInfo.receiptsCount]);
-
-  const getMostSpentTypes = useCallback(async () => {
-    const mostSpentTypes = await apiRef.current.getMostSpentTypesInfo(
-      fromDateStr,
-      toDateStr,
-      10,
-    );
-    if (!Array.isArray(mostSpentTypes) || mostSpentTypes.length === 0) {
-      setMostSpentTypes([]);
-      return;
-    }
-    const spentTypesFormatted = getSpendingsPieFormatData(
-      mostSpentTypes,
-      false,
-    ) as ChartPiePoint[];
-    spentTypesFormatted.push({
-      id: "Ostalo",
-      value:
-        Number(receiptsInfo.totalSpent || 0) -
-        sumSpendings(spentTypesFormatted),
-    });
-    setMostSpentTypes(spentTypesFormatted);
-  }, [fromDateStr, toDateStr, receiptsInfo.totalSpent]);
-
-  const getMostVisitedTypes = useCallback(async () => {
-    const mostVisitedTypes = await apiRef.current.getMostVisitedTypesInfo(
-      fromDateStr,
-      toDateStr,
-      10,
-    );
-    if (!Array.isArray(mostVisitedTypes) || mostVisitedTypes.length === 0) {
-      setMostVisitedTypes([]);
-      return;
-    }
-    const visitedTypesFormatted = getVisitsPieFormatData(
-      mostVisitedTypes,
-      false,
-    ) as ChartPiePoint[];
-    visitedTypesFormatted.push({
-      id: "Ostalo",
-      value:
-        Number(receiptsInfo.receiptsCount || 0) -
-        countReceipts(visitedTypesFormatted),
-    });
-    setMostVisitedTypes(visitedTypesFormatted);
-  }, [fromDateStr, toDateStr, receiptsInfo.receiptsCount]);
-
-  const getMostValuableItems = useCallback(async () => {
-    const mostValuableItems = await apiRef.current.getValuableItems(
-      fromDateStr,
-      toDateStr,
-      10,
-    );
-    if (!Array.isArray(mostValuableItems) || mostValuableItems.length === 0) {
-      setMostValuableItems([]);
-      return;
-    }
-    const mostValuableItemsFormatted = getMostValItemsFormat(
-      mostValuableItems,
-    ) as ChartBarPoint[];
-    setMostValuableItems(mostValuableItemsFormatted);
-  }, [fromDateStr, toDateStr]);
-
-  const getStatPlots = useCallback(async () => {
-    const plots = (await apiRef.current.getStatPlots(
-      fromDateStr,
-      toDateStr,
-      10,
-    )) as StatPlotsView;
-    setStatPlots(plots);
-    setPlotsLoading(false);
-  }, [fromDateStr, toDateStr]);
-
-  const applyFilters = useCallback(async () => {
-    setStatsLoading(true);
-    getBaseStats();
-    getReceiptsInfo();
-    getReceiptsByWeekday();
-    getReceiptsByMonth();
-    getReceiptsByHour();
-    getSpentByHour();
-    getSpentByWeekday();
-    getSpentByMonth();
-    getMostSpentCompanies();
-    getMostVisitedCompanies();
-    getMostSpentTypes();
-    getMostVisitedTypes();
-    getMostValuableItems();
-    setStatsLoading(false);
-  }, [
-    getBaseStats,
-    getMostSpentCompanies,
-    getMostSpentTypes,
-    getMostValuableItems,
-    getMostVisitedCompanies,
-    getMostVisitedTypes,
-    getReceiptsByHour,
-    getReceiptsByMonth,
-    getReceiptsByWeekday,
-    getReceiptsInfo,
-    getSpentByHour,
-    getSpentByMonth,
-    getSpentByWeekday,
-  ]);
-
-  const generatePdf = useCallback(() => {
+  useEffect(() => {
     if (!workerRef.current) {
       return;
     }
+
+    if (!baseStats.totalSpent || !statPlots?.spending) {
+      return;
+    }
+
+    const cachedPdfBlob = pdfBlobCache.get(pdfCacheKey);
+    if (cachedPdfBlob) {
+      setPDFBlob(cachedPdfBlob);
+      return;
+    }
+
+    setPDFBlob(null);
+    pendingPdfKeyRef.current = pdfCacheKey;
 
     workerRef.current.postMessage({
       statPlots: statPlots,
@@ -364,30 +287,7 @@ const Statistics = () => {
       toDate: toDate,
       mostSpentTypes: mostSpentTypes,
     });
-  }, [baseStats, fromDate, mostSpentTypes, statPlots, toDate]);
-
-  useEffect(() => {
-    applyFilters();
-    getStatPlots();
-    setPlotsLoading(true);
-  }, [fromDate, toDate, applyFilters, getStatPlots]);
-
-  useEffect(() => {
-    getMostSpentCompanies();
-    getMostVisitedCompanies();
-    getMostSpentTypes();
-    getMostVisitedTypes();
-  }, [
-    receiptsInfo,
-    getMostSpentCompanies,
-    getMostSpentTypes,
-    getMostVisitedCompanies,
-    getMostVisitedTypes,
-  ]);
-
-  useEffect(() => {
-    baseStats.totalSpent && statPlots?.spending && generatePdf();
-  }, [baseStats.totalSpent, generatePdf, statPlots?.spending]);
+  }, [baseStats, fromDate, mostSpentTypes, pdfCacheKey, statPlots, toDate]);
 
   return (
     <div className="l-container">

@@ -101,10 +101,15 @@ const useFetch = () => {
       return { response: { status: 401 } as Response, data: null as any };
     }
 
-    config["headers"] = {
-      ...(config.headers || {}),
-      Authorization: `Bearer ${latestTokens.access}`,
-    };
+    const headers = new Headers(config.headers || {});
+
+    // Default JSON content type for string payloads unless caller set one explicitly.
+    if (typeof config.body === "string" && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+
+    headers.set("Authorization", `Bearer ${latestTokens.access}`);
+    config.headers = headers;
 
     const { response, data } = await originalRequest(url, config);
     return { response, data };

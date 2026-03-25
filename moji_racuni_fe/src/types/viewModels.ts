@@ -152,3 +152,17 @@ export type ChartPiePoint = {
   id: string;
   value: number;
 };
+
+export type StatsAggregationPoint = {
+  hourNum?: number;
+  dayofweek?: number;
+  monthNum?: number;
+  count?: number;
+  spent?: number;
+  companyName?: string;
+  companyType?: string;
+  priceSum?: number;
+  receiptCount?: number;
+  name?: string;
+  price?: number;
+};

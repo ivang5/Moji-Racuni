@@ -165,20 +165,45 @@ const useApi = () => {
 
   const addFullReceipt = async (url: string) => {
     const company = await createCompany(url);
-    if (company === null) {
+    if (
+      company === null ||
+      company === 404 ||
+      company === 409 ||
+      typeof company !== "object" ||
+      !("tin" in company)
+    ) {
       return null;
     }
+
     const companyUnit = await createCompanyUnit(url, company.tin);
-    if (companyUnit === null) {
+    if (
+      companyUnit === null ||
+      companyUnit === 404 ||
+      companyUnit === 409 ||
+      typeof companyUnit !== "object" ||
+      !("id" in companyUnit)
+    ) {
       return null;
     }
+
     const receipt = await createReceipt(url, companyUnit.id);
     if (receipt === null) {
       return null;
     } else if (receipt === 409) {
       return 409;
+    } else if (
+      receipt === 404 ||
+      typeof receipt !== "object" ||
+      !("id" in receipt)
+    ) {
+      return null;
     }
+
     const items = await createItems(url, receipt.id);
+    if (items === 404 || items === 409) {
+      return null;
+    }
+
     return items;
   };
 

@@ -16,17 +16,11 @@ import useAuthUser from "../hooks/useAuthUser";
 import useUsersListQuery from "../hooks/queries/useUsersListQuery";
 import useUserByIdQuery from "../hooks/queries/useUserByIdQuery";
 import useUpdateUserMutation from "../hooks/mutations/useUpdateUserMutation";
-import type { User as UserModel } from "../types/models";
 
 type UsersFilterForm = HTMLFormElement & {
   id: HTMLInputElement;
   username: HTMLInputElement;
   email: HTMLInputElement;
-};
-
-type ModalUser = UserModel & {
-  first_name?: string;
-  last_name?: string;
 };
 
 const Users = () => {
@@ -78,7 +72,7 @@ const Users = () => {
   });
   const { mutateAsync: updateUserMutation } = useUpdateUserMutation();
 
-  const users = (data?.users || []) as ModalUser[];
+  const users = data?.users || [];
   const usersLoading = isFetching;
   const { data: modalUser } = useUserByIdQuery(selectedUserId);
 
@@ -125,7 +119,7 @@ const Users = () => {
     });
   };
 
-  const openModal = async (userId: number) => {
+  const openModal = (userId: number) => {
     setModalOpen(true);
     setSelectedUserId(userId);
     document.body.style.overflowY = "hidden";
@@ -145,8 +139,8 @@ const Users = () => {
 
     const userInfo = {
       username: modalUser.username,
-      first_name: (modalUser as ModalUser).first_name || "",
-      last_name: (modalUser as ModalUser).last_name || "",
+      first_name: modalUser.first_name || "",
+      last_name: modalUser.last_name || "",
       email: modalUser.email,
       is_active: !modalUser.is_active,
     };

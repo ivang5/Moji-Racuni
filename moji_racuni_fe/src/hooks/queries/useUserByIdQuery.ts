@@ -4,10 +4,15 @@ import { userKeys } from "../../services/queryKeys";
 import type { User } from "../../types/models";
 import useApi from "../../utils/useApi";
 
+export type UserDetails = User & {
+  first_name?: string;
+  last_name?: string;
+};
+
 const useUserByIdQuery = (id: number | null | undefined) => {
   const api = useApi();
 
-  return useQuery<User>({
+  return useQuery<UserDetails>({
     queryKey: userKeys.detail(id ?? -1),
     enabled: typeof id === "number" && id > 0,
     queryFn: async () => {
@@ -40,7 +45,7 @@ const useUserByIdQuery = (id: number | null | undefined) => {
         });
       }
 
-      return response;
+      return response as UserDetails;
     },
   });
 };

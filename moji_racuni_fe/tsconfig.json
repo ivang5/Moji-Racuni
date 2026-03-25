@@ -11,6 +11,8 @@
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "isolatedModules": true,
     "resolveJsonModule": true,

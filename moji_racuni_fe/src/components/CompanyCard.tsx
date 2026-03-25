@@ -1,34 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
-import useApi from "../utils/useApi";
+import React from "react";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
-import type { CompanyListItemView, CompanyTypeView } from "../types/viewModels";
+import type { CompanyListItemView } from "../types/viewModels";
+import useCompanyCardMetaQuery from "../hooks/queries/useCompanyCardMetaQuery";
 
 type CompanyCardProps = CompanyListItemView & {
   openModal: (tin: string) => void;
 };
 
 const CompanyCard = ({ tin, name, image, openModal }: CompanyCardProps) => {
-  const [companyVisits, setCompanyVisits] = useState(0);
-  const [companyType, setCompanyType] = useState<Partial<CompanyTypeView>>({});
-  const api = useApi();
-  const apiRef = useRef(api);
-
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
-
-  useEffect(() => {
-    const loadCompanyData = async () => {
-      const [type, visits] = await Promise.all([
-        apiRef.current.getTypeForCompany(tin),
-        apiRef.current.getCompanyVisits(tin),
-      ]);
-      setCompanyType(type);
-      setCompanyVisits(visits.visits);
-    };
-
-    loadCompanyData();
-  }, [tin]);
+  const { data } = useCompanyCardMetaQuery(tin);
+  const companyType = data?.companyType;
+  const companyTypeName = companyType?.name?.trim();
+  const companyVisits = data?.companyVisits ?? 0;
 
   return (
     <div className="company-card" onClick={() => openModal(tin)}>
@@ -49,8 +32,8 @@ const CompanyCard = ({ tin, name, image, openModal }: CompanyCardProps) => {
         }
         alt="logo preduzeća"
       />
-      {companyType && (
-        <span className="company-card__type">{companyType.name}</span>
+      {companyTypeName && (
+        <span className="company-card__type">{companyTypeName}</span>
       )}
       <div className="company-card__visits">Broj poseta: {companyVisits}</div>
     </div>

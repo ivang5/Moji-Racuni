@@ -24,6 +24,9 @@ const StatPanel = ({
   percentageChanges,
   statsLoading,
 }: StatPanelProps) => {
+  const topVisitedCompany = stats.MostVisitedCompaniesInfo?.[0];
+  const topValuableItem = stats.mostValuableItems?.[0];
+
   return (
     <div className="stat-panel py-4 py-lg-3">
       <div className="stat-panel__header">
@@ -148,12 +151,12 @@ const StatPanel = ({
                   Najposećenije preduzeće
                 </h6>
                 <h3 className="stat-panel__item-val">
-                  {stats.MostVisitedCompaniesInfo[0].companyName}
+                  {topVisitedCompany?.companyName}
                 </h3>
                 <div className="stat-panel__item-wrapper">
                   <div>
                     <span className="stat-panel__item-val fs-3 fw-bold">
-                      {stats.MostVisitedCompaniesInfo[0].receiptCount}
+                      {topVisitedCompany?.receiptCount ?? 0}
                     </span>
                     <h6 className="stat-panel__item-title c-gray">Računa</h6>
                     {timeSpan !== "all" &&
@@ -188,8 +191,7 @@ const StatPanel = ({
                   </div>
                   <div>
                     <span className="stat-panel__item-val fs-3 fw-bold">
-                      {formatPrice(stats.MostVisitedCompaniesInfo[0].priceSum)}{" "}
-                      RSD
+                      {formatPrice(topVisitedCompany?.priceSum ?? 0)} RSD
                     </span>
                     <h6 className="stat-panel__item-title c-gray">Potrošeno</h6>
                     {timeSpan !== "all" &&
@@ -225,10 +227,10 @@ const StatPanel = ({
                   Najskuplji proizvod
                 </h6>
                 <h3 className="stat-panel__item-val">
-                  {stats.mostValuableItems?.[0].name}
+                  {topValuableItem?.name}
                 </h3>
                 <span className="stat-panel__item-val fs-2 fw-bold">
-                  {formatPrice(stats.mostValuableItems?.[0].price ?? 0)} RSD
+                  {formatPrice(topValuableItem?.price ?? 0)} RSD
                 </span>
                 {timeSpan !== "all" &&
                   percentageChanges.mostValuableItemPrice !== null &&

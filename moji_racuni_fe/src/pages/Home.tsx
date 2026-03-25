@@ -1,16 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import Receipt from "../components/Receipt";
 import StatPanel from "../components/StatPanel";
-import useApi from "../utils/useApi";
-import {
-  getThisMonth,
-  getLastMonth,
-  getThisYear,
-  getLastYear,
-  getAllTime,
-  getPercentageChange,
-  capitalize,
-} from "../utils/utils";
+import { getPercentageChange, capitalize } from "../utils/utils";
 import { TypeAnimation } from "react-type-animation";
 import FormGroup from "../components/FormGroup";
 import InfoIcon from "../icons/info-icon.png";
@@ -19,8 +10,12 @@ import Report from "../components/Report";
 import useToast from "../hooks/useToast";
 import { validateReceiptLink } from "../utils/validators";
 import useAuthUser from "../hooks/useAuthUser";
+import useHomeBaseStatsQuery from "../hooks/queries/useHomeBaseStatsQuery";
+import useLastReceiptFullQuery from "../hooks/queries/useLastReceiptFullQuery";
+import useLastReportQuery from "../hooks/queries/useLastReportQuery";
+import useAddFullReceiptMutation from "../hooks/mutations/useAddFullReceiptMutation";
+import { ApiError } from "../api/errors";
 import type {
-  ExtendedStats,
   PercentageChanges,
   ReceiptInfoView,
   ReportInfoView,
@@ -40,172 +35,95 @@ const toNullableNumber = (value: string | null): number | null => {
   return Number(value);
 };
 
+const EMPTY_PERCENTAGE_CHANGES: PercentageChanges = {
+  totalSpent: null,
+  unitCount: null,
+  mostVisitedCompanyReceiptCount: null,
+  mostVisitedCompanyPriceSum: null,
+  mostValuableItemPrice: null,
+};
+
 const Home = () => {
-  const [lastReceiptInfo, setLastReceiptInfo] = useState<
-    Partial<ReceiptInfoView>
-  >({});
-  const [receiptLoading, setReceiptLoading] = useState(true);
-  const [lastReport, setLastReport] = useState<Partial<ReportInfoView>>({});
-  const [reportLoading, setReportLoading] = useState(true);
-  const [stats, setStats] = useState<Partial<ExtendedStats>>({});
-  const [previousStats, setPreviousStats] = useState<Partial<ExtendedStats>>(
-    {},
-  );
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [addingReceipt, setAddingReceipt] = useState(false);
   const [timeSpan, setTimeSpan] = useState<TimeSpan>("month");
-  const [percentageChanges, setPercentageChanges] = useState<PercentageChanges>(
-    {
-      totalSpent: null,
-      unitCount: null,
-      mostVisitedCompanyReceiptCount: null,
-      mostVisitedCompanyPriceSum: null,
-      mostValuableItemPrice: null,
-    },
-  );
   const [receiptLinkValid, setReceiptLinkValid] = useState("");
-  const [successText, setSuccessText] = useState("");
-  const statsRequestIdRef = useRef(0);
   const receiptInputRef = useRef<HTMLInputElement | null>(null);
-  const api = useApi();
-  const apiRef = useRef(api);
   const { userRole, username } = useAuthUser();
   const { toast, toastOpen, showToast, closeToast } = useToast(10000);
+  const statsQuery = useHomeBaseStatsQuery(timeSpan, "current");
+  const previousStatsQuery = useHomeBaseStatsQuery(timeSpan, "previous");
+  const lastReceiptQuery = useLastReceiptFullQuery(userRole === "REGULAR");
+  const lastReportQuery = useLastReportQuery(userRole === "ADMIN");
+  const addFullReceiptMutation = useAddFullReceiptMutation();
 
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
+  const stats = statsQuery.data;
+  const previousStats = previousStatsQuery.data;
+  const statsLoading =
+    statsQuery.isLoading ||
+    statsQuery.isFetching ||
+    (timeSpan !== "all" &&
+      (previousStatsQuery.isLoading || previousStatsQuery.isFetching));
 
-  const loadStatsForTimeSpan = useCallback(async () => {
-    const requestId = ++statsRequestIdRef.current;
-    setStatsLoading(true);
-    setPercentageChanges({
-      totalSpent: null,
-      unitCount: null,
-      mostVisitedCompanyReceiptCount: null,
-      mostVisitedCompanyPriceSum: null,
-      mostValuableItemPrice: null,
-    });
-
-    const currentDate =
-      timeSpan === "month"
-        ? getThisMonth()
-        : timeSpan === "year"
-          ? getThisYear()
-          : getAllTime();
-
-    const currentPreviousDate =
-      timeSpan === "month" ? getLastMonth() : getLastYear();
-
-    const statsPromise = apiRef.current.getBaseStats(
-      currentDate.dateFrom,
-      currentDate.dateTo,
-      1,
-    );
-
-    const previousStatsPromise =
-      timeSpan === "all"
-        ? Promise.resolve(null)
-        : apiRef.current.getBaseStats(
-            currentPreviousDate.dateFrom,
-            currentPreviousDate.dateTo,
-            1,
-          );
-
-    const [baseStats, basePreviousStats] = await Promise.all([
-      statsPromise,
-      previousStatsPromise,
-    ]);
-
-    if (requestId !== statsRequestIdRef.current) {
-      return;
+  const percentageChanges = useMemo<PercentageChanges>(() => {
+    if (
+      timeSpan === "all" ||
+      !stats?.totalSpent ||
+      !previousStats?.totalSpent
+    ) {
+      return EMPTY_PERCENTAGE_CHANGES;
     }
 
-    setStats(baseStats || {});
-    setPreviousStats(basePreviousStats || {});
-    setStatsLoading(false);
-  }, [timeSpan]);
-
-  const getLastReceipt = useCallback(async () => {
-    if (userRole !== "REGULAR") {
-      return;
-    }
-    setReceiptLoading(true);
-    const receiptInfo = await apiRef.current.getLastReceiptFull();
-    setLastReceiptInfo(receiptInfo);
-    setReceiptLoading(false);
-  }, [userRole]);
-
-  const getLastReport = useCallback(async () => {
-    if (userRole !== "ADMIN") {
-      return;
-    }
-    setReportLoading(true);
-    const report = await apiRef.current.getLastReport();
-    setLastReport(report);
-    setReportLoading(false);
-  }, [userRole]);
-
-  useEffect(() => {
-    getLastReceipt();
-    getLastReport();
-  }, [getLastReceipt, getLastReport]);
-
-  useEffect(() => {
-    loadStatsForTimeSpan();
-  }, [loadStatsForTimeSpan]);
-
-  useEffect(() => {
-    if (stats.totalSpent && previousStats.totalSpent && timeSpan !== "all") {
-      const changes = {
-        totalSpent: toNullableNumber(
-          getPercentageChange(
-            previousStats.totalSpent.totalSpent,
-            stats.totalSpent.totalSpent,
-          ),
+    return {
+      totalSpent: toNullableNumber(
+        getPercentageChange(
+          previousStats.totalSpent.totalSpent,
+          stats.totalSpent.totalSpent,
         ),
-        unitCount: toNullableNumber(
-          getPercentageChange(
-            previousStats.visitedCompaniesInfo?.unitCount,
-            stats.visitedCompaniesInfo?.unitCount,
-          ),
+      ),
+      unitCount: toNullableNumber(
+        getPercentageChange(
+          previousStats.visitedCompaniesInfo?.unitCount,
+          stats.visitedCompaniesInfo?.unitCount,
         ),
-        mostVisitedCompanyReceiptCount: toNullableNumber(
-          getPercentageChange(
-            previousStats.MostVisitedCompaniesInfo?.[0]?.receiptCount,
-            stats.MostVisitedCompaniesInfo?.[0]?.receiptCount,
-          ),
+      ),
+      mostVisitedCompanyReceiptCount: toNullableNumber(
+        getPercentageChange(
+          previousStats.MostVisitedCompaniesInfo?.[0]?.receiptCount,
+          stats.MostVisitedCompaniesInfo?.[0]?.receiptCount,
         ),
-        mostVisitedCompanyPriceSum: toNullableNumber(
-          getPercentageChange(
-            previousStats.MostVisitedCompaniesInfo?.[0]?.priceSum,
-            stats.MostVisitedCompaniesInfo?.[0]?.priceSum,
-          ),
+      ),
+      mostVisitedCompanyPriceSum: toNullableNumber(
+        getPercentageChange(
+          previousStats.MostVisitedCompaniesInfo?.[0]?.priceSum,
+          stats.MostVisitedCompaniesInfo?.[0]?.priceSum,
         ),
-        mostValuableItemPrice: toNullableNumber(
-          getPercentageChange(
-            previousStats.mostValuableItems?.[0]?.price,
-            stats.mostValuableItems?.[0]?.price,
-          ),
+      ),
+      mostValuableItemPrice: toNullableNumber(
+        getPercentageChange(
+          previousStats.mostValuableItems?.[0]?.price,
+          stats.mostValuableItems?.[0]?.price,
         ),
-      };
-
-      setPercentageChanges(changes);
-    }
+      ),
+    };
   }, [
-    previousStats.MostVisitedCompaniesInfo,
-    previousStats.mostValuableItems,
-    previousStats.totalSpent,
-    previousStats.visitedCompaniesInfo?.unitCount,
+    previousStats?.MostVisitedCompaniesInfo,
+    previousStats?.mostValuableItems,
+    previousStats?.totalSpent,
+    previousStats?.visitedCompaniesInfo?.unitCount,
     stats,
     timeSpan,
   ]);
+
+  const addingReceipt = addFullReceiptMutation.isPending;
+  const receiptLoading =
+    lastReceiptQuery.isLoading || lastReceiptQuery.isFetching;
+  const reportLoading = lastReportQuery.isLoading || lastReportQuery.isFetching;
+  const lastReceiptInfo = lastReceiptQuery.data;
+  const lastReport = lastReportQuery.data;
 
   const addReceipt = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as AddReceiptForm;
     setReceiptLinkValid("");
-    setSuccessText("");
     const validationMessage = validateReceiptLink(form.receiptLink.value);
 
     if (validationMessage !== "") {
@@ -213,29 +131,27 @@ const Home = () => {
       return;
     }
 
-    setAddingReceipt(true);
+    try {
+      await addFullReceiptMutation.mutateAsync(form.receiptLink.value.trim());
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "CONFLICT") {
+        setReceiptLinkValid("Ovaj račun ste već uneli!");
+        return;
+      }
 
-    const response = await api.addFullReceipt(form.receiptLink.value.trim());
-
-    setAddingReceipt(false);
-
-    if (response === null) {
       setReceiptLinkValid(
         "Došlo je do greške, proverite da li ste uneli validan link i pokušajte ponovo!",
       );
-    } else if (response === 409) {
-      setReceiptLinkValid("Ovaj račun ste već uneli!");
-    } else {
-      loadStatsForTimeSpan();
-      getLastReceipt();
-      showToast({
-        title: "Uspešno",
-        text: "Račun je uspešno dodat.",
-      });
+      return;
+    }
 
-      if (receiptInputRef.current) {
-        receiptInputRef.current.value = "";
-      }
+    showToast({
+      title: "Uspešno",
+      text: "Račun je uspešno dodat.",
+    });
+
+    if (receiptInputRef.current) {
+      receiptInputRef.current.value = "";
     }
   };
 
@@ -277,7 +193,7 @@ const Home = () => {
                 text="Link fiskalnog računa"
                 type="text"
                 error={receiptLinkValid}
-                success={successText}
+                success=""
               />
               {!addingReceipt ? (
                 <button className="btn btn-primary btn-round" type="submit">
@@ -296,7 +212,7 @@ const Home = () => {
             </form>
           </>
         )}
-        {stats.totalSpent ? (
+        {stats?.totalSpent ? (
           <StatPanel
             stats={stats as StatSummary}
             timeSpan={timeSpan}
@@ -331,7 +247,7 @@ const Home = () => {
               </div>
             ) : (
               <>
-                {lastReceiptInfo.receipt ? (
+                {lastReceiptInfo?.receipt ? (
                   <Receipt
                     receiptInfo={lastReceiptInfo as ReceiptInfoView}
                     fullWidth={true}
@@ -362,7 +278,7 @@ const Home = () => {
               </div>
             ) : (
               <>
-                {lastReport.receipt ? (
+                {lastReport?.receipt ? (
                   <Report
                     reportInfo={lastReport as ReportInfoView}
                     hasLink={true}

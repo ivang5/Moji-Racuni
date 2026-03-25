@@ -3,16 +3,18 @@ import { ApiError } from "../../api/errors";
 import { companyKeys } from "../../services/queryKeys";
 import useApi from "../../utils/useApi";
 
+type CreateCompanyTypePayload = {
+  name: string;
+  description: string;
+  user: number;
+};
+
 const useCreateCompanyTypeMutation = () => {
   const api = useApi();
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (typeInfo: {
-      name: string;
-      description: string;
-      user: number;
-    }) => {
+  return useMutation<unknown, ApiError, CreateCompanyTypePayload>({
+    mutationFn: async (typeInfo) => {
       const response = await api.createCompanyType(typeInfo);
 
       if (response === 404) {

@@ -3,12 +3,17 @@ import { ApiError } from "../../api/errors";
 import { companyKeys } from "../../services/queryKeys";
 import useApi from "../../utils/useApi";
 
+type ChangeCompanyImagePayload = {
+  tin: string;
+  image: File;
+};
+
 const useChangeCompanyImageMutation = () => {
   const api = useApi();
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ tin, image }: { tin: string; image: File }) => {
+  return useMutation<unknown, ApiError, ChangeCompanyImagePayload>({
+    mutationFn: async ({ tin, image }) => {
       const response = await api.changeCompanyImage(tin, image);
 
       if (response === 404) {

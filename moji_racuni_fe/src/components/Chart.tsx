@@ -191,7 +191,11 @@ const Chart = ({
                 <strong>
                   {keys[0] === "price" && (
                     <>
-                      {String(data[index]["name"] ?? "")}
+                      {String(
+                        (typeof index === "number"
+                          ? data[index]?.["name"]
+                          : "") ?? "",
+                      )}
                       <br />
                     </>
                   )}

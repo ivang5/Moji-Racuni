@@ -24,7 +24,6 @@ import useReceiptsListQuery from "../hooks/queries/useReceiptsListQuery";
 import useFullReceiptInfoQuery from "../hooks/queries/useFullReceiptInfoQuery";
 import useDeleteReceiptMutation from "../hooks/mutations/useDeleteReceiptMutation";
 import useCreateReportMutation from "../hooks/mutations/useCreateReportMutation";
-import type { ReceiptInfoView } from "../types/viewModels";
 
 type ReceiptFilterForm = HTMLFormElement & {
   id: HTMLInputElement;
@@ -162,7 +161,7 @@ const Receipts = () => {
     });
   };
 
-  const openModal = async (receiptId: number) => {
+  const openModal = (receiptId: number) => {
     setModalOpen(true);
     setSelectedReceiptId(receiptId);
     document.body.style.overflowY = "hidden";
@@ -374,7 +373,7 @@ const Receipts = () => {
         <div className="modal">
           {modalReceipt?.receipt ? (
             <div className="modal__content">
-              <Receipt receiptInfo={modalReceipt as ReceiptInfoView} />
+              <Receipt receiptInfo={modalReceipt} />
               {userRole === "REGULAR" && (
                 <div className="modal__options">
                   {!reportOpen && !deletionOpen ? (

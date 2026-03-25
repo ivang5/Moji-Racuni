@@ -22,7 +22,7 @@ import useDeleteCompanyTypeMutation from "../hooks/mutations/useDeleteCompanyTyp
 import useChangeCompanyTypeMutation from "../hooks/mutations/useChangeCompanyTypeMutation";
 import useChangeCompanyImageMutation from "../hooks/mutations/useChangeCompanyImageMutation";
 import { ApiError } from "../api/errors";
-import type { CompanyInfoView, CompanyTypeView } from "../types/viewModels";
+import type { CompanyTypeView } from "../types/viewModels";
 
 type TypeValidation = {
   name: string;
@@ -160,7 +160,7 @@ const Companies = () => {
     });
   };
 
-  const openModal = async (companyTin: string) => {
+  const openModal = (companyTin: string) => {
     setModalOpen(true);
     setSelectedCompanyTin(companyTin);
     document.body.style.overflowY = "hidden";
@@ -442,7 +442,7 @@ const Companies = () => {
           {modalCompany?.company ? (
             <div className="modal__content">
               <Company
-                companyInfo={modalCompany as CompanyInfoView}
+                companyInfo={modalCompany}
                 changeCompanyImg={changeCompanyImg}
                 companyTypes={companyTypes}
                 changeCompanyType={changeCompanyType}

@@ -187,6 +187,9 @@ const Review = ({
   toDate,
   showCompanyTypes,
 }: ReviewProps) => {
+  const topVisitedCompany = baseStats.MostVisitedCompaniesInfo?.[0];
+  const topValuableItem = baseStats.mostValuableItems?.[0];
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -289,9 +292,7 @@ const Review = ({
         <View style={styles.infoGroup}>
           <View style={styles.thirdWidth}>
             <Text style={styles.infoTitle}>Najposećenije preduzeće</Text>
-            <Text style={styles.infoVal}>
-              {baseStats.MostVisitedCompaniesInfo[0].companyName}
-            </Text>
+            <Text style={styles.infoVal}>{topVisitedCompany?.companyName}</Text>
           </View>
           <View style={styles.thirdWidth}>
             <Text style={styles.infoTitle}>Broj posećenih preduzeća</Text>
@@ -329,7 +330,7 @@ const Review = ({
             <View style={styles.thirdWidth}>
               <Text style={styles.infoTitle}>Najposećenije preduzeće</Text>
               <Text style={styles.infoVal}>
-                {baseStats.MostVisitedCompaniesInfo[0].companyName}
+                {topVisitedCompany?.companyName}
               </Text>
             </View>
             <View style={styles.thirdWidth}>
@@ -369,9 +370,7 @@ const Review = ({
         <View style={styles.infoGroup}>
           <View style={styles.thirdWidth}>
             <Text style={styles.infoTitle}>Najskuplja stavka</Text>
-            <Text style={styles.infoVal}>
-              {baseStats.mostValuableItems[0].name}
-            </Text>
+            <Text style={styles.infoVal}>{topValuableItem?.name}</Text>
           </View>
           <View style={styles.thirdWidth}>
             <Text style={styles.infoTitle}>

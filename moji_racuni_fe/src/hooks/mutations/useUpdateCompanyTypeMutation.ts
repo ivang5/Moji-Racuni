@@ -3,12 +3,21 @@ import { ApiError } from "../../api/errors";
 import { companyKeys } from "../../services/queryKeys";
 import useApi from "../../utils/useApi";
 
+type UpdateCompanyTypePayload = {
+  id: number;
+  typeInfo: {
+    name: string;
+    description: string;
+    user: number;
+  };
+};
+
 const useUpdateCompanyTypeMutation = () => {
   const api = useApi();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, typeInfo }: { id: number; typeInfo: unknown }) => {
+    mutationFn: async ({ id, typeInfo }: UpdateCompanyTypePayload) => {
       const response = await api.changeType(id, typeInfo);
 
       if (response === 404) {
