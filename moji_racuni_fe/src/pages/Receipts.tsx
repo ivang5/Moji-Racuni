@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
 import useApi from "../utils/useApi";
@@ -20,19 +20,9 @@ import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
-import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 import useAuthUser from "../hooks/useAuthUser";
+import useReceiptsListQuery from "../hooks/queries/useReceiptsListQuery";
 import type { ReceiptInfoView, ReceiptListItemView } from "../types/viewModels";
-
-type ReceiptSearch = {
-  dateFrom: string;
-  dateTo: string;
-  id: string;
-  unit: string;
-  tin: string;
-  priceFrom: number;
-  priceTo: number;
-};
 
 type ReceiptFilterForm = HTMLFormElement & {
   id: HTMLInputElement;
@@ -48,8 +38,6 @@ type ReportForm = HTMLFormElement & {
 
 const Receipts = () => {
   const { page } = useParams();
-  const [receipts, setReceipts] = useState<ReceiptListItemView[]>([]);
-  const [receiptsLoading, setReceiptsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalReceipt, setModalReceipt] = useState<Partial<ReceiptInfoView>>(
     {},
@@ -95,51 +83,30 @@ const Receipts = () => {
   const api = useApi();
   const { userRole } = useAuthUser();
   const navigate = useNavigate();
+  const orderBy = getReceiptOrderCode(sortBy);
+  const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-  const fetchSortedPage = useCallback(
-    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }: any) => {
-      const filters = searchObj as ReceiptSearch;
-      const receipts = await api.filterReceipts(
-        filters.dateFrom,
-        filters.dateTo,
-        filters.id,
-        filters.unit,
-        filters.tin,
-        filters.priceFrom,
-        filters.priceTo,
-        orderBy,
-        ascendingOrder,
-        pageNum,
-      );
-
-      if (!receipts) {
-        return null;
-      }
-
-      return {
-        pageCount: receipts.pageCount,
-        items: receipts.receipts,
-      };
-    },
-    [],
-  );
-
-  const applySortingFilters = usePaginatedSortingFetch({
-    api,
-    sortBy,
-    sortType,
-    searchObj,
+  const { data, isFetching, refetch } = useReceiptsListQuery({
+    dateFrom: searchObj.dateFrom,
+    dateTo: searchObj.dateTo,
+    id: searchObj.id,
+    unit: searchObj.unit,
+    tin: searchObj.tin,
+    priceFrom: searchObj.priceFrom,
+    priceTo: searchObj.priceTo,
+    orderBy,
+    ascendingOrder,
     pageNum,
-    getOrderBy: getReceiptOrderCode,
-    fetchSortedPage,
-    setLoading: setReceiptsLoading,
-    setPageCount,
-    setItems: setReceipts,
   });
 
+  const receipts = data?.receipts || [];
+  const receiptsLoading = isFetching;
+
   useEffect(() => {
-    applySortingFilters();
-  }, [sortBy, sortType, applySortingFilters]);
+    if (data?.pageCount) {
+      setPageCount(data.pageCount);
+    }
+  }, [data?.pageCount, setPageCount]);
 
   useRoutePageParam({
     page,
@@ -148,11 +115,10 @@ const Receipts = () => {
   });
 
   useEffect(() => {
-    applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum, applySortingFilters]);
+  }, [pageNum]);
 
-  const applyFilters = async (e: React.FormEvent<HTMLFormElement>) => {
+  const applyFilters = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as ReceiptFilterForm;
     const dateFrom = dateBEFormatter(fromDate);
@@ -162,8 +128,6 @@ const Receipts = () => {
     let tin = "%";
     let priceFrom = 0;
     let priceTo = 9999999;
-    let orderBy = getReceiptOrderCode(sortBy);
-    const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
     if (form.id.value !== "") {
       id = form.id.value;
@@ -181,21 +145,7 @@ const Receipts = () => {
       priceTo = Number(form.priceTo.value);
     }
 
-    setReceiptsLoading(true);
     setSearchOpen(false);
-
-    const receipts = await api.filterReceipts(
-      dateFrom,
-      dateTo,
-      id,
-      unit,
-      tin,
-      priceFrom,
-      priceTo,
-      orderBy,
-      ascendingOrder,
-      pageNum,
-    );
 
     setSearchObj({
       dateFrom: dateFrom,
@@ -206,13 +156,6 @@ const Receipts = () => {
       priceFrom: priceFrom,
       priceTo: priceTo,
     });
-
-    setReceiptsLoading(false);
-
-    if (receipts) {
-      setPageCount(receipts.pageCount);
-      setReceipts(receipts.receipts);
-    }
   };
 
   const openModal = async (receiptId: number) => {
@@ -274,7 +217,7 @@ const Receipts = () => {
 
   const deleteReceipt = async (id: number) => {
     await api.deleteReceipt(id);
-    applySortingFilters();
+    refetch();
     setDeletionOpen(false);
     setModalOpen(false);
     showToast({

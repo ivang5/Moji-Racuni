@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import { getCompanyOrderCode } from "../utils/utils";
@@ -13,9 +13,9 @@ import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
-import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 import useAuthUser from "../hooks/useAuthUser";
 import useCompanyTypesQuery from "../hooks/queries/useCompanyTypesQuery";
+import useCompaniesListQuery from "../hooks/queries/useCompaniesListQuery";
 import type {
   CompanyInfoView,
   CompanyListItemView,
@@ -25,12 +25,6 @@ import type {
 type TypeValidation = {
   name: string;
   description: string;
-};
-
-type CompanySearch = {
-  name: string;
-  tin: string;
-  type: string;
 };
 
 type CompanyFilterForm = HTMLFormElement & {
@@ -46,11 +40,9 @@ type CompanyTypeForm = HTMLFormElement & {
 
 const Companies = () => {
   const { page } = useParams();
-  const [companies, setCompanies] = useState<CompanyListItemView[]>([]);
   const [selectedType, setSelectedType] = useState<Partial<CompanyTypeView>>(
     {},
   );
-  const [companiesLoading, setCompaniesLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCompany, setModalCompany] = useState<Partial<CompanyInfoView>>(
     {},
@@ -100,49 +92,29 @@ const Companies = () => {
   const api = useApi();
   const { data: companyTypes = [], refetch: refetchCompanyTypes } =
     useCompanyTypesQuery();
+  const orderBy = getCompanyOrderCode(sortBy);
+  const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
+  const {
+    data: companiesData,
+    isFetching: companiesLoading,
+    refetch: refetchCompanies,
+  } = useCompaniesListQuery({
+    name: searchObj.name,
+    tin: searchObj.tin,
+    type: searchObj.type,
+    orderBy,
+    ascendingOrder,
+    pageNum,
+  });
+  const companies = companiesData?.companies || [];
   const { userId } = useAuthUser();
   const navigate = useNavigate();
 
-  const fetchSortedPage = useCallback(
-    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }: any) => {
-      const filters = searchObj as CompanySearch;
-      const companies = await api.filterCompanies(
-        filters.name,
-        filters.tin,
-        filters.type,
-        orderBy,
-        ascendingOrder,
-        pageNum,
-      );
-
-      if (!companies) {
-        return null;
-      }
-
-      return {
-        pageCount: companies.pageCount,
-        items: companies.companies,
-      };
-    },
-    [],
-  );
-
-  const applySortingFilters = usePaginatedSortingFetch({
-    api,
-    sortBy,
-    sortType,
-    searchObj,
-    pageNum,
-    getOrderBy: getCompanyOrderCode,
-    fetchSortedPage,
-    setLoading: setCompaniesLoading,
-    setPageCount,
-    setItems: setCompanies,
-  });
-
   useEffect(() => {
-    applySortingFilters();
-  }, [sortBy, sortType, applySortingFilters]);
+    if (companiesData?.pageCount) {
+      setPageCount(companiesData.pageCount);
+    }
+  }, [companiesData?.pageCount, setPageCount]);
 
   useRoutePageParam({
     page,
@@ -151,18 +123,15 @@ const Companies = () => {
   });
 
   useEffect(() => {
-    applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum, applySortingFilters]);
+  }, [pageNum]);
 
-  const applyFilters = async (e: React.FormEvent<HTMLFormElement>) => {
+  const applyFilters = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as CompanyFilterForm;
     let name = "%";
     let tin = "%";
     let type = "%";
-    let orderBy = getCompanyOrderCode(sortBy);
-    const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
     if (form.name.value.trim() !== "") {
       name = form.name.value.trim();
@@ -174,30 +143,13 @@ const Companies = () => {
       type = form.type.value;
     }
 
-    setCompaniesLoading(true);
     setSearchOpen(false);
-
-    const companies = await api.filterCompanies(
-      name,
-      tin,
-      type,
-      orderBy,
-      ascendingOrder,
-      pageNum,
-    );
 
     setSearchObj({
       name: name,
       tin: tin,
       type: type,
     });
-
-    setCompaniesLoading(false);
-
-    if (companies) {
-      setPageCount(companies.pageCount);
-      setCompanies(companies.companies);
-    }
   };
 
   const openModal = async (companyTin: string) => {
@@ -310,7 +262,7 @@ const Companies = () => {
     const companyType = await api.changeType(selectedType.id, typeInfo);
     if (companyType) {
       refetchCompanyTypes();
-      applySortingFilters();
+      refetchCompanies();
       setTypeModalMain(true);
       showToast({
         title: "Uspešno",
@@ -325,7 +277,7 @@ const Companies = () => {
     }
     await api.deleteCompanyType(selectedType.id);
     refetchCompanyTypes();
-    applySortingFilters();
+    refetchCompanies();
     setTypeModalMain(true);
     showToast({
       title: "Uspešno",
@@ -342,7 +294,7 @@ const Companies = () => {
       type: id,
     };
     await api.changeCompanyType(modalCompany.company.tin, typeInfo);
-    applySortingFilters();
+    refetchCompanies();
     showToast({
       title: "Uspešno",
       text: "Tip preduzeća uspešno promenjen.",
@@ -359,7 +311,7 @@ const Companies = () => {
       modalCompany.company.tin,
       image,
     );
-    await applySortingFilters();
+    await refetchCompanies();
 
     if (modalOpen) {
       setModalCompany((prevState) => {
