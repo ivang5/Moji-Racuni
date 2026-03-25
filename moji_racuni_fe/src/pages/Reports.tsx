@@ -21,6 +21,9 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import useAuthUser from "../hooks/useAuthUser";
 import useReportsListQuery from "../hooks/queries/useReportsListQuery";
+import useSetReportSeenMutation from "../hooks/mutations/useSetReportSeenMutation";
+import useUpdateReportMutation from "../hooks/mutations/useUpdateReportMutation";
+import useDeleteReportMutation from "../hooks/mutations/useDeleteReportMutation";
 import type { ReportInfoView, ReportListItemView } from "../types/viewModels";
 
 type ReportFilterForm = HTMLFormElement & {
@@ -83,7 +86,7 @@ const Reports = () => {
   const orderBy = getReportOrderCode(sortBy);
   const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-  const { data, isFetching, refetch } = useReportsListQuery({
+  const { data, isFetching } = useReportsListQuery({
     dateFrom: searchObj.dateFrom,
     dateTo: searchObj.dateTo,
     id: searchObj.id,
@@ -94,6 +97,9 @@ const Reports = () => {
     ascendingOrder,
     pageNum,
   });
+  const { mutateAsync: setReportSeenMutation } = useSetReportSeenMutation();
+  const { mutateAsync: updateReportMutation } = useUpdateReportMutation();
+  const { mutateAsync: deleteReportMutation } = useDeleteReportMutation();
 
   const reports = data?.reports || [];
   const reportsLoading = isFetching;
@@ -156,13 +162,12 @@ const Reports = () => {
 
     if (report) {
       if (userRole === "REGULAR" && report.closed && !report.seen) {
-        const seenReport = (await api.setReportSeen(
+        const seenReport = (await setReportSeenMutation(
           reportId,
         )) as ReportListItemView | null;
         if (seenReport) {
           report = seenReport;
         }
-        refetch();
       }
       setModalReport(report);
       document.body.style.overflowY = "hidden";
@@ -202,11 +207,10 @@ const Reports = () => {
       user: modalReport.user,
     };
 
-    await api.updateReport(modalReport.id, report);
+    await updateReportMutation({ id: modalReport.id, reportInfo: report });
     setResponseOpen(false);
     setModalOpen(false);
     setResponseValidation("");
-    refetch();
     showToast({
       title: "Uspešno",
       text: "Odgovor na prijavu je uspešno poslat.",
@@ -214,8 +218,7 @@ const Reports = () => {
   };
 
   const deleteReport = async (id: number) => {
-    await api.deleteReport(id);
-    refetch();
+    await deleteReportMutation(id);
     setDeletionOpen(false);
     setModalOpen(false);
     showToast({

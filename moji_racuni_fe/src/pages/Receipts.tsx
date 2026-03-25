@@ -22,6 +22,8 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import useAuthUser from "../hooks/useAuthUser";
 import useReceiptsListQuery from "../hooks/queries/useReceiptsListQuery";
+import useDeleteReceiptMutation from "../hooks/mutations/useDeleteReceiptMutation";
+import useCreateReportMutation from "../hooks/mutations/useCreateReportMutation";
 import type { ReceiptInfoView, ReceiptListItemView } from "../types/viewModels";
 
 type ReceiptFilterForm = HTMLFormElement & {
@@ -86,7 +88,7 @@ const Receipts = () => {
   const orderBy = getReceiptOrderCode(sortBy);
   const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-  const { data, isFetching, refetch } = useReceiptsListQuery({
+  const { data, isFetching } = useReceiptsListQuery({
     dateFrom: searchObj.dateFrom,
     dateTo: searchObj.dateTo,
     id: searchObj.id,
@@ -98,6 +100,8 @@ const Receipts = () => {
     ascendingOrder,
     pageNum,
   });
+  const { mutateAsync: deleteReceiptMutation } = useDeleteReceiptMutation();
+  const { mutateAsync: createReportMutation } = useCreateReportMutation();
 
   const receipts = data?.receipts || [];
   const receiptsLoading = isFetching;
@@ -205,7 +209,7 @@ const Receipts = () => {
       request: form.repmsg.value.trim(),
     };
 
-    await api.createReport(report);
+    await createReportMutation(report);
     setReportOpen(false);
     setModalOpen(false);
     setReportValidation("");
@@ -216,8 +220,7 @@ const Receipts = () => {
   };
 
   const deleteReceipt = async (id: number) => {
-    await api.deleteReceipt(id);
-    refetch();
+    await deleteReceiptMutation(id);
     setDeletionOpen(false);
     setModalOpen(false);
     showToast({

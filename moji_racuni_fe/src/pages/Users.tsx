@@ -15,6 +15,7 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import useAuthUser from "../hooks/useAuthUser";
 import useUsersListQuery from "../hooks/queries/useUsersListQuery";
+import useUpdateUserMutation from "../hooks/mutations/useUpdateUserMutation";
 import type { User as UserModel } from "../types/models";
 
 type UsersFilterForm = HTMLFormElement & {
@@ -68,7 +69,7 @@ const Users = () => {
   const orderBy = getUserOrderCode(sortBy);
   const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-  const { data, isFetching, refetch } = useUsersListQuery({
+  const { data, isFetching } = useUsersListQuery({
     id: searchObj.id,
     username: searchObj.username,
     email: searchObj.email,
@@ -76,6 +77,7 @@ const Users = () => {
     ascendingOrder,
     pageNum,
   });
+  const { mutateAsync: updateUserMutation } = useUpdateUserMutation();
 
   const users = (data?.users || []) as ModalUser[];
   const usersLoading = isFetching;
@@ -153,8 +155,7 @@ const Users = () => {
       email: modalUser.email,
       is_active: !modalUser.is_active,
     };
-    const newUser = await api.updateUser(id, userInfo);
-    refetch();
+    const newUser = await updateUserMutation({ id, userInfo });
     setBlockingOpen(false);
     setModalOpen(false);
     showToast({

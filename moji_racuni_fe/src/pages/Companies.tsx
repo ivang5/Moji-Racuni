@@ -16,6 +16,12 @@ import useRoutePageParam from "../hooks/useRoutePageParam";
 import useAuthUser from "../hooks/useAuthUser";
 import useCompanyTypesQuery from "../hooks/queries/useCompanyTypesQuery";
 import useCompaniesListQuery from "../hooks/queries/useCompaniesListQuery";
+import useCreateCompanyTypeMutation from "../hooks/mutations/useCreateCompanyTypeMutation";
+import useUpdateCompanyTypeMutation from "../hooks/mutations/useUpdateCompanyTypeMutation";
+import useDeleteCompanyTypeMutation from "../hooks/mutations/useDeleteCompanyTypeMutation";
+import useChangeCompanyTypeMutation from "../hooks/mutations/useChangeCompanyTypeMutation";
+import useChangeCompanyImageMutation from "../hooks/mutations/useChangeCompanyImageMutation";
+import { ApiError } from "../api/errors";
 import type {
   CompanyInfoView,
   CompanyListItemView,
@@ -90,22 +96,28 @@ const Companies = () => {
   const sortByOptions = ["Naziv", "PIB", "Tip"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
-  const { data: companyTypes = [], refetch: refetchCompanyTypes } =
-    useCompanyTypesQuery();
+  const { data: companyTypes = [] } = useCompanyTypesQuery();
   const orderBy = getCompanyOrderCode(sortBy);
   const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
-  const {
-    data: companiesData,
-    isFetching: companiesLoading,
-    refetch: refetchCompanies,
-  } = useCompaniesListQuery({
-    name: searchObj.name,
-    tin: searchObj.tin,
-    type: searchObj.type,
-    orderBy,
-    ascendingOrder,
-    pageNum,
-  });
+  const { data: companiesData, isFetching: companiesLoading } =
+    useCompaniesListQuery({
+      name: searchObj.name,
+      tin: searchObj.tin,
+      type: searchObj.type,
+      orderBy,
+      ascendingOrder,
+      pageNum,
+    });
+  const { mutateAsync: createCompanyTypeMutation } =
+    useCreateCompanyTypeMutation();
+  const { mutateAsync: updateCompanyTypeMutation } =
+    useUpdateCompanyTypeMutation();
+  const { mutateAsync: deleteCompanyTypeMutation } =
+    useDeleteCompanyTypeMutation();
+  const { mutateAsync: changeCompanyTypeMutation } =
+    useChangeCompanyTypeMutation();
+  const { mutateAsync: changeCompanyImageMutation } =
+    useChangeCompanyImageMutation();
   const companies = companiesData?.companies || [];
   const { userId } = useAuthUser();
   const navigate = useNavigate();
@@ -208,14 +220,18 @@ const Companies = () => {
       user: userId,
     };
 
-    const companyType = await api.createCompanyType(companyTypeInfo);
-    if (companyType === 409) {
-      validationObj.name = "Naziv tipa već postoji!";
-      setTypeValidation(validationObj);
-      return;
+    try {
+      await createCompanyTypeMutation(companyTypeInfo);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "CONFLICT") {
+        validationObj.name = "Naziv tipa već postoji!";
+        setTypeValidation(validationObj);
+        return;
+      }
+
+      throw error;
     }
 
-    refetchCompanyTypes();
     setTypeValidation(validationObj);
     setTypeCreationOpen(false);
     showToast({
@@ -259,25 +275,19 @@ const Companies = () => {
       return;
     }
 
-    const companyType = await api.changeType(selectedType.id, typeInfo);
-    if (companyType) {
-      refetchCompanyTypes();
-      refetchCompanies();
-      setTypeModalMain(true);
-      showToast({
-        title: "Uspešno",
-        text: "Tip preduzeća je uspešno promenjen.",
-      });
-    }
+    await updateCompanyTypeMutation({ id: selectedType.id, typeInfo });
+    setTypeModalMain(true);
+    showToast({
+      title: "Uspešno",
+      text: "Tip preduzeća je uspešno promenjen.",
+    });
   };
 
   const deleteCompanyType = async () => {
     if (!selectedType.id) {
       return;
     }
-    await api.deleteCompanyType(selectedType.id);
-    refetchCompanyTypes();
-    refetchCompanies();
+    await deleteCompanyTypeMutation(selectedType.id);
     setTypeModalMain(true);
     showToast({
       title: "Uspešno",
@@ -293,8 +303,10 @@ const Companies = () => {
     const typeInfo = {
       type: id,
     };
-    await api.changeCompanyType(modalCompany.company.tin, typeInfo);
-    refetchCompanies();
+    await changeCompanyTypeMutation({
+      tin: modalCompany.company.tin,
+      typeInfo,
+    });
     showToast({
       title: "Uspešno",
       text: "Tip preduzeća uspešno promenjen.",
@@ -307,11 +319,10 @@ const Companies = () => {
       return;
     }
 
-    const company = await api.changeCompanyImage(
-      modalCompany.company.tin,
+    const company = await changeCompanyImageMutation({
+      tin: modalCompany.company.tin,
       image,
-    );
-    await refetchCompanies();
+    });
 
     if (modalOpen) {
       setModalCompany((prevState) => {
