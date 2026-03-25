@@ -49,6 +49,7 @@ const useUpdateReportMutation = () => {
     },
     onSuccess: (updatedReport, payload) => {
       queryClient.invalidateQueries({ queryKey: reportKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: reportKeys.last() });
       queryClient.invalidateQueries({
         queryKey: reportKeys.detail(payload.id),
       });

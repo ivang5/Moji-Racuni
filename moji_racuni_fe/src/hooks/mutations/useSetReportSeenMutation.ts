@@ -35,6 +35,7 @@ const useSetReportSeenMutation = () => {
     },
     onSuccess: (updatedReport, id) => {
       queryClient.invalidateQueries({ queryKey: reportKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: reportKeys.last() });
       queryClient.invalidateQueries({ queryKey: reportKeys.detail(id) });
       if (updatedReport?.id) {
         queryClient.invalidateQueries({

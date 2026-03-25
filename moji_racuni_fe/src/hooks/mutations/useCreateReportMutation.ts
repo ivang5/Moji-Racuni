@@ -39,6 +39,7 @@ const useCreateReportMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reportKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: reportKeys.last() });
     },
   });
 };

@@ -29,6 +29,7 @@ const useDeleteReportMutation = () => {
     },
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: reportKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: reportKeys.last() });
       queryClient.invalidateQueries({ queryKey: reportKeys.detail(id) });
     },
   });

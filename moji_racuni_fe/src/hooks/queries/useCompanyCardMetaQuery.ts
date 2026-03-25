@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { ApiError } from "../../api/errors";
 import { companyKeys } from "../../services/queryKeys";
 import type { CompanyTypeView } from "../../types/viewModels";
+import {
+  ensureNoConflict,
+  ensurePresent,
+  isNotFoundResponse,
+  parseNumberFieldOrThrow,
+  parseObjectOrThrow,
+} from "../../utils/queryResponse";
 import useApi from "../../utils/useApi";
 
 type CompanyCardMeta = {
@@ -21,22 +27,29 @@ const useCompanyCardMetaQuery = (tin: string) => {
         api.getCompanyVisits(tin),
       ]);
 
-      if (type === 409 || visits === 409) {
-        throw new ApiError("Company card meta request conflict.", {
-          code: "CONFLICT",
-          status: 409,
-        });
-      }
+      ensureNoConflict(type, "Company card meta request conflict.");
+      ensureNoConflict(visits, "Company card meta request conflict.");
+      ensurePresent(type, "Unable to load company card metadata.");
+      ensurePresent(visits, "Unable to load company card metadata.");
+
+      const companyType = isNotFoundResponse(type)
+        ? null
+        : parseObjectOrThrow<CompanyTypeView>(
+            type,
+            "Unable to parse company type metadata.",
+          );
+
+      const companyVisits = isNotFoundResponse(visits)
+        ? 0
+        : parseNumberFieldOrThrow(
+            visits,
+            "visits",
+            "Unable to parse company visits metadata.",
+          );
 
       return {
-        companyType: type && type !== 404 ? (type as CompanyTypeView) : null,
-        companyVisits:
-          visits &&
-          visits !== 404 &&
-          typeof visits === "object" &&
-          "visits" in visits
-            ? Number((visits as { visits: number }).visits)
-            : 0,
+        companyType,
+        companyVisits,
       };
     },
   });

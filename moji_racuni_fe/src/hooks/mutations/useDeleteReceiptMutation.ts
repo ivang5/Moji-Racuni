@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ApiError } from "../../api/errors";
-import { receiptKeys } from "../../services/queryKeys";
+import { receiptKeys, statsKeys } from "../../services/queryKeys";
 import useApi from "../../utils/useApi";
 
 const useDeleteReceiptMutation = () => {
@@ -30,6 +30,8 @@ const useDeleteReceiptMutation = () => {
     onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: receiptKeys.lists() });
       queryClient.invalidateQueries({ queryKey: receiptKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: receiptKeys.lastFull() });
+      queryClient.invalidateQueries({ queryKey: statsKeys.all });
     },
   });
 };
