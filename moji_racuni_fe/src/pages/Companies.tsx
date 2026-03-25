@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import { getCompanyOrderCode } from "../utils/utils";
@@ -15,6 +15,7 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 import useAuthUser from "../hooks/useAuthUser";
+import useCompanyTypesQuery from "../hooks/queries/useCompanyTypesQuery";
 import type {
   CompanyInfoView,
   CompanyListItemView,
@@ -46,7 +47,6 @@ type CompanyTypeForm = HTMLFormElement & {
 const Companies = () => {
   const { page } = useParams();
   const [companies, setCompanies] = useState<CompanyListItemView[]>([]);
-  const [companyTypes, setCompanyTypes] = useState<CompanyTypeView[]>([]);
   const [selectedType, setSelectedType] = useState<Partial<CompanyTypeView>>(
     {},
   );
@@ -98,13 +98,10 @@ const Companies = () => {
   const sortByOptions = ["Naziv", "PIB", "Tip"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
   const api = useApi();
-  const apiRef = useRef(api);
+  const { data: companyTypes = [], refetch: refetchCompanyTypes } =
+    useCompanyTypesQuery();
   const { userId } = useAuthUser();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
 
   const fetchSortedPage = useCallback(
     async ({ api, searchObj, orderBy, ascendingOrder, pageNum }: any) => {
@@ -142,15 +139,6 @@ const Companies = () => {
     setPageCount,
     setItems: setCompanies,
   });
-
-  const getCompanyTypes = useCallback(async () => {
-    const types = await apiRef.current.getCompanyTypes();
-    setCompanyTypes(types);
-  }, []);
-
-  useEffect(() => {
-    getCompanyTypes();
-  }, [getCompanyTypes]);
 
   useEffect(() => {
     applySortingFilters();
@@ -275,7 +263,7 @@ const Companies = () => {
       return;
     }
 
-    getCompanyTypes();
+    refetchCompanyTypes();
     setTypeValidation(validationObj);
     setTypeCreationOpen(false);
     showToast({
@@ -321,7 +309,7 @@ const Companies = () => {
 
     const companyType = await api.changeType(selectedType.id, typeInfo);
     if (companyType) {
-      getCompanyTypes();
+      refetchCompanyTypes();
       applySortingFilters();
       setTypeModalMain(true);
       showToast({
@@ -336,7 +324,7 @@ const Companies = () => {
       return;
     }
     await api.deleteCompanyType(selectedType.id);
-    getCompanyTypes();
+    refetchCompanyTypes();
     applySortingFilters();
     setTypeModalMain(true);
     showToast({

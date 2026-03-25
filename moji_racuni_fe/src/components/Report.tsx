@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import useApi from "../utils/useApi";
 import { dateTimeFormatter } from "../utils/utils";
 import useAuthUser from "../hooks/useAuthUser";
-import type { ReportInfoView, ReportUserView } from "../types/viewModels";
+import useUserByIdQuery from "../hooks/queries/useUserByIdQuery";
+import type { ReportInfoView } from "../types/viewModels";
 
 type ReportProps = {
   reportInfo: ReportInfoView;
@@ -11,23 +11,8 @@ type ReportProps = {
 };
 
 const Report = ({ reportInfo, hasLink = false }: ReportProps) => {
-  const [reportUser, setReportUser] = useState<Partial<ReportUserView>>({});
   const { userRole } = useAuthUser();
-  const api = useApi();
-  const apiRef = useRef(api);
-
-  useEffect(() => {
-    apiRef.current = api;
-  }, [api]);
-
-  useEffect(() => {
-    const loadReportUser = async () => {
-      const repUser = await apiRef.current.getUser(reportInfo.user);
-      setReportUser(repUser);
-    };
-
-    loadReportUser();
-  }, [reportInfo.user]);
+  const { data: reportUser } = useUserByIdQuery(reportInfo.user);
 
   return (
     <div className="report-details">
@@ -54,7 +39,7 @@ const Report = ({ reportInfo, hasLink = false }: ReportProps) => {
             Prijavio:
             <span className="fw-bold">
               {" "}
-              {reportUser.username} (#{reportUser.id})
+              {reportUser?.username || "..."} (#{reportUser?.id || "-"})
             </span>
           </div>
         )}
