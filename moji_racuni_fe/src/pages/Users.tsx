@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
-import useApi from "../utils/useApi";
 import { getUserOrderCode } from "../utils/utils";
 import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
@@ -15,6 +14,7 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import useAuthUser from "../hooks/useAuthUser";
 import useUsersListQuery from "../hooks/queries/useUsersListQuery";
+import useUserByIdQuery from "../hooks/queries/useUserByIdQuery";
 import useUpdateUserMutation from "../hooks/mutations/useUpdateUserMutation";
 import type { User as UserModel } from "../types/models";
 
@@ -32,7 +32,7 @@ type ModalUser = UserModel & {
 const Users = () => {
   const { page } = useParams();
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalUser, setModalUser] = useState<ModalUser | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [blockingOpen, setBlockingOpen] = useState(false);
 
   const {
@@ -63,7 +63,6 @@ const Users = () => {
 
   const sortByOptions = ["ID", "Status", "Kor. ime", "Ime", "Prezime", "Email"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
-  const api = useApi();
   const { userRole } = useAuthUser();
   const navigate = useNavigate();
   const orderBy = getUserOrderCode(sortBy);
@@ -81,6 +80,7 @@ const Users = () => {
 
   const users = (data?.users || []) as ModalUser[];
   const usersLoading = isFetching;
+  const { data: modalUser } = useUserByIdQuery(selectedUserId);
 
   useEffect(() => {
     if (data?.pageCount) {
@@ -127,18 +127,13 @@ const Users = () => {
 
   const openModal = async (userId: number) => {
     setModalOpen(true);
-
-    const user = (await api.getUser(userId)) as ModalUser | null;
-
-    if (user) {
-      setModalUser(user);
-      document.body.style.overflowY = "hidden";
-    }
+    setSelectedUserId(userId);
+    document.body.style.overflowY = "hidden";
   };
 
   const resetModal = () => {
     setModalOpen(false);
-    setModalUser(null);
+    setSelectedUserId(null);
     setBlockingOpen(false);
     document.body.style.overflow = "auto";
   };
@@ -150,8 +145,8 @@ const Users = () => {
 
     const userInfo = {
       username: modalUser.username,
-      first_name: modalUser.first_name || "",
-      last_name: modalUser.last_name || "",
+      first_name: (modalUser as ModalUser).first_name || "",
+      last_name: (modalUser as ModalUser).last_name || "",
       email: modalUser.email,
       is_active: !modalUser.is_active,
     };

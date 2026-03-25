@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
-import useApi from "../utils/useApi";
 import { getCompanyOrderCode } from "../utils/utils";
 import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
@@ -16,17 +15,14 @@ import useRoutePageParam from "../hooks/useRoutePageParam";
 import useAuthUser from "../hooks/useAuthUser";
 import useCompanyTypesQuery from "../hooks/queries/useCompanyTypesQuery";
 import useCompaniesListQuery from "../hooks/queries/useCompaniesListQuery";
+import useFullCompanyInfoQuery from "../hooks/queries/useFullCompanyInfoQuery";
 import useCreateCompanyTypeMutation from "../hooks/mutations/useCreateCompanyTypeMutation";
 import useUpdateCompanyTypeMutation from "../hooks/mutations/useUpdateCompanyTypeMutation";
 import useDeleteCompanyTypeMutation from "../hooks/mutations/useDeleteCompanyTypeMutation";
 import useChangeCompanyTypeMutation from "../hooks/mutations/useChangeCompanyTypeMutation";
 import useChangeCompanyImageMutation from "../hooks/mutations/useChangeCompanyImageMutation";
 import { ApiError } from "../api/errors";
-import type {
-  CompanyInfoView,
-  CompanyListItemView,
-  CompanyTypeView,
-} from "../types/viewModels";
+import type { CompanyInfoView, CompanyTypeView } from "../types/viewModels";
 
 type TypeValidation = {
   name: string;
@@ -50,8 +46,8 @@ const Companies = () => {
     {},
   );
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalCompany, setModalCompany] = useState<Partial<CompanyInfoView>>(
-    {},
+  const [selectedCompanyTin, setSelectedCompanyTin] = useState<string | null>(
+    null,
   );
   const [modalOpenType, setModalOpenType] = useState(false);
   const [typeModalMain, setTypeModalMain] = useState(true);
@@ -95,7 +91,6 @@ const Companies = () => {
 
   const sortByOptions = ["Naziv", "PIB", "Tip"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
-  const api = useApi();
   const { data: companyTypes = [] } = useCompanyTypesQuery();
   const orderBy = getCompanyOrderCode(sortBy);
   const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
@@ -118,6 +113,7 @@ const Companies = () => {
     useChangeCompanyTypeMutation();
   const { mutateAsync: changeCompanyImageMutation } =
     useChangeCompanyImageMutation();
+  const { data: modalCompany } = useFullCompanyInfoQuery(selectedCompanyTin);
   const companies = companiesData?.companies || [];
   const { userId } = useAuthUser();
   const navigate = useNavigate();
@@ -166,20 +162,13 @@ const Companies = () => {
 
   const openModal = async (companyTin: string) => {
     setModalOpen(true);
-
-    const company = (await api.getFullCompanyInfo(
-      companyTin,
-    )) as CompanyInfoView | null;
-
-    if (company) {
-      setModalCompany(company);
-      document.body.style.overflowY = "hidden";
-    }
+    setSelectedCompanyTin(companyTin);
+    document.body.style.overflowY = "hidden";
   };
 
   const resetModal = () => {
     setModalOpen(false);
-    setModalCompany({});
+    setSelectedCompanyTin(null);
     setTypeModalMain(true);
     setModalOpenType(false);
     setTypeCreationOpen(false);
@@ -296,15 +285,17 @@ const Companies = () => {
   };
 
   const changeCompanyType = async (id: number | "none") => {
-    if (!modalCompany.company) {
+    if (!modalCompany?.company) {
       return;
     }
+
+    const currentCompany = modalCompany.company;
 
     const typeInfo = {
       type: id,
     };
     await changeCompanyTypeMutation({
-      tin: modalCompany.company.tin,
+      tin: currentCompany.tin,
       typeInfo,
     });
     showToast({
@@ -315,20 +306,16 @@ const Companies = () => {
 
   const changeCompanyImg = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const image = e.target.files?.[0];
-    if (!image || !modalCompany.company) {
+    if (!image || !modalCompany?.company) {
       return;
     }
 
-    const company = await changeCompanyImageMutation({
-      tin: modalCompany.company.tin,
+    const currentCompany = modalCompany.company;
+
+    await changeCompanyImageMutation({
+      tin: currentCompany.tin,
       image,
     });
-
-    if (modalOpen) {
-      setModalCompany((prevState) => {
-        return { ...prevState, company: company };
-      });
-    }
 
     showToast({
       title: "Uspešno",
@@ -452,7 +439,7 @@ const Companies = () => {
       </div>
       {modalOpen && (
         <div className="modal">
-          {modalCompany.company ? (
+          {modalCompany?.company ? (
             <div className="modal__content">
               <Company
                 companyInfo={modalCompany as CompanyInfoView}

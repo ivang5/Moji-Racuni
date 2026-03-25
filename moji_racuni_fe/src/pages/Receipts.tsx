@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import ReceiptCard from "../components/ReceiptCard";
-import useApi from "../utils/useApi";
 import {
   getTenYearsAgo,
   dateBEFormatter,
@@ -22,9 +21,10 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import useAuthUser from "../hooks/useAuthUser";
 import useReceiptsListQuery from "../hooks/queries/useReceiptsListQuery";
+import useFullReceiptInfoQuery from "../hooks/queries/useFullReceiptInfoQuery";
 import useDeleteReceiptMutation from "../hooks/mutations/useDeleteReceiptMutation";
 import useCreateReportMutation from "../hooks/mutations/useCreateReportMutation";
-import type { ReceiptInfoView, ReceiptListItemView } from "../types/viewModels";
+import type { ReceiptInfoView } from "../types/viewModels";
 
 type ReceiptFilterForm = HTMLFormElement & {
   id: HTMLInputElement;
@@ -41,8 +41,8 @@ type ReportForm = HTMLFormElement & {
 const Receipts = () => {
   const { page } = useParams();
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalReceipt, setModalReceipt] = useState<Partial<ReceiptInfoView>>(
-    {},
+  const [selectedReceiptId, setSelectedReceiptId] = useState<number | null>(
+    null,
   );
   const [reportOpen, setReportOpen] = useState(false);
   const [reportValidation, setReportValidation] = useState("");
@@ -82,7 +82,6 @@ const Receipts = () => {
 
   const sortByOptions = ["Datum", "Prodavnica", "PIB", "Cena", "PDV"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
-  const api = useApi();
   const { userRole } = useAuthUser();
   const navigate = useNavigate();
   const orderBy = getReceiptOrderCode(sortBy);
@@ -105,6 +104,7 @@ const Receipts = () => {
 
   const receipts = data?.receipts || [];
   const receiptsLoading = isFetching;
+  const { data: modalReceipt } = useFullReceiptInfoQuery(selectedReceiptId);
 
   useEffect(() => {
     if (data?.pageCount) {
@@ -164,20 +164,13 @@ const Receipts = () => {
 
   const openModal = async (receiptId: number) => {
     setModalOpen(true);
-
-    const receipt = (await api.getFullReceiptInfo(
-      receiptId,
-    )) as ReceiptInfoView | null;
-
-    if (receipt) {
-      setModalReceipt(receipt);
-      document.body.style.overflowY = "hidden";
-    }
+    setSelectedReceiptId(receiptId);
+    document.body.style.overflowY = "hidden";
   };
 
   const resetModal = () => {
     setModalOpen(false);
-    setModalReceipt({});
+    setSelectedReceiptId(null);
     setReportOpen(false);
     setDeletionOpen(false);
     setReportValidation("");
@@ -196,16 +189,18 @@ const Receipts = () => {
       return;
     }
 
-    if (!modalReceipt.receipt) {
+    if (!modalReceipt?.receipt) {
       return;
     }
+
+    const currentReceipt = modalReceipt.receipt;
 
     const date = new Date();
     const formattedDate = dateTimeBEFormatter(date);
 
     const report = {
       date: formattedDate,
-      receipt: modalReceipt.receipt.id,
+      receipt: currentReceipt.id,
       request: form.repmsg.value.trim(),
     };
 
@@ -377,7 +372,7 @@ const Receipts = () => {
       </div>
       {modalOpen && (
         <div className="modal">
-          {modalReceipt.receipt ? (
+          {modalReceipt?.receipt ? (
             <div className="modal__content">
               <Receipt receiptInfo={modalReceipt as ReceiptInfoView} />
               {userRole === "REGULAR" && (
@@ -454,7 +449,7 @@ const Receipts = () => {
                             <button
                               className="btn btn-primary btn-primary--red btn-round"
                               onClick={() => {
-                                if (modalReceipt.receipt) {
+                                if (modalReceipt?.receipt) {
                                   deleteReceipt(modalReceipt.receipt.id);
                                 }
                               }}

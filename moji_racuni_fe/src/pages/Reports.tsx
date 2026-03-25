@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
-import useApi from "../utils/useApi";
 import {
   getTenYearsAgo,
   dateBEFormatter,
@@ -21,10 +20,11 @@ import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
 import useAuthUser from "../hooks/useAuthUser";
 import useReportsListQuery from "../hooks/queries/useReportsListQuery";
+import useReportByIdQuery from "../hooks/queries/useReportByIdQuery";
 import useSetReportSeenMutation from "../hooks/mutations/useSetReportSeenMutation";
 import useUpdateReportMutation from "../hooks/mutations/useUpdateReportMutation";
 import useDeleteReportMutation from "../hooks/mutations/useDeleteReportMutation";
-import type { ReportInfoView, ReportListItemView } from "../types/viewModels";
+import type { ReportInfoView } from "../types/viewModels";
 
 type ReportFilterForm = HTMLFormElement & {
   id: HTMLInputElement;
@@ -40,12 +40,13 @@ type ResponseForm = HTMLFormElement & {
 const Reports = () => {
   const { page } = useParams();
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalReport, setModalReport] = useState<Partial<ReportListItemView>>(
-    {},
-  );
+  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
   const [responseOpen, setResponseOpen] = useState(false);
   const [responseValidation, setResponseValidation] = useState("");
   const [deletionOpen, setDeletionOpen] = useState(false);
+  const [seenMarkedReportId, setSeenMarkedReportId] = useState<number | null>(
+    null,
+  );
   const [fromDate, setFromDate] = useState(getTenYearsAgo());
   const [toDate, setToDate] = useState(getTomorrow());
 
@@ -80,7 +81,6 @@ const Reports = () => {
 
   const sortByOptions = ["Datum", "Status"];
   const sortTypeOptions = ["Rastuće", "Opadajuće"];
-  const api = useApi();
   const { userRole } = useAuthUser();
   const navigate = useNavigate();
   const orderBy = getReportOrderCode(sortBy);
@@ -100,6 +100,7 @@ const Reports = () => {
   const { mutateAsync: setReportSeenMutation } = useSetReportSeenMutation();
   const { mutateAsync: updateReportMutation } = useUpdateReportMutation();
   const { mutateAsync: deleteReportMutation } = useDeleteReportMutation();
+  const { data: modalReport } = useReportByIdQuery(selectedReportId);
 
   const reports = data?.reports || [];
   const reportsLoading = isFetching;
@@ -155,29 +156,40 @@ const Reports = () => {
     });
   };
 
+  useEffect(() => {
+    if (
+      !modalOpen ||
+      !modalReport ||
+      userRole !== "REGULAR" ||
+      !modalReport.closed ||
+      modalReport.seen ||
+      seenMarkedReportId === modalReport.id
+    ) {
+      return;
+    }
+
+    setSeenMarkedReportId(modalReport.id);
+    void setReportSeenMutation(modalReport.id);
+  }, [
+    modalOpen,
+    modalReport,
+    seenMarkedReportId,
+    setReportSeenMutation,
+    userRole,
+  ]);
+
   const openModal = async (reportId: number) => {
     setModalOpen(true);
-
-    let report = (await api.getReport(reportId)) as ReportListItemView | null;
-
-    if (report) {
-      if (userRole === "REGULAR" && report.closed && !report.seen) {
-        const seenReport = (await setReportSeenMutation(
-          reportId,
-        )) as ReportListItemView | null;
-        if (seenReport) {
-          report = seenReport;
-        }
-      }
-      setModalReport(report);
-      document.body.style.overflowY = "hidden";
-    }
+    setSelectedReportId(reportId);
+    setSeenMarkedReportId(null);
+    document.body.style.overflowY = "hidden";
   };
 
   const resetModal = () => {
     setModalOpen(false);
-    setModalReport({});
+    setSelectedReportId(null);
     setDeletionOpen(false);
+    setSeenMarkedReportId(null);
     document.body.style.overflow = "auto";
   };
 
@@ -193,21 +205,23 @@ const Reports = () => {
       return;
     }
 
-    if (!modalReport.id) {
+    if (!modalReport?.id) {
       return;
     }
 
+    const currentReport = modalReport;
+
     const report = {
-      date: modalReport.date,
-      request: modalReport.request,
+      date: currentReport.date,
+      request: currentReport.request,
       response: form.repmsg.value.trim(),
       closed: true,
       seen: false,
-      receipt: modalReport.receipt,
-      user: modalReport.user,
+      receipt: currentReport.receipt,
+      user: currentReport.user,
     };
 
-    await updateReportMutation({ id: modalReport.id, reportInfo: report });
+    await updateReportMutation({ id: currentReport.id, reportInfo: report });
     setResponseOpen(false);
     setModalOpen(false);
     setResponseValidation("");
@@ -382,10 +396,10 @@ const Reports = () => {
       </div>
       {modalOpen && (
         <div className="modal">
-          {modalReport.request ? (
+          {modalReport?.request ? (
             <div className="modal__content">
               <Report reportInfo={modalReport as ReportInfoView} />
-              {!modalReport.response && (
+              {!modalReport?.response && (
                 <>
                   {userRole === "REGULAR" ? (
                     <div className="modal__options modal__options--single">
@@ -414,7 +428,7 @@ const Reports = () => {
                             <button
                               className="btn btn-primary btn-primary--red btn-round"
                               onClick={() => {
-                                if (modalReport.id !== undefined) {
+                                if (modalReport?.id !== undefined) {
                                   deleteReport(modalReport.id);
                                 }
                               }}
