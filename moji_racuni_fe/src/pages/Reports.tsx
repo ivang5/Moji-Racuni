@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import {
@@ -19,18 +19,9 @@ import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
-import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 import useAuthUser from "../hooks/useAuthUser";
+import useReportsListQuery from "../hooks/queries/useReportsListQuery";
 import type { ReportInfoView, ReportListItemView } from "../types/viewModels";
-
-type ReportSearch = {
-  dateFrom: string;
-  dateTo: string;
-  id: string;
-  receipt: string;
-  user: string;
-  request: string;
-};
 
 type ReportFilterForm = HTMLFormElement & {
   id: HTMLInputElement;
@@ -45,8 +36,6 @@ type ResponseForm = HTMLFormElement & {
 
 const Reports = () => {
   const { page } = useParams();
-  const [reports, setReports] = useState<ReportListItemView[]>([]);
-  const [reportsLoading, setReportsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalReport, setModalReport] = useState<Partial<ReportListItemView>>(
     {},
@@ -91,50 +80,29 @@ const Reports = () => {
   const api = useApi();
   const { userRole } = useAuthUser();
   const navigate = useNavigate();
+  const orderBy = getReportOrderCode(sortBy);
+  const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-  const fetchSortedPage = useCallback(
-    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }: any) => {
-      const filters = searchObj as ReportSearch;
-      const reports = await api.filterReports(
-        filters.dateFrom,
-        filters.dateTo,
-        filters.id,
-        filters.receipt,
-        filters.user,
-        filters.request,
-        orderBy,
-        ascendingOrder,
-        pageNum,
-      );
-
-      if (!reports) {
-        return null;
-      }
-
-      return {
-        pageCount: reports.pageCount,
-        items: reports.reports,
-      };
-    },
-    [],
-  );
-
-  const applySortingFilters = usePaginatedSortingFetch({
-    api,
-    sortBy,
-    sortType,
-    searchObj,
+  const { data, isFetching, refetch } = useReportsListQuery({
+    dateFrom: searchObj.dateFrom,
+    dateTo: searchObj.dateTo,
+    id: searchObj.id,
+    receipt: searchObj.receipt,
+    user: searchObj.user,
+    request: searchObj.request,
+    orderBy,
+    ascendingOrder,
     pageNum,
-    getOrderBy: getReportOrderCode,
-    fetchSortedPage,
-    setLoading: setReportsLoading,
-    setPageCount,
-    setItems: setReports,
   });
 
+  const reports = data?.reports || [];
+  const reportsLoading = isFetching;
+
   useEffect(() => {
-    applySortingFilters();
-  }, [sortBy, sortType, applySortingFilters]);
+    if (data?.pageCount) {
+      setPageCount(data.pageCount);
+    }
+  }, [data?.pageCount, setPageCount]);
 
   useRoutePageParam({
     page,
@@ -143,11 +111,10 @@ const Reports = () => {
   });
 
   useEffect(() => {
-    applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum, applySortingFilters]);
+  }, [pageNum]);
 
-  const applyFilters = async (e: React.FormEvent<HTMLFormElement>) => {
+  const applyFilters = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as ReportFilterForm;
     const dateFrom = dateBEFormatter(fromDate);
@@ -156,8 +123,6 @@ const Reports = () => {
     let receipt = "%";
     let user = "%";
     let request = "%";
-    let orderBy = getReportOrderCode(sortBy);
-    const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
     if (form.id.value !== "") {
       id = form.id.value;
@@ -172,20 +137,7 @@ const Reports = () => {
       receipt = form.receipt.value.trim();
     }
 
-    setReportsLoading(true);
     setSearchOpen(false);
-
-    const reports = await api.filterReports(
-      dateFrom,
-      dateTo,
-      id,
-      receipt,
-      user,
-      request,
-      orderBy,
-      ascendingOrder,
-      pageNum,
-    );
 
     setSearchObj({
       dateFrom: dateFrom,
@@ -195,13 +147,6 @@ const Reports = () => {
       user: user,
       request: request,
     });
-
-    setReportsLoading(false);
-
-    if (reports) {
-      setPageCount(reports.pageCount);
-      setReports(reports.reports);
-    }
   };
 
   const openModal = async (reportId: number) => {
@@ -217,7 +162,7 @@ const Reports = () => {
         if (seenReport) {
           report = seenReport;
         }
-        applySortingFilters();
+        refetch();
       }
       setModalReport(report);
       document.body.style.overflowY = "hidden";
@@ -261,7 +206,7 @@ const Reports = () => {
     setResponseOpen(false);
     setModalOpen(false);
     setResponseValidation("");
-    applySortingFilters();
+    refetch();
     showToast({
       title: "Uspešno",
       text: "Odgovor na prijavu je uspešno poslat.",
@@ -270,7 +215,7 @@ const Reports = () => {
 
   const deleteReport = async (id: number) => {
     await api.deleteReport(id);
-    applySortingFilters();
+    refetch();
     setDeletionOpen(false);
     setModalOpen(false);
     showToast({

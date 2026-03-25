@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import useApi from "../utils/useApi";
 import { getUserOrderCode } from "../utils/utils";
@@ -13,15 +13,9 @@ import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
 import useRoutePageParam from "../hooks/useRoutePageParam";
-import usePaginatedSortingFetch from "../hooks/usePaginatedSortingFetch";
 import useAuthUser from "../hooks/useAuthUser";
+import useUsersListQuery from "../hooks/queries/useUsersListQuery";
 import type { User as UserModel } from "../types/models";
-
-type UsersSearch = {
-  id: string;
-  username: string;
-  email: string;
-};
 
 type UsersFilterForm = HTMLFormElement & {
   id: HTMLInputElement;
@@ -36,8 +30,6 @@ type ModalUser = UserModel & {
 
 const Users = () => {
   const { page } = useParams();
-  const [users, setUsers] = useState<ModalUser[]>([]);
-  const [usersLoading, setUsersLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalUser, setModalUser] = useState<ModalUser | null>(null);
   const [blockingOpen, setBlockingOpen] = useState(false);
@@ -73,46 +65,26 @@ const Users = () => {
   const api = useApi();
   const { userRole } = useAuthUser();
   const navigate = useNavigate();
+  const orderBy = getUserOrderCode(sortBy);
+  const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
-  const fetchSortedPage = useCallback(
-    async ({ api, searchObj, orderBy, ascendingOrder, pageNum }: any) => {
-      const users = await api.filterUsers(
-        (searchObj as UsersSearch).id,
-        (searchObj as UsersSearch).username,
-        (searchObj as UsersSearch).email,
-        orderBy,
-        ascendingOrder,
-        pageNum,
-      );
-
-      if (!users) {
-        return null;
-      }
-
-      return {
-        pageCount: users.pageCount,
-        items: users.users,
-      };
-    },
-    [],
-  );
-
-  const applySortingFilters = usePaginatedSortingFetch({
-    api,
-    sortBy,
-    sortType,
-    searchObj,
+  const { data, isFetching, refetch } = useUsersListQuery({
+    id: searchObj.id,
+    username: searchObj.username,
+    email: searchObj.email,
+    orderBy,
+    ascendingOrder,
     pageNum,
-    getOrderBy: getUserOrderCode,
-    fetchSortedPage,
-    setLoading: setUsersLoading,
-    setPageCount,
-    setItems: setUsers,
   });
 
+  const users = (data?.users || []) as ModalUser[];
+  const usersLoading = isFetching;
+
   useEffect(() => {
-    applySortingFilters();
-  }, [sortBy, sortType, applySortingFilters]);
+    if (data?.pageCount) {
+      setPageCount(data.pageCount);
+    }
+  }, [data?.pageCount, setPageCount]);
 
   useRoutePageParam({
     page,
@@ -122,18 +94,15 @@ const Users = () => {
   });
 
   useEffect(() => {
-    applySortingFilters();
     window.scrollTo(0, 0);
-  }, [pageNum, applySortingFilters]);
+  }, [pageNum]);
 
-  const applyFilters = async (e: React.FormEvent<HTMLFormElement>) => {
+  const applyFilters = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as UsersFilterForm;
     let id = "%";
     let username = "%";
     let email = "%";
-    let orderBy = getUserOrderCode(sortBy);
-    const ascendingOrder = sortType === "Opadajuće" ? "desc" : "asc";
 
     if (form.id.value !== "") {
       id = form.id.value;
@@ -145,30 +114,13 @@ const Users = () => {
       email = form.email.value.trim();
     }
 
-    setUsersLoading(true);
     setSearchOpen(false);
-
-    const users = await api.filterUsers(
-      id,
-      username,
-      email,
-      orderBy,
-      ascendingOrder,
-      pageNum,
-    );
 
     setSearchObj({
       id: id,
       username: username,
       email: email,
     });
-
-    setUsersLoading(false);
-
-    if (users) {
-      setPageCount(users.pageCount);
-      setUsers(users.users);
-    }
   };
 
   const openModal = async (userId: number) => {
@@ -202,7 +154,7 @@ const Users = () => {
       is_active: !modalUser.is_active,
     };
     const newUser = await api.updateUser(id, userInfo);
-    applySortingFilters();
+    refetch();
     setBlockingOpen(false);
     setModalOpen(false);
     showToast({
