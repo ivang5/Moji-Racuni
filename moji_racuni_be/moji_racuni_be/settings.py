@@ -166,6 +166,12 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD', 'root'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '3306'),
+        # Test baza (test_<NAME>) se pravi sa istim charset-om/collation-om kao glavna baza
+        # (vidi README.md), da bi se testovi ponašali isto kao aplikacija (npr. LIKE/LOWER pod cp1250_bin).
+        'TEST': {
+            'CHARSET': os.getenv('DB_TEST_CHARSET', 'cp1250'),
+            'COLLATION': os.getenv('DB_TEST_COLLATION', 'cp1250_bin'),
+        },
     }
 }
 

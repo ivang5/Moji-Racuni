@@ -2,3 +2,6 @@
 .github/*
 .mrenv
 tasks/
+backups/
+.playwright-mcp/
+CLAUDE.local.md
