@@ -80,9 +80,8 @@ class CompanyViewSet(viewsets.ViewSet):
 
     def create(self, request):
         companies = Company.objects.all()
+        #* U slučaju greške retrieve_* baca InvalidReceiptError (400) ili PursUnavailableError (502)
         company = utils.retrieve_company(request.data.get('url'))
-        if not company:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
         company_tin = company['tin']
         for c in companies:
             if c.tin == company_tin:

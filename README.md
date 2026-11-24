@@ -24,3 +24,9 @@ Web aplikacija za praćenje finansija. Skladišti podatke sa fiskalnih računa i
 - Unutar `moji_racuni_be` direktorijuma izvršiti `python manage.py runserver 0.0.0.0:8000`.
 - Unutar `moji_racuni_fe` direktorijuma izvršiti `npm start`.
 - Preko bilo kog uređaja na mreži pristupite aplikaciji na adresi `http://{IPv4 adresa host uređaja}:3000` (npr. `http://192.168.1.1:3000`)
+
+## Testovi (backend):
+
+- Unutar `moji_racuni_be` direktorijuma instalirati dev zavisnosti: `pip install -r requirements-dev.txt` (ili `uv pip install -r requirements-dev.txt`).
+- Pokrenuti `pytest`. Testovi parsera računa ne koriste bazu ni mrežu.
+- Snapshot-ovi stvarnih računa za testove parsera se ne čuvaju u repozitorijumu; uputstvo za dodavanje je u `moji_racuni_be/receipt/tests/fixtures/README.md`.
