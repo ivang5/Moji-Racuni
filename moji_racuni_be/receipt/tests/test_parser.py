@@ -156,7 +156,7 @@ for _item in SYNTHETIC_EXPECTED["items"]:
     "newline",
     [
         pytest.param("\r\n", id="crlf-kao-na-purs-u"),
-        #* lxml >= 6.0 (libxml2 2.14) pri parsiranju pretvara '\r\n' u '\n' - uzrok kvara iz T01
+        #* lxml >= 6.0 (libxml2 2.14) pri parsiranju pretvara '\r\n' u '\n', zbog čega unos računa nije radio
         pytest.param("\n", id="lf-posle-html5-normalizacije"),
     ],
 )
