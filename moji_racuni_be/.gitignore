@@ -4,3 +4,6 @@
 __pycache__
 images
 .env
+# Snapshot-ovi stvarnih računa sa PURS-a (podaci o kupovini)
+receipt/tests/fixtures/*.html
+receipt/tests/fixtures/*.expected.json

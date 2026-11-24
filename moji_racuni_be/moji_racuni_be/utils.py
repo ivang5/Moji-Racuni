@@ -1,13 +1,37 @@
 from bs4 import BeautifulSoup
+import functools
 import logging
+import re
 import requests
 from urllib.parse import urlparse
 import ipaddress
 from srtools import cyrillic_to_latin
 from django.db import connection
+from rest_framework.exceptions import APIException
 
 REQUEST_TIMEOUT_SECONDS = 10
 logger = logging.getLogger(__name__)
+
+
+class ReceiptRetrievalError(APIException):
+    """
+    Osnovna greška pri preuzimanju ili parsiranju računa sa PURS-a.
+    DRF je automatski pretvara u odgovor {"detail": "..."} sa status_code podklase.
+    """
+
+
+class InvalidReceiptError(ReceiptRetrievalError):
+    """Link nije validan, PURS ga ne prepoznaje ili stranica nema očekivanu strukturu."""
+    status_code = 400
+    default_detail = "Račun nije pronađen ili link nije validan."
+    default_code = "invalid_receipt"
+
+
+class PursUnavailableError(ReceiptRetrievalError):
+    """PURS nije dostupan (timeout, mrežna greška, 5xx odgovor)."""
+    status_code = 502
+    default_detail = "Sajt Poreske uprave trenutno nije dostupan, pokušajte ponovo kasnije."
+    default_code = "purs_unavailable"
 
 # ==========================================================
 #                        WEB-SCRAPING
@@ -358,78 +382,123 @@ def _is_public_fetch_url(url):
 
 
 def _fetch_url_text(url):
-    if not _is_public_fetch_url(url):
-        return None
+    """
+    Preuzima stranicu računa. Nikad ne vraća None: u slučaju greške baca
+    InvalidReceiptError (400) ili PursUnavailableError (502).
+    """
+    if not isinstance(url, str) or not _is_public_fetch_url(url):
+        raise InvalidReceiptError()
     try:
         response = requests.get(
             url,
             timeout=REQUEST_TIMEOUT_SECONDS,
             allow_redirects=False,
         )
-        response.raise_for_status()
-        return response.text
-    except requests.RequestException:
-        return None
-    
+    except (
+        requests.exceptions.InvalidURL,
+        requests.exceptions.InvalidSchema,
+        requests.exceptions.MissingSchema,
+        requests.exceptions.URLRequired,
+    ) as e:
+        raise InvalidReceiptError() from e
+    except requests.RequestException as e:
+        logger.warning("Preuzimanje računa sa PURS-a nije uspelo: %r", e)
+        raise PursUnavailableError() from e
 
-def retrieve_company(url):
-    html_text = _fetch_url_text(url)
-    if html_text is None:
-        return False
-    soup = BeautifulSoup(html_text, 'lxml')
-    
-    try:
-        receipt = soup.find('pre').text
-    except AttributeError:
-        return False
-    
+    if response.status_code >= 500:
+        logger.warning("PURS je vratio HTTP %s", response.status_code)
+        raise PursUnavailableError()
+    #* Redirect-i se ne prate (SSRF zaštita); PURS nevalidne linkove preusmerava na stranicu greške.
+    if response.status_code >= 300:
+        raise InvalidReceiptError()
+    return response.text
+
+
+def _receipt_parser(func):
+    """
+    Dekorator za parse_* funkcije: svaka greška nastala usled neočekivane strukture
+    stranice postaje InvalidReceiptError (400) umesto neuhvaćenog izuzetka (500).
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except (AttributeError, IndexError, KeyError, TypeError, ValueError) as e:
+            logger.warning("Parsiranje računa (%s) nije uspelo", func.__name__, exc_info=True)
+            raise InvalidReceiptError() from e
+    return wrapper
+
+
+def _parse_html(html_text):
+    return BeautifulSoup(html_text, 'lxml')
+
+
+def _get_receipt_journal(soup):
+    """
+    Vraća tekstualni žurnal računa iz <pre> elementa.
+
+    PURS šalje žurnal sa prelomima reda '\\r\\n' i ceo parser se oslanja na njih, ali
+    lxml >= 6.0 (libxml2 >= 2.14, HTML5 tokenizer) pri parsiranju HTML-a '\\r\\n' pretvara
+    u '\\n'. Zato se prelomi ovde vraćaju na '\\r\\n', nezavisno od verzije parsera.
+    """
+    pre = soup.find('pre')
+    if pre is None:
+        raise InvalidReceiptError()
+    return re.sub(r'\r?\n', '\r\n', pre.text)
+
+
+def _get_info_groups(soup, panel_index):
+    info_panels = soup.find_all('div', class_='panel-info')
+    return info_panels[panel_index].select('.panel-body .form-group div')
+
+
+@_receipt_parser
+def parse_company(html_text):
+    journal_lines = _get_receipt_journal(_parse_html(html_text)).split('\r\n')
     company = {
-        "tin": int(receipt.split('\r\n')[1]),
-        "name": cyrillic_to_latin(receipt.split('\r\n')[2].title()),
+        "tin": int(journal_lines[1]),
+        "name": cyrillic_to_latin(journal_lines[2].strip().title()),
     }
     return company
-    
-def retrieve_company_unit(url, company_tin):
-    html_text = _fetch_url_text(url)
-    if html_text is None:
-        return False
-    soup = BeautifulSoup(html_text, 'lxml')
-    info_panels = soup.find_all('div', class_='panel-info')
-    info_groups_first = info_panels[0].select('.panel-body .form-group div')
+
+@_receipt_parser
+def parse_company_unit(html_text, company_tin):
+    info_groups_first = _get_info_groups(_parse_html(html_text), 0)
     company_unit = get_company_unit(info_groups_first, company_tin)
     return company_unit
 
-def retrieve_receipt(url, company_unit_id, user_id):
-    html_text = _fetch_url_text(url)
-    if html_text is None:
-        return False
-    soup = BeautifulSoup(html_text, 'lxml')
-    info_panels = soup.find_all('div', class_='panel-info')
-    info_groups_second = info_panels[1].select('.panel-body .form-group div')
-    
-    try:
-        receipt = soup.find('pre').text
-    except AttributeError:
-        return False
-    
-    total_vat_str = receipt.split('Укупан износ пореза:')[1].split('\r\n')[0].strip()
+@_receipt_parser
+def parse_receipt(html_text, url, company_unit_id, user_id):
+    soup = _parse_html(html_text)
+    info_groups_second = _get_info_groups(soup, 1)
+    journal = _get_receipt_journal(soup)
+
+    total_vat_str = journal.split('Укупан износ пореза:')[1].split('\r\n')[0].strip()
     total_vat = float(total_vat_str.replace('.', '').replace(",", "."))
     receipt_obj = get_receipt(url, info_groups_second, total_vat, company_unit_id, user_id)
     return receipt_obj
-    
-def retrieve_items(url, receipt_id):
-    html_text = _fetch_url_text(url)
-    if html_text is None:
-        return False
-    soup = BeautifulSoup(html_text, 'lxml')
-    
-    try:
-        receipt = soup.find('pre').text
-    except AttributeError:
-        return False
-    
-    items = get_items(receipt, receipt_id)
+
+@_receipt_parser
+def parse_items(html_text, receipt_id):
+    journal = _get_receipt_journal(_parse_html(html_text))
+    items = get_items(journal, receipt_id)
+    #* Račun bez ijedne stavke ne postoji, prazna lista znači da parsiranje nije uspelo
+    if not items:
+        raise InvalidReceiptError()
     return items
+
+
+def retrieve_company(url):
+    return parse_company(_fetch_url_text(url))
+
+def retrieve_company_unit(url, company_tin):
+    return parse_company_unit(_fetch_url_text(url), company_tin)
+
+def retrieve_receipt(url, company_unit_id, user_id):
+    return parse_receipt(_fetch_url_text(url), url, company_unit_id, user_id)
+
+def retrieve_items(url, receipt_id):
+    return parse_items(_fetch_url_text(url), receipt_id)
 
 
 
