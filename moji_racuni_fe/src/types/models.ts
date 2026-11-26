@@ -6,7 +6,8 @@ export interface AuthTokens {
 }
 
 export interface JwtPayload {
-  user_id: number;
+  // Novi tokeni nose string, a ranije započete sesije broj (rotacija refresh tokena kopira claim-ove)
+  user_id: string | number;
   username: string;
   role: UserRole;
   exp: number;

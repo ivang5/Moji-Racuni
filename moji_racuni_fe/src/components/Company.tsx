@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef } from "react";
 import Dropdown from "react-dropdown";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
 import EditIcon from "../icons/edit-icon.svg";
@@ -19,32 +19,28 @@ const Company = ({
   companyTypes,
   changeCompanyType,
 }: CompanyProps) => {
-  const [companyTypeOption, setCompanyTypeOption] = useState(
-    companyInfo.type && companyInfo.type.name,
-  );
   let companyTypeOptions: string[] = ["Bez tipa"];
   const { userRole } = useAuthUser();
   const imgInput = useRef<HTMLInputElement | null>(null);
-  const firstUpdate = useRef(true);
+  const currentTypeOption = companyInfo.type
+    ? companyInfo.type.name
+    : companyTypeOptions[0];
 
   companyTypes.forEach((type) => {
     companyTypeOptions.push(type.name);
   });
 
-  useEffect(() => {
-    if (firstUpdate.current) {
-      firstUpdate.current = false;
+  const handleTypeChange = (selectedOption: string) => {
+    if (selectedOption === currentTypeOption) {
       return;
     }
-    if (companyTypeOption) {
-      const matchedType = companyTypes.find(
-        (type) => type.name === companyTypeOption,
-      );
-      const selectedType: number | "none" =
-        companyTypeOption === "Bez tipa" ? "none" : (matchedType?.id ?? "none");
-      changeCompanyType(selectedType);
-    }
-  }, [changeCompanyType, companyTypeOption, companyTypes]);
+    const matchedType = companyTypes.find(
+      (type) => type.name === selectedOption,
+    );
+    const selectedType: number | "none" =
+      selectedOption === "Bez tipa" ? "none" : (matchedType?.id ?? "none");
+    changeCompanyType(selectedType);
+  };
 
   const handleClick = () => {
     if (userRole !== "REGULAR") {
@@ -103,12 +99,8 @@ const Company = ({
               <span className="company__type-text">Tip: </span>
               <Dropdown
                 options={companyTypeOptions}
-                onChange={(value) => setCompanyTypeOption(value.value)}
-                value={
-                  companyInfo.type
-                    ? companyInfo.type.name
-                    : companyTypeOptions[0]
-                }
+                onChange={(option) => handleTypeChange(option.value)}
+                value={currentTypeOption}
                 placeholder="Izaberite opciju"
               />
             </div>

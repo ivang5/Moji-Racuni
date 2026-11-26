@@ -4,7 +4,7 @@ import AuthContext from "../context/AuthContext";
 const useAuthUser = () => {
   const { user } = useContext(AuthContext);
   const userRole = user?.role || null;
-  const userId = user?.user_id || null;
+  const userId = user?.user_id ? Number(user.user_id) : null;
   const username = user?.username || "";
 
   return {
