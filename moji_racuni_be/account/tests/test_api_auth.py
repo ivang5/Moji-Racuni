@@ -8,6 +8,7 @@ import jwt
 import pytest
 from django.conf import settings
 
+from account.api.views import MyTokenObtainPairSerializer
 from account.models import User
 from account.tests.factories import DEFAULT_PASSWORD, UserFactory
 
@@ -31,7 +32,8 @@ def test_token_obtain_returns_access_and_refresh_with_custom_claims(api_client, 
     assert set(response.json()) == {"access", "refresh"}
     claims = _claims(response.json()["access"])
     assert claims["token_type"] == "access"
-    assert claims["user_id"] == regular_user.id
+    #* simplejwt (>= 5.5.1) user_id claim uvek upisuje kao string; FE ga pretvara u broj (useAuthUser)
+    assert claims["user_id"] == str(regular_user.id)
     assert claims["username"] == "regular"
     assert claims["role"] == "REGULAR"
 
@@ -89,6 +91,22 @@ def test_token_refresh_rotates_refresh_token_and_keeps_claims(api_client, regula
     claims = _claims(response.json()["access"])
     assert claims["username"] == "regular"
     assert claims["role"] == "REGULAR"
+
+
+def test_token_with_numeric_user_id_claim_still_refreshes_and_authenticates(api_client, regular_user):
+    #* Starije verzije simplejwt-a su user_id upisivale kao broj; takve sesije moraju i dalje da rade
+    refresh = MyTokenObtainPairSerializer.get_token(regular_user)
+    refresh["user_id"] = regular_user.id
+
+    response = api_client.post("/api/token/refresh/", {"refresh": str(refresh)}, format="json")
+
+    assert response.status_code == 200
+    access = response.json()["access"]
+    #* Rotacija kopira claim-ove, pa i novi tokeni zadržavaju broj
+    assert _claims(access)["user_id"] == regular_user.id
+    assert _claims(response.json()["refresh"])["user_id"] == regular_user.id
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+    assert api_client.get(f"/api/users/{regular_user.id}/").status_code == 200
 
 
 def test_token_refresh_with_rotated_refresh_token_returns_401(api_client, regular_user):

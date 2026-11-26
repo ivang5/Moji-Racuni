@@ -5,9 +5,10 @@ import re
 import requests
 from urllib.parse import urlparse
 import ipaddress
-from srtools import cyrillic_to_latin
 from django.db import connection
 from rest_framework.exceptions import APIException
+
+from moji_racuni_be.transliteration import cyrillic_to_latin
 
 REQUEST_TIMEOUT_SECONDS = 10
 logger = logging.getLogger(__name__)
@@ -1566,7 +1567,8 @@ def get_objects_info(obj_list, lab, val):
     
     for obj in obj_list:
         labels.append(obj[lab])
-        values.append(obj[val])
+        #* matplotlib pie ne prihvata Decimal (SUM iz baze), već int/float
+        values.append(float(obj[val]))
         
     return labels, values
 

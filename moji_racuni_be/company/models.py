@@ -11,7 +11,7 @@ class CompanyType(models.Model):
 class Company(models.Model):
     tin = models.PositiveIntegerField(primary_key=True, validators=[MaxValueValidator(999999999)])
     name = models.CharField(max_length=150)
-    type = models.ManyToManyField(CompanyType, null=True)
+    type = models.ManyToManyField(CompanyType, blank=True)
     image = models.ImageField(upload_to='images', null=True)
     
 class CompanyUnit(models.Model):
