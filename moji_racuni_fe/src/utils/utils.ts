@@ -38,7 +38,7 @@ export const dateTimeBEFormatter = (date: Date | string) => {
 
 export const getTomorrow = () => {
   const today = new Date();
-  let tomorrow = new Date();
+  const tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
   return tomorrow;
 };

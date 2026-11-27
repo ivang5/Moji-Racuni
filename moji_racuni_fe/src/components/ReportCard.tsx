@@ -1,4 +1,3 @@
-import React from "react";
 import { dateTimeFormatter } from "../utils/utils";
 import BellIcon from "../icons/bell-icon.svg";
 import useAuthUser from "../hooks/useAuthUser";

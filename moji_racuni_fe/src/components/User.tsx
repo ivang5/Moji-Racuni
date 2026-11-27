@@ -1,4 +1,3 @@
-import React from "react";
 import { dateFormatter } from "../utils/utils";
 import type { User as UserModel } from "../types/models";
 

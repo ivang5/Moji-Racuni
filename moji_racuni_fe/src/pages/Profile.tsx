@@ -61,7 +61,7 @@ const Profile = () => {
     }
     const form = e.currentTarget as ProfileInfoForm;
 
-    let validationObj = validateProfileInfoForm({
+    const validationObj = validateProfileInfoForm({
       username: form.username.value,
       email: form.email.value,
     });
@@ -109,7 +109,7 @@ const Profile = () => {
     }
     const form = e.currentTarget as PasswordForm;
 
-    let validationObj = validatePasswordUpdateForm({
+    const validationObj = validatePasswordUpdateForm({
       password: form.pass.value,
       passwordRepeat: form.passRepeat.value,
     });

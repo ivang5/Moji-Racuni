@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import { dateTimeFormatter } from "../utils/utils";
 import useAuthUser from "../hooks/useAuthUser";

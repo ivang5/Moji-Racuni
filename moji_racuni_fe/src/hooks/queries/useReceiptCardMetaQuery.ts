@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { ApiError } from "../../api/errors";
 import { receiptKeys } from "../../services/queryKeys";
 import type { CompanyUnit } from "../../types/models";
 import {

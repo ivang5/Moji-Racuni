@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import checkIcon from "../icons/checkmark_circle.svg";
 

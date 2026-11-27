@@ -31,9 +31,11 @@ const useRoutePageParam = ({
     const parsedPage = parseInt(page, 10);
 
     if (parsedPage) {
-      Math.sign(parsedPage) !== -1
-        ? setPageNum(parsedPage)
-        : navigate(notFoundPath);
+      if (Math.sign(parsedPage) !== -1) {
+        setPageNum(parsedPage);
+      } else {
+        navigate(notFoundPath);
+      }
       return;
     }
 

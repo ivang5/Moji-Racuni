@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TypeAnimation } from "react-type-animation";
 import DatePicker from "react-datepicker";
 import {
@@ -238,6 +238,7 @@ const Statistics = () => {
   useEffect(() => {
     const worker = new Worker(
       new URL("../workers/WorkerPDF.ts", import.meta.url),
+      { type: "module" },
     );
     worker.onmessage = (e: MessageEvent<Blob>) => {
       const pendingKey = pendingPdfKeyRef.current;

@@ -11,7 +11,9 @@
   border-radius: 20px;
   cursor: pointer;
   box-shadow: 5px 5px 10px $c-white-3;
-  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+  transition:
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
 
   @include respond-to(tablet) {
     width: calc(50% - 6px);

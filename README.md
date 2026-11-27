@@ -17,12 +17,12 @@ Web aplikacija za praćenje finansija. Skladišti podatke sa fiskalnih računa i
 - Unutar `moji_racuni_fe` direktorijuma:
   - Izvršiti `npm install`
   - Kreirati `.env` fajl po uzoru na `moji_racuni_fe/.env.example`.
-    - Obavezno podesiti `REACT_APP_BASE_URL` na backend adresu u formatu `http://{IPv4 adresa host uređaja}:8000` (npr. `http://192.168.1.1:8000`).
+    - Obavezno podesiti `VITE_API_BASE_URL` na backend adresu u formatu `http://{IPv4 adresa host uređaja}:8000` (npr. `http://192.168.1.1:8000`).
 
 ## Pokretanje:
 
 - Unutar `moji_racuni_be` direktorijuma izvršiti `uv run python manage.py runserver 0.0.0.0:8000`.
-- Unutar `moji_racuni_fe` direktorijuma izvršiti `npm start`.
+- Unutar `moji_racuni_fe` direktorijuma izvršiti `npm start` (ili `npm run dev`); Vite dev server sluša na portu 3000 na svim mrežnim interfejsima.
 - Preko bilo kog uređaja na mreži pristupite aplikaciji na adresi `http://{IPv4 adresa host uređaja}:3000` (npr. `http://192.168.1.1:3000`)
 
 ## Testovi (backend):
@@ -30,6 +30,18 @@ Web aplikacija za praćenje finansija. Skladišti podatke sa fiskalnih računa i
 - Unutar `moji_racuni_be` direktorijuma pokrenuti `uv run pytest`. Testovi rade nad MariaDB bazom `test_<DB_NAME>` (DB korisnik mora imati pravo `CREATE DATABASE`); posle izmene modela/migracija pokrenuti `uv run pytest --create-db`.
 - `uv run pytest --endpoint-coverage` ispisuje koji API endpoint-i su pokriveni testovima.
 - Snapshot-ovi stvarnih računa za testove parsera se ne čuvaju u repozitorijumu (vidi `moji_racuni_be/receipt/tests/fixtures/README.md`).
+
+## Frontend (provere i build):
+
+Unutar `moji_racuni_fe` direktorijuma:
+
+```bash
+npm run type-check   # TypeScript
+npm run lint         # ESLint
+npm test             # Vitest (jednom; npm run test:watch za watch režim)
+npm run build        # produkcioni build u dist/ (npm run preview ga servira na portu 3000)
+npm run format       # Prettier
+```
 
 ## Zavisnosti (backend):
 

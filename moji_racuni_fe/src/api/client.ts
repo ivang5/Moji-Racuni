@@ -1,11 +1,8 @@
+import { API_BASE_URL } from "../config";
 import { toApiError, toNetworkError } from "./errors";
 
 type RequestOptions = RequestInit & {
   parseAsText?: boolean;
-};
-
-const getBaseUrl = (): string => {
-  return process.env.REACT_APP_BASE_URL || "";
 };
 
 const parseResponse = async (response: Response): Promise<unknown> => {
@@ -24,7 +21,7 @@ export const apiClient = async <T>(
   options: RequestOptions = {},
 ): Promise<T> => {
   try {
-    const response = await fetch(`${getBaseUrl()}${path}`, options);
+    const response = await fetch(`${API_BASE_URL}${path}`, options);
     const data = await parseResponse(response);
 
     if (!response.ok) {

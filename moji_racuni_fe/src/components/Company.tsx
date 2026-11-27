@@ -3,6 +3,7 @@ import Dropdown from "react-dropdown";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
 import EditIcon from "../icons/edit-icon.svg";
 import { formatPrice } from "../utils/utils";
+import { API_BASE_URL } from "../config";
 import useAuthUser from "../hooks/useAuthUser";
 import type { CompanyInfoView, CompanyTypeView } from "../types/viewModels";
 
@@ -19,7 +20,7 @@ const Company = ({
   companyTypes,
   changeCompanyType,
 }: CompanyProps) => {
-  let companyTypeOptions: string[] = ["Bez tipa"];
+  const companyTypeOptions: string[] = ["Bez tipa"];
   const { userRole } = useAuthUser();
   const imgInput = useRef<HTMLInputElement | null>(null);
   const currentTypeOption = companyInfo.type
@@ -80,7 +81,7 @@ const Company = ({
                 }
                 src={
                   companyInfo.company.image
-                    ? `${process.env.REACT_APP_BASE_URL}${companyInfo.company.image}`
+                    ? `${API_BASE_URL}${companyInfo.company.image}`
                     : ImgPlaceholder
                 }
                 alt="logo preduzeća"
