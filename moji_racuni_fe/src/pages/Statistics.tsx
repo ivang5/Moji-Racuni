@@ -18,7 +18,7 @@ import {
 } from "../utils/utils";
 import Chart from "../components/Chart";
 import InfoIcon from "../icons/info-icon.png";
-import { saveAs } from "file-saver";
+import { downloadBlob } from "../utils/downloadBlob";
 import type {
   BaseStatsView,
   ChartBarPoint,
@@ -320,7 +320,7 @@ const Statistics = () => {
                   <span className="statistics__search-lbl">Datum od</span>
                   <DatePicker
                     selected={fromDate}
-                    onChange={(date) => {
+                    onChange={(date: Date | null) => {
                       if (date) {
                         setFromDate(date);
                       }
@@ -329,13 +329,14 @@ const Statistics = () => {
                     startDate={fromDate}
                     endDate={toDate}
                     dateFormat="d/MM/yyyy"
+                    popperPlacement="bottom-start"
                   />
                 </div>
                 <div className="statistics__search-date-wrapper">
                   <span className="statistics__search-lbl">Datum do</span>
                   <DatePicker
                     selected={toDate}
-                    onChange={(date) => {
+                    onChange={(date: Date | null) => {
                       if (date) {
                         setToDate(date);
                       }
@@ -345,6 +346,7 @@ const Statistics = () => {
                     endDate={toDate}
                     minDate={fromDate}
                     dateFormat="d/MM/yyyy"
+                    popperPlacement="bottom-start"
                   />
                 </div>
                 <ul className="statistics__search-checkbox-wrapper">
@@ -435,7 +437,7 @@ const Statistics = () => {
                         className="btn btn-primary btn-round"
                         type="button"
                         onClick={async () => {
-                          saveAs(PDFBlob, "Statistika.pdf");
+                          downloadBlob(PDFBlob, "Statistika.pdf");
                         }}
                       >
                         Preuzmi PDF

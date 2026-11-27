@@ -28,9 +28,23 @@
   border-radius: 10px;
 }
 
+// The day names are rendered after the header, so they share its background
+// and carry its bottom border to look like a single block.
 .react-datepicker__header {
+  padding-bottom: 0;
+  background-color: rgba($color: $c-green-1, $alpha: 0.2);
+  border-bottom: none;
+}
+
+.react-datepicker__day-names {
+  margin-bottom: 0;
   background-color: rgba($color: $c-green-1, $alpha: 0.2);
   border-bottom: 1px solid $c-green-4;
+}
+
+// The month title is an h2, which would otherwise get the heading font.
+.react-datepicker__current-month {
+  font-family: "Source Sans Pro", sans-serif;
 }
 
 .react-datepicker__day--selected,
@@ -83,12 +97,10 @@
   background-color: $c-green-4;
 }
 
-.react-datepicker-popper[data-placement^="bottom"]
-  .react-datepicker__triangle::before,
-.react-datepicker-popper[data-placement^="bottom"]
-  .react-datepicker__triangle::after {
-  border-top: none;
-  border-bottom-color: $c-green-3;
+.react-datepicker-popper[data-placement^="bottom"] .react-datepicker__triangle {
+  color: $c-green-3;
+  fill: $c-green-3;
+  stroke: $c-green-3;
 }
 
 .react-datepicker__year-read-view--down-arrow,

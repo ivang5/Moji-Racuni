@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { TypeAnimation } from "react-type-animation";
 import FormGroup from "../components/FormGroup";
 import Toast from "../components/Toast";

@@ -1,8 +1,59 @@
-import { useEffect } from "react";
+import { useEffect, type ComponentProps, type SVGProps } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import { ResponsivePie } from "@nivo/pie";
 import { formatChartVal, formatPrice } from "../utils/utils";
 import { useState } from "react";
+
+type AxisTickProps = Parameters<
+  NonNullable<
+    NonNullable<
+      ComponentProps<typeof ResponsiveBar>["axisBottom"]
+    >["renderTick"]
+  >
+>[0];
+
+const MAX_TICK_LABEL_LENGTH = 20;
+
+// Same markup as nivo's default tick, but long labels are shortened and keep
+// the full text in a <title> (shown on hover). The default tick only renders
+// strings, so this cannot be done through `format`.
+const TruncatedAxisTick = ({
+  value,
+  x,
+  y,
+  lineX,
+  lineY,
+  textX,
+  textY,
+  rotate = 0,
+  textAnchor,
+  textBaseline,
+  theme,
+}: AxisTickProps) => {
+  const label = String(value);
+  const isTruncated = label.length > MAX_TICK_LABEL_LENGTH;
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <line x1={0} x2={lineX} y1={0} y2={lineY} style={theme.line} />
+      <text
+        dominantBaseline={
+          textBaseline as SVGProps<SVGTextElement>["dominantBaseline"]
+        }
+        textAnchor={textAnchor as SVGProps<SVGTextElement>["textAnchor"]}
+        transform={`translate(${textX},${textY}) rotate(${rotate})`}
+        style={{
+          fill: theme.text.fill,
+          fontFamily: theme.text.fontFamily,
+          fontSize: theme.text.fontSize,
+        }}
+      >
+        {isTruncated ? `${label.substring(0, 17)}...` : label}
+        {isTruncated && <title>{label}</title>}
+      </text>
+    </g>
+  );
+};
 
 type PieChartSettings = {
   margin?: { top: number; right: number; bottom: number; left: number };
@@ -129,7 +180,7 @@ const Chart = ({
             indexBy={index}
             margin={{ top: 50, right: 0, bottom: 105, left: 36 }}
             padding={0.4}
-            valueScale={{ type: "linear" }}
+            valueScale={{ type: "linear", nice: false }}
             colors="#23c363"
             animate={true}
             enableLabel={false}
@@ -210,16 +261,7 @@ const Chart = ({
             axisTop={null}
             axisRight={null}
             axisBottom={{
-              format: (v) => {
-                return v.length > 20 && customAxis ? (
-                  <tspan>
-                    {v.substring(0, 17) + "..."}
-                    <title>{v}</title>
-                  </tspan>
-                ) : (
-                  v
-                );
-              },
+              renderTick: customAxis ? TruncatedAxisTick : undefined,
               tickRotation: customAxis ? -55 : 0,
             }}
             axisLeft={{

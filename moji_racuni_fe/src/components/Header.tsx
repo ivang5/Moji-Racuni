@@ -1,6 +1,6 @@
 import { useCallback, useContext, useState } from "react";
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { capitalize, getPageFromPathname } from "../utils/utils";
 import AuthContext from "../context/AuthContext";
 import useAuthUser from "../hooks/useAuthUser";

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
 import AuthContext from "../context/AuthContext";
 import type { AuthTokens, JwtPayload } from "../types/models";
@@ -58,7 +58,7 @@ const useFetch = () => {
 
     localStorage.setItem("authTokens", JSON.stringify(data));
     setAuthTokens(data);
-    setUser(jwt_decode(data.access));
+    setUser(jwtDecode(data.access));
     isRefreshing = false;
     return data;
   };
@@ -72,7 +72,7 @@ const useFetch = () => {
 
     let user: JwtPayload;
     try {
-      user = jwt_decode<JwtPayload>(storedTokens.access);
+      user = jwtDecode<JwtPayload>(storedTokens.access);
     } catch {
       logoutUser();
       return { response: { status: 401 } as Response, data: null as any };

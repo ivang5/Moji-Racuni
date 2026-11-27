@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { formatPrice } from "../utils/utils";
 import TrendUp from "../icons/trend-up.png";
 import TrendDown from "../icons/trend-down.png";
