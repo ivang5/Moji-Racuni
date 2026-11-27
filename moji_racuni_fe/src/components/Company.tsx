@@ -100,7 +100,7 @@ const Company = ({
               <span className="company__type-text">Tip: </span>
               <Dropdown
                 options={companyTypeOptions}
-                onChange={(option) => handleTypeChange(option.value)}
+                onChange={(option) => handleTypeChange(String(option.value))}
                 value={currentTypeOption}
                 placeholder="Izaberite opciju"
               />

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { dateTimeFormatter } from "../utils/utils";
 import useAuthUser from "../hooks/useAuthUser";
 import useUserByIdQuery from "../hooks/queries/useUserByIdQuery";

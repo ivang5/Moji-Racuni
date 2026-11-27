@@ -5,7 +5,7 @@ import Dropdown from "react-dropdown";
 import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
 import Toast from "../components/Toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import User from "../components/User";
 import UserCard from "../components/UserCard";
 import useToast from "../hooks/useToast";
@@ -212,13 +212,13 @@ const Users = () => {
             <div className="users__sort-wrapper">
               <Dropdown
                 options={sortByOptions}
-                onChange={(value) => setSortBy(value.value)}
+                onChange={(value) => setSortBy(String(value.value))}
                 value={sortBy}
                 placeholder="Izaberite opciju"
               />
               <Dropdown
                 options={sortTypeOptions}
-                onChange={(value) => setSortType(value.value)}
+                onChange={(value) => setSortType(String(value.value))}
                 value={sortType}
                 placeholder="Izaberite opciju"
               />

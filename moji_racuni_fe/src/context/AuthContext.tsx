@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, type ReactNode } from "react";
-import jwt_decode from "jwt-decode";
-import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router";
 import type { AuthTokens, JwtPayload } from "../types/models";
 import { API_BASE_URL } from "../config";
 
@@ -59,7 +59,7 @@ const decodeAccessToken = (tokens: AuthTokens | null): JwtPayload | null => {
   }
 
   try {
-    return jwt_decode(tokens.access);
+    return jwtDecode(tokens.access);
   } catch {
     localStorage.removeItem("authTokens");
     return null;
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (response.status === 200) {
         setAuthTokens(data);
-        setUser(jwt_decode(data.access));
+        setUser(jwtDecode(data.access));
         localStorage.setItem("authTokens", JSON.stringify(data));
         navigate("/");
       } else {

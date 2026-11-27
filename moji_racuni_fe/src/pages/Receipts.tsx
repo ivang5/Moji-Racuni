@@ -14,7 +14,7 @@ import FormGroup from "../components/FormGroup";
 import Paginator from "../components/Paginator";
 import Receipt from "../components/Receipt";
 import Toast from "../components/Toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import useToast from "../hooks/useToast";
 import usePaginatedListState from "../hooks/usePaginatedListState";
 import useModalDismiss from "../hooks/useModalDismiss";
@@ -276,7 +276,7 @@ const Receipts = () => {
                     <span className="receipts__search-lbl">Datum od</span>
                     <DatePicker
                       selected={fromDate}
-                      onChange={(date) => {
+                      onChange={(date: Date | null) => {
                         if (date) {
                           setFromDate(date);
                         }
@@ -285,13 +285,14 @@ const Receipts = () => {
                       startDate={fromDate}
                       endDate={toDate}
                       dateFormat="d/MM/yyyy"
+                      popperPlacement="bottom-start"
                     />
                   </div>
                   <div className="receipts__search-date-wrapper">
                     <span className="receipts__search-lbl">Datum do</span>
                     <DatePicker
                       selected={toDate}
-                      onChange={(date) => {
+                      onChange={(date: Date | null) => {
                         if (date) {
                           setToDate(date);
                         }
@@ -301,6 +302,7 @@ const Receipts = () => {
                       endDate={toDate}
                       minDate={fromDate}
                       dateFormat="d/MM/yyyy"
+                      popperPlacement="bottom-start"
                     />
                   </div>
                 </div>
@@ -318,13 +320,13 @@ const Receipts = () => {
             <div className="receipts__sort-wrapper">
               <Dropdown
                 options={sortByOptions}
-                onChange={(value) => setSortBy(value.value)}
+                onChange={(value) => setSortBy(String(value.value))}
                 value={sortBy}
                 placeholder="Izaberite opciju"
               />
               <Dropdown
                 options={sortTypeOptions}
-                onChange={(value) => setSortType(value.value)}
+                onChange={(value) => setSortType(String(value.value))}
                 value={sortType}
                 placeholder="Izaberite opciju"
               />
