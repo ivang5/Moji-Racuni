@@ -3,6 +3,7 @@ import jwt_decode from "jwt-decode";
 import dayjs from "dayjs";
 import AuthContext from "../context/AuthContext";
 import type { AuthTokens, JwtPayload } from "../types/models";
+import { API_BASE_URL } from "../config";
 
 type RequestConfig = RequestInit & {
   headers?: HeadersInit;
@@ -16,7 +17,7 @@ const useFetch = () => {
     try {
       const rawTokens = localStorage.getItem("authTokens");
       return rawTokens ? JSON.parse(rawTokens) : null;
-    } catch (error) {
+    } catch {
       localStorage.removeItem("authTokens");
       return null;
     }
@@ -27,12 +28,12 @@ const useFetch = () => {
   }
 
   const originalRequest = async (url: string, config: RequestConfig) => {
-    url = `${process.env.REACT_APP_BASE_URL}${url}`;
+    url = `${API_BASE_URL}${url}`;
     const response = await fetch(url, config);
     let data;
     try {
       data = await response.json();
-    } catch (error) {
+    } catch {
       data = null;
     }
     return { response, data };
@@ -40,16 +41,13 @@ const useFetch = () => {
 
   const refreshToken = async (authTokens: AuthTokens) => {
     isRefreshing = true;
-    const response = await fetch(
-      `${process.env.REACT_APP_BASE_URL}/api/token/refresh/`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refresh: authTokens.refresh }),
+    const response = await fetch(`${API_BASE_URL}/api/token/refresh/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({ refresh: authTokens.refresh }),
+    });
     const data = await response.json();
 
     if (response.status !== 200 || !data?.access) {
@@ -75,7 +73,7 @@ const useFetch = () => {
     let user: JwtPayload;
     try {
       user = jwt_decode<JwtPayload>(storedTokens.access);
-    } catch (error) {
+    } catch {
       logoutUser();
       return { response: { status: 401 } as Response, data: null as any };
     }

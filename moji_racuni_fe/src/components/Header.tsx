@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { capitalize, getPageFromPathname } from "../utils/utils";
@@ -7,13 +7,7 @@ import useAuthUser from "../hooks/useAuthUser";
 import Logo from "../icons/logo/Logo_bg_color.svg";
 
 type HeaderPage =
-  | "Home"
-  | "Stats"
-  | "Receipts"
-  | "Companies"
-  | "Users"
-  | "Reports"
-  | "Profile";
+  "Home" | "Stats" | "Receipts" | "Companies" | "Users" | "Reports" | "Profile";
 
 const Header = () => {
   const { logoutUser } = useContext(AuthContext);
@@ -65,9 +59,7 @@ const Header = () => {
         setActivePage("Users");
         break;
       case currentPath.startsWith("/prijave") ? currentPath : "":
-        userRole === "REGULAR"
-          ? setActivePage("Profile")
-          : setActivePage("Reports");
+        setActivePage(userRole === "REGULAR" ? "Profile" : "Reports");
         break;
       case "/profil":
         setActivePage("Profile");

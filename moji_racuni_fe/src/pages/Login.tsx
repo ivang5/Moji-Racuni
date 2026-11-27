@@ -61,7 +61,7 @@ const Login = () => {
   const initiateLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as LoginForm;
-    let validationObj = validateLoginForm({
+    const validationObj = validateLoginForm({
       username: form.username.value,
       password: form.password.value,
     });
@@ -88,7 +88,7 @@ const Login = () => {
   const initiateRegistration = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as RegistrationForm;
-    let validationObj = validateRegistrationForm({
+    const validationObj = validateRegistrationForm({
       email: form.regEmail.value,
       username: form.regUsername.value,
       password: form.regPassword.value,

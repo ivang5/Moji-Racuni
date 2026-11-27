@@ -1,5 +1,3 @@
-import React from "react";
-
 type UserCardProps = {
   id: number;
   username: string;

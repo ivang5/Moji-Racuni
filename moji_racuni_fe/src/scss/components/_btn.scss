@@ -7,8 +7,11 @@
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 12px 24px rgb(34 51 49 / 13%);
-  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
-    border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  transition:
+    color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
 
   @include respond-to(tablet) {
     font-size: 16px;

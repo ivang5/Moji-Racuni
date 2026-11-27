@@ -14,7 +14,9 @@
     border-radius: 7px;
     color: $c-dark-4;
     cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
 
     &:hover {
       @include respond-to(tablet) {

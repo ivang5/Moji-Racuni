@@ -1,5 +1,5 @@
-import React from "react";
 import ImgPlaceholder from "../icons/placeholder-icon.svg";
+import { API_BASE_URL } from "../config";
 import type { CompanyListItemView } from "../types/viewModels";
 import useCompanyCardMetaQuery from "../hooks/queries/useCompanyCardMetaQuery";
 
@@ -25,11 +25,7 @@ const CompanyCard = ({ tin, name, image, openModal }: CompanyCardProps) => {
             ? "company-card__img company-card__img--logo"
             : "company-card__img"
         }
-        src={
-          image
-            ? `${process.env.REACT_APP_BASE_URL}/media/${image}`
-            : ImgPlaceholder
-        }
+        src={image ? `${API_BASE_URL}/media/${image}` : ImgPlaceholder}
         alt="logo preduzeća"
       />
       {companyTypeName && (

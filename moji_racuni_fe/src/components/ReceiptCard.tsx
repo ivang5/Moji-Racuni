@@ -1,4 +1,3 @@
-import React from "react";
 import { dateTimeFormatter, formatPrice } from "../utils/utils";
 import type { ReceiptListItemView } from "../types/viewModels";
 import useReceiptCardMetaQuery from "../hooks/queries/useReceiptCardMetaQuery";

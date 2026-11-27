@@ -10,15 +10,13 @@ const useApi = () => {
   const api = useFetch();
 
   const getResponse = (response: Response, data: any, status = 200) => {
-    let toReturn;
     if (response.status === 409) {
       return 409;
     }
     if (response.status === 404) {
       return 404;
     }
-    response.status === status ? (toReturn = data) : (toReturn = null);
-    return toReturn;
+    return response.status === status ? data : null;
   };
 
   const {
