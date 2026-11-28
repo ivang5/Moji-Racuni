@@ -9,23 +9,54 @@ type RequestConfig = RequestInit & {
   headers?: HeadersInit;
 };
 
-const useFetch = () => {
-  const { setAuthTokens, setUser, logoutUser } = useContext(AuthContext);
-  let isRefreshing = false;
+// Access token se osvežava malo pre isteka, da ne istekne dok je zahtev na putu do BE-a
+const EXPIRY_MARGIN_MS = 10_000;
 
-  const getStoredTokens = () => {
-    try {
-      const rawTokens = localStorage.getItem("authTokens");
-      return rawTokens ? JSON.parse(rawTokens) : null;
-    } catch {
-      localStorage.removeItem("authTokens");
-      return null;
-    }
-  };
-
-  function delay(time: number) {
-    return new Promise((resolve) => setTimeout(resolve, time));
+const getStoredTokens = (): AuthTokens | null => {
+  try {
+    const rawTokens = localStorage.getItem("authTokens");
+    return rawTokens ? JSON.parse(rawTokens) : null;
+  } catch {
+    localStorage.removeItem("authTokens");
+    return null;
   }
+};
+
+// Refresh token se posle upotrebe poništava (rotacija), pa svi zahtevi kojima je istekao access
+// token čekaju isti refresh umesto da svaki pošalje svoj (zakasneli bi dobili 401 i odjavu).
+// Novi tokeni se upisuju u localStorage pre nego što se refresh završi, da zahtev pokrenut posle
+// toga ne bi pročitao stare tokene i krenuo u nov refresh sa već poništenim tokenom.
+let refreshInFlight: Promise<AuthTokens | null> | null = null;
+
+const refreshTokens = (refresh: string): Promise<AuthTokens | null> => {
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/token/refresh/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refresh }),
+        });
+        const data = await response.json().catch(() => null);
+        if (response.status !== 200 || !data?.access || !data?.refresh) {
+          return null;
+        }
+        localStorage.setItem("authTokens", JSON.stringify(data));
+        return data as AuthTokens;
+      } catch {
+        return null;
+      }
+    })().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+};
+
+const useFetch = () => {
+  const { storeAuthTokens, logoutUser } = useContext(AuthContext);
 
   const originalRequest = async (url: string, config: RequestConfig) => {
     url = `${API_BASE_URL}${url}`;
@@ -37,30 +68,6 @@ const useFetch = () => {
       data = null;
     }
     return { response, data };
-  };
-
-  const refreshToken = async (authTokens: AuthTokens) => {
-    isRefreshing = true;
-    const response = await fetch(`${API_BASE_URL}/api/token/refresh/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ refresh: authTokens.refresh }),
-    });
-    const data = await response.json();
-
-    if (response.status !== 200 || !data?.access) {
-      isRefreshing = false;
-      logoutUser();
-      return null;
-    }
-
-    localStorage.setItem("authTokens", JSON.stringify(data));
-    setAuthTokens(data);
-    setUser(jwtDecode(data.access));
-    isRefreshing = false;
-    return data;
   };
 
   const callFetch = async (url: string, config: RequestConfig = {}) => {
@@ -78,19 +85,15 @@ const useFetch = () => {
       return { response: { status: 401 } as Response, data: null as any };
     }
 
-    const isExpired = dayjs.unix(user.exp).diff(dayjs()) < 1;
+    const isExpired = dayjs.unix(user.exp).diff(dayjs()) < EXPIRY_MARGIN_MS;
 
     if (isExpired) {
-      if (!isRefreshing) {
-        const refreshedTokens = await refreshToken(storedTokens);
-        if (!refreshedTokens?.access) {
-          return { response: { status: 401 } as Response, data: null as any };
-        }
-      } else {
-        while (isRefreshing) {
-          await delay(200);
-        }
+      const refreshedTokens = await refreshTokens(storedTokens.refresh);
+      if (!refreshedTokens) {
+        logoutUser();
+        return { response: { status: 401 } as Response, data: null as any };
       }
+      storeAuthTokens(refreshedTokens);
     }
 
     const latestTokens = getStoredTokens();

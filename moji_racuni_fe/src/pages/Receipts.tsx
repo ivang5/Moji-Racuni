@@ -4,7 +4,6 @@ import ReceiptCard from "../components/ReceiptCard";
 import {
   getTenYearsAgo,
   dateBEFormatter,
-  dateTimeBEFormatter,
   getReceiptOrderCode,
   getTomorrow,
 } from "../utils/utils";
@@ -194,11 +193,8 @@ const Receipts = () => {
 
     const currentReceipt = modalReceipt.receipt;
 
-    const date = new Date();
-    const formattedDate = dateTimeBEFormatter(date);
-
+    // Datum prijave postavlja server
     const report = {
-      date: formattedDate,
       receipt: currentReceipt.id,
       request: form.repmsg.value.trim(),
     };

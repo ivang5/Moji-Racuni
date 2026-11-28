@@ -210,14 +210,10 @@ const Reports = () => {
 
     const currentReport = modalReport;
 
+    // Administrator menja samo odgovor i zatvara prijavu (seen postavlja server)
     const report = {
-      date: currentReport.date,
-      request: currentReport.request,
       response: form.repmsg.value.trim(),
       closed: true,
-      seen: false,
-      receipt: currentReport.receipt,
-      user: currentReport.user,
     };
 
     await updateReportMutation({ id: currentReport.id, reportInfo: report });

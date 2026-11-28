@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link } from "react-router";
 import { TypeAnimation } from "react-type-animation";
 import FormGroup from "../components/FormGroup";
@@ -15,6 +15,14 @@ import useUserByIdQuery from "../hooks/queries/useUserByIdQuery";
 import useUpdateUserMutation from "../hooks/mutations/useUpdateUserMutation";
 import useUpdateUserPasswordMutation from "../hooks/mutations/useUpdateUserPasswordMutation";
 import { ApiError } from "../api/errors";
+import AuthContext from "../context/AuthContext";
+
+// Prva poruka za polje iz greške validacije sa BE-a ({ polje: ["poruka", ...] })
+const fieldError = (error: ApiError, field: string) => {
+  const details = error.details as Record<string, unknown> | null;
+  const messages = details?.[field];
+  return Array.isArray(messages) ? messages.join(" ") : "";
+};
 
 type ProfileValidation = {
   username: string;
@@ -22,8 +30,10 @@ type ProfileValidation = {
 };
 
 type PasswordValidation = {
+  currentPassword: string;
   password: string;
   passwordRepeat: string;
+  server?: string;
 };
 
 type ProfileInfoForm = HTMLFormElement & {
@@ -32,6 +42,7 @@ type ProfileInfoForm = HTMLFormElement & {
 };
 
 type PasswordForm = HTMLFormElement & {
+  currentPass: HTMLInputElement;
   pass: HTMLInputElement;
   passRepeat: HTMLInputElement;
 };
@@ -44,9 +55,11 @@ const Profile = () => {
     email: "",
   });
   const [formValidPass, setFormValidPass] = useState<PasswordValidation>({
+    currentPassword: "",
     password: "",
     passwordRepeat: "",
   });
+  const { storeAuthTokens } = useContext(AuthContext);
   const { userId, userRole } = useAuthUser();
   const { toast, toastOpen, showToast, closeToast } = useToast(7000);
   const { data: userInfo, isLoading: userLoading } = useUserByIdQuery(userId);
@@ -90,6 +103,10 @@ const Profile = () => {
       if (error instanceof ApiError && error.code === "CONFLICT") {
         validationObj.username = "Korisničko ime već postoji!";
         setFormValid(validationObj);
+      } else if (error instanceof ApiError && error.code === "BAD_REQUEST") {
+        validationObj.username = fieldError(error, "username");
+        validationObj.email = fieldError(error, "email");
+        setFormValid(validationObj);
       }
       return;
     }
@@ -109,26 +126,45 @@ const Profile = () => {
     }
     const form = e.currentTarget as PasswordForm;
 
-    const validationObj = validatePasswordUpdateForm({
+    const validationObj: PasswordValidation = validatePasswordUpdateForm({
+      currentPassword: form.currentPass.value,
       password: form.pass.value,
       passwordRepeat: form.passRepeat.value,
     });
 
-    if (validationObj.password !== "" || validationObj.passwordRepeat !== "") {
+    if (
+      validationObj.currentPassword !== "" ||
+      validationObj.password !== "" ||
+      validationObj.passwordRepeat !== ""
+    ) {
       setFormValidPass(validationObj);
       return;
     }
 
     const newPasswordInfo = {
+      currentPassword: form.currentPass.value,
       password: form.pass.value,
       passRepeat: form.passRepeat.value,
     };
     try {
-      await updateUserPasswordMutation({
+      const tokens = await updateUserPasswordMutation({
         id: userId,
         passwordInfo: newPasswordInfo,
       });
-    } catch {
+      // BE posle promene lozinke poništava sve refresh tokene i vraća nove za ovu sesiju
+      storeAuthTokens(tokens);
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "BAD_REQUEST") {
+        validationObj.currentPassword = fieldError(error, "currentPassword");
+        validationObj.password = fieldError(error, "password");
+      } else if (error instanceof ApiError && error.status === 429) {
+        validationObj.server =
+          "Previše pokušaja promene lozinke, pokušajte ponovo kasnije.";
+      } else {
+        validationObj.server =
+          "Došlo je do greške, pokušajte ponovo za nekoliko minuta...";
+      }
+      setFormValidPass(validationObj);
       return;
     }
 
@@ -249,6 +285,12 @@ const Profile = () => {
               >
                 <h3 className="profile__form-title">Izmena lozinke</h3>
                 <FormGroup
+                  name="currentPass"
+                  text="Trenutna lozinka"
+                  type="password"
+                  error={formValidPass.currentPassword}
+                />
+                <FormGroup
                   name="pass"
                   text="Nova lozinka"
                   type="password"
@@ -256,10 +298,15 @@ const Profile = () => {
                 />
                 <FormGroup
                   name="passRepeat"
-                  text="Ponvite lozinku"
+                  text="Ponovite lozinku"
                   type="password"
                   error={formValidPass.passwordRepeat}
                 />
+                {formValidPass.server && (
+                  <span className="form__error t-center mb-1">
+                    {formValidPass.server}
+                  </span>
+                )}
                 <div className="profile__form-footer">
                   <button
                     className="btn btn-primary btn-primary--gray btn-round"

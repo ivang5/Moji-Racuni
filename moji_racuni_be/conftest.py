@@ -40,6 +40,16 @@ class RecordingAPIClient(APIClient):
         return response
 
 
+@pytest.fixture(autouse=True)
+def _clear_cache():
+    """Throttle brojači su u kešu; svaki test počinje sa praznim."""
+    from django.core.cache import cache
+
+    cache.clear()
+    yield
+    cache.clear()
+
+
 @pytest.fixture
 def api_client():
     return RecordingAPIClient()

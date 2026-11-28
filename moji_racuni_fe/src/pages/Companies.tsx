@@ -311,11 +311,29 @@ const Companies = () => {
     }
 
     const currentCompany = modalCompany.company;
+    // Isti fajl mora moći ponovo da se izabere posle greške
+    e.target.value = "";
 
-    await changeCompanyImageMutation({
-      tin: currentCompany.tin,
-      image,
-    });
+    try {
+      await changeCompanyImageMutation({
+        tin: currentCompany.tin,
+        image,
+      });
+    } catch (error) {
+      const details =
+        error instanceof ApiError
+          ? (error.details as Record<string, unknown> | null)
+          : null;
+      const messages = details?.img;
+      showToast({
+        title: "Greška",
+        error: true,
+        text: Array.isArray(messages)
+          ? messages.join(" ")
+          : "Slika preduzeća nije promenjena, pokušajte ponovo.",
+      });
+      return;
+    }
 
     showToast({
       title: "Uspešno",
@@ -678,7 +696,12 @@ const Companies = () => {
         </div>
       )}
       {toastOpen && (
-        <Toast title={toast.title} text={toast.text} close={closeToast} />
+        <Toast
+          title={toast.title}
+          text={toast.text}
+          error={toast.error}
+          close={closeToast}
+        />
       )}
     </div>
   );

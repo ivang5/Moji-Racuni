@@ -1,8 +1,12 @@
 """
-Karakterizacioni testovi: upravljanje korisnicima (lista, filter, detalji, izmena, lozinka,
-brisanje, kreiranje admina).
+Testovi: upravljanje korisnicima (filter, detalji, izmena, lozinka).
+
+Prijavljen korisnik bez prava na akciju dobija 403, a 401 samo neprijavljen korisnik. Tuđi nalog
+se REGULAR korisniku ponaša kao nepostojeći (404).
 """
+import jwt
 import pytest
+from django.conf import settings
 
 from account.models import User
 from account.tests.factories import DEFAULT_PASSWORD, UserFactory
@@ -13,23 +17,32 @@ USER_FIELDS = {"id", "username", "email", "role", "date_joined", "is_active"}
 
 
 # ----------------------------------------------------------
-#  GET /api/users/
+#  Uklonjeni endpoint-i (FE ih ne koristi)
 # ----------------------------------------------------------
 
-def test_users_list_for_admin_returns_all_users(admin_api_client, admin_user, regular_user, other_regular_user):
-    response = admin_api_client.get("/api/users/")
+@pytest.mark.parametrize(
+    "method, path",
+    [
+        ("get", "/api/users/"),
+        ("delete", "/api/users/{id}/"),
+    ],
+    ids=["lista", "brisanje"],
+)
+def test_removed_user_endpoints_return_405(admin_api_client, regular_user, method, path):
+    response = getattr(admin_api_client, method)(path.format(id=regular_user.id))
 
-    assert response.status_code == 200
-    assert sorted(u["username"] for u in response.json()) == ["admin", "other_regular", "regular"]
-    assert all(set(u) == USER_FIELDS for u in response.json())
+    assert response.status_code == 405
+    assert User.objects.filter(id=regular_user.id).exists()
 
 
-def test_users_list_for_regular_returns_401(regular_client):
-    assert regular_client.get("/api/users/").status_code == 401
+@pytest.mark.parametrize("client_fixture", ["admin_api_client", "regular_client", "api_client"])
+def test_create_admin_endpoint_is_removed(request, client_fixture):
+    client = request.getfixturevalue(client_fixture)
 
+    response = client.post("/api/admins/", {"username": "haker", "email": "h@example.com", "role": "ADMIN"}, format="json")
 
-def test_users_list_for_anonymous_returns_401(api_client):
-    assert api_client.get("/api/users/").status_code == 401
+    assert response.status_code == 404
+    assert not User.objects.filter(username="haker").exists()
 
 
 # ----------------------------------------------------------
@@ -76,16 +89,13 @@ def test_users_filter_by_username_and_ordering(admin_api_client):
 def test_users_filter_row_shape(admin_api_client, regular_user):
     row = admin_api_client.get("/api/users/filter/", FILTER_ALL).json()["users"][0]
 
-    #* Raw SQL (SELECT *): sve kolone tabele account_user
-    assert set(row) == {
-        "id", "password", "last_login", "is_superuser", "username", "first_name", "last_name",
-        "email", "is_staff", "is_active", "date_joined", "role",
-    }
+    #* Raw SQL sa eksplicitnim kolonama (bez heša lozinke i internih polja); is_active je 0/1
+    assert set(row) == USER_FIELDS
     assert row["username"] == "regular"
     assert row["role"] == "REGULAR"
+    assert row["is_active"] == 1
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: filter korisnika vraća heš lozinke (SELECT * iz account_user)")
 def test_users_filter_does_not_expose_password_hash(admin_api_client, regular_user):
     row = admin_api_client.get("/api/users/filter/", FILTER_ALL).json()["users"][0]
 
@@ -98,11 +108,10 @@ def test_users_filter_without_required_params_returns_400(admin_api_client):
     assert response.status_code == 400
 
 
-def test_users_filter_for_regular_returns_401(regular_client):
-    assert regular_client.get("/api/users/filter/", FILTER_ALL).status_code == 401
+def test_users_filter_for_regular_returns_403(regular_client):
+    assert regular_client.get("/api/users/filter/", FILTER_ALL).status_code == 403
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: neprijavljen korisnik dobija 500 (AttributeError) umesto 401")
 def test_users_filter_for_anonymous_returns_401(api_client):
     assert api_client.get("/api/users/filter/", FILTER_ALL).status_code == 401
 
@@ -122,8 +131,12 @@ def test_user_retrieve_own_profile(regular_client, regular_user):
     assert body["role"] == "REGULAR"
 
 
-def test_user_retrieve_other_user_as_regular_returns_401(regular_client, other_regular_user):
-    assert regular_client.get(f"/api/users/{other_regular_user.id}/").status_code == 401
+def test_user_retrieve_other_user_as_regular_returns_404(regular_client, other_regular_user):
+    assert regular_client.get(f"/api/users/{other_regular_user.id}/").status_code == 404
+
+
+def test_user_retrieve_as_anonymous_returns_401(api_client, regular_user):
+    assert api_client.get(f"/api/users/{regular_user.id}/").status_code == 401
 
 
 def test_user_retrieve_any_user_as_admin(admin_api_client, regular_user):
@@ -172,12 +185,41 @@ def test_user_update_without_email_returns_400(regular_client, regular_user):
     assert response.status_code == 400
 
 
-def test_user_update_other_user_as_regular_returns_401(regular_client, other_regular_user):
+@pytest.mark.parametrize("email", ["nije-email", "OTHER_REGULAR@example.com"], ids=["nevalidan", "zauzet"])
+def test_user_update_with_invalid_or_taken_email_returns_400(regular_client, regular_user, other_regular_user, email):
+    response = regular_client.put(f"/api/users/{regular_user.id}/", {"username": "regular", "email": email}, format="json")
+
+    assert response.status_code == 400
+    assert "email" in response.json()
+    regular_user.refresh_from_db()
+    assert regular_user.email == "regular@example.com"
+
+
+def test_user_update_keeps_own_email(regular_client, regular_user):
+    response = regular_client.put(
+        f"/api/users/{regular_user.id}/", {"username": "regular", "email": "Regular@example.com"}, format="json"
+    )
+
+    assert response.status_code == 200
+
+
+def test_user_update_ignores_read_only_fields(regular_client, regular_user):
+    payload = {"username": "regular", "email": "regular@example.com", "role": "ADMIN", "date_joined": "2000-01-01"}
+
+    response = regular_client.put(f"/api/users/{regular_user.id}/", payload, format="json")
+
+    assert response.status_code == 200
+    regular_user.refresh_from_db()
+    assert regular_user.role == "REGULAR"
+    assert regular_user.date_joined.year != 2000
+
+
+def test_user_update_other_user_as_regular_returns_404(regular_client, other_regular_user):
     response = regular_client.put(
         f"/api/users/{other_regular_user.id}/", {"username": "preuzet", "email": "x@example.com"}, format="json"
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 404
     other_regular_user.refresh_from_db()
     assert other_regular_user.username == "other_regular"
 
@@ -196,25 +238,63 @@ def test_admin_can_block_and_unblock_user(admin_api_client, regular_user):
     assert unblocked.json()["is_active"] is True
 
 
+def test_blocked_user_access_token_stops_working(admin_api_client, auth_client, regular_user):
+    client = auth_client(regular_user)
+    payload = {"username": "regular", "email": "regular@example.com", "is_active": False}
+
+    admin_api_client.put(f"/api/users/{regular_user.id}/", payload, format="json")
+
+    assert client.get(f"/api/users/{regular_user.id}/").status_code == 401
+
+
+def test_admin_cannot_deactivate_own_account(admin_api_client, admin_user):
+    payload = {"username": "admin", "email": "admin@example.com", "is_active": False}
+
+    response = admin_api_client.put(f"/api/users/{admin_user.id}/", payload, format="json")
+
+    assert response.status_code == 200
+    admin_user.refresh_from_db()
+    assert admin_user.is_active is True
+
+
 # ----------------------------------------------------------
 #  PUT /api/users/update-password/<id>/
 # ----------------------------------------------------------
 
-def test_update_own_password(regular_client, regular_user, api_client):
+NEW_PASSWORD = "Nova-lozinka-456"
+
+
+def _password_payload(**overrides):
     #* Isti oblik kao Profile.tsx (passRepeat BE ignoriše)
-    response = regular_client.put(
-        f"/api/users/update-password/{regular_user.id}/",
-        {"password": "Nova-lozinka-456", "passRepeat": "Nova-lozinka-456"},
-        format="json",
-    )
+    payload = {"currentPassword": DEFAULT_PASSWORD, "password": NEW_PASSWORD, "passRepeat": NEW_PASSWORD}
+    payload.update(overrides)
+    return payload
+
+
+def test_update_own_password(regular_client, regular_user, api_client):
+    response = regular_client.put(f"/api/users/update-password/{regular_user.id}/", _password_payload(), format="json")
 
     assert response.status_code == 200
-    assert set(response.json()) == USER_FIELDS
+    #* Tekuća sesija dobija nov par tokena (stari refresh tokeni su poništeni)
+    assert set(response.json()) == {"access", "refresh"}
+    claims = jwt.decode(response.json()["access"], settings.SECRET_KEY, algorithms=["HS256"])
+    assert claims["user_id"] == str(regular_user.id)
     regular_user.refresh_from_db()
-    assert regular_user.check_password("Nova-lozinka-456")
+    assert regular_user.check_password(NEW_PASSWORD)
     assert api_client.post(
-        "/api/token/", {"username": "regular", "password": "Nova-lozinka-456"}, format="json"
+        "/api/token/", {"username": "regular", "password": NEW_PASSWORD}, format="json"
     ).status_code == 200
+
+
+def test_update_password_blacklists_existing_refresh_tokens(regular_client, regular_user, api_client):
+    old = api_client.post("/api/token/", {"username": "regular", "password": DEFAULT_PASSWORD}, format="json").json()
+
+    new = regular_client.put(
+        f"/api/users/update-password/{regular_user.id}/", _password_payload(), format="json"
+    ).json()
+
+    assert api_client.post("/api/token/refresh/", {"refresh": old["refresh"]}, format="json").status_code == 401
+    assert api_client.post("/api/token/refresh/", {"refresh": new["refresh"]}, format="json").status_code == 200
 
 
 def test_update_password_without_password_returns_400(regular_client, regular_user):
@@ -223,77 +303,60 @@ def test_update_password_without_password_returns_400(regular_client, regular_us
     assert response.status_code == 400
 
 
-def test_update_password_of_other_user_as_regular_returns_401(regular_client, other_regular_user):
+def test_update_password_of_other_user_as_regular_returns_404(regular_client, other_regular_user):
     response = regular_client.put(
-        f"/api/users/update-password/{other_regular_user.id}/", {"password": "Preuzeto-123"}, format="json"
+        f"/api/users/update-password/{other_regular_user.id}/", _password_payload(), format="json"
     )
 
-    assert response.status_code == 401
+    assert response.status_code == 404
     other_regular_user.refresh_from_db()
     assert other_regular_user.check_password(DEFAULT_PASSWORD)
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: promena sopstvene lozinke mora da traži trenutnu lozinku")
-def test_update_own_password_requires_current_password(regular_client, regular_user):
-    response = regular_client.put(
-        f"/api/users/update-password/{regular_user.id}/", {"password": "Nova-lozinka-456"}, format="json"
-    )
+def test_admin_cannot_change_password_of_other_user(admin_api_client, regular_user):
+    #* Lozinku menja samo vlasnik naloga (uz trenutnu lozinku)
+    response = admin_api_client.put(f"/api/users/update-password/{regular_user.id}/", _password_payload(), format="json")
 
-    assert response.status_code == 400
+    assert response.status_code == 404
     regular_user.refresh_from_db()
     assert regular_user.check_password(DEFAULT_PASSWORD)
 
 
-# ----------------------------------------------------------
-#  DELETE /api/users/<id>/
-# ----------------------------------------------------------
+@pytest.mark.parametrize("current", [None, "pogresna-lozinka"], ids=["bez-trenutne", "pogresna-trenutna"])
+def test_update_own_password_requires_current_password(regular_client, regular_user, current):
+    payload = _password_payload(currentPassword=current)
+    if current is None:
+        del payload["currentPassword"]
 
-def test_admin_deletes_user(admin_api_client, regular_user):
-    response = admin_api_client.delete(f"/api/users/{regular_user.id}/")
+    response = regular_client.put(f"/api/users/update-password/{regular_user.id}/", payload, format="json")
 
-    assert response.status_code == 204
-    assert not User.objects.filter(id=regular_user.id).exists()
-
-
-def test_admin_delete_unknown_user_returns_404(admin_api_client):
-    assert admin_api_client.delete("/api/users/999999/").status_code == 404
-
-
-def test_regular_cannot_delete_user(regular_client, other_regular_user):
-    response = regular_client.delete(f"/api/users/{other_regular_user.id}/")
-
-    assert response.status_code == 401
-    assert User.objects.filter(id=other_regular_user.id).exists()
+    assert response.status_code == 400
+    assert "currentPassword" in response.json()
+    regular_user.refresh_from_db()
+    assert regular_user.check_password(DEFAULT_PASSWORD)
 
 
-# ----------------------------------------------------------
-#  POST /api/admins/
-# ----------------------------------------------------------
-
-def test_admin_creates_admin(admin_api_client):
-    response = admin_api_client.post(
-        "/api/admins/", {"username": "admin2", "email": "admin2@example.com", "role": "ADMIN"}, format="json"
+def test_update_own_password_rejects_weak_password(regular_client, regular_user):
+    response = regular_client.put(
+        f"/api/users/update-password/{regular_user.id}/", _password_payload(password="12345678"), format="json"
     )
 
-    assert response.status_code == 201
-    assert response.json()["role"] == "ADMIN"
-    assert User.objects.get(username="admin2").role == "ADMIN"
-    #* Napomena: AdminSerializer nema polje password, pa novi admin nema upotrebljivu lozinku
+    assert response.status_code == 400
+    assert response.json()["password"] == [
+        "Ova lozinka je među najčešće korišćenim lozinkama.",
+        "Ova lozinka sadrži samo cifre.",
+    ]
+    regular_user.refresh_from_db()
+    assert regular_user.check_password(DEFAULT_PASSWORD)
 
 
-def test_admin_create_with_existing_username_returns_409(admin_api_client, regular_user):
-    response = admin_api_client.post(
-        "/api/admins/", {"username": "regular", "email": "x@example.com", "role": "ADMIN"}, format="json"
-    )
+def test_update_password_is_throttled(regular_client, regular_user, monkeypatch):
+    from rest_framework.throttling import ScopedRateThrottle
 
-    assert response.status_code == 409
+    monkeypatch.setitem(ScopedRateThrottle.THROTTLE_RATES, "password", "2/min")
+    url = f"/api/users/update-password/{regular_user.id}/"
+    payload = _password_payload(currentPassword="pogresna-lozinka")
 
+    statuses = [regular_client.put(url, payload, format="json").status_code for _ in range(3)]
 
-@pytest.mark.parametrize("client_fixture", ["regular_client", "api_client"])
-def test_non_admin_cannot_create_admin(request, client_fixture):
-    client = request.getfixturevalue(client_fixture)
-
-    response = client.post("/api/admins/", {"username": "haker", "email": "h@example.com", "role": "ADMIN"}, format="json")
-
-    assert response.status_code == 401
-    assert not User.objects.filter(username="haker").exists()
+    assert statuses == [400, 400, 429]

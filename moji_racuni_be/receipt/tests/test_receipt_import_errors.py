@@ -10,7 +10,6 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from company.api.views import CompanyUnitViewSet, CompanyViewSet
 from moji_racuni_be import utils
-from receipt.api.views import ItemViewSet
 
 RECEIPT_URL = "https://suf.purs.gov.rs/v/?vl=TEST"
 
@@ -46,7 +45,10 @@ def test_fetch_returns_page_text_and_does_not_follow_redirects(fake_get):
 
 @pytest.mark.parametrize(
     "url",
-    [None, "", "nije-link", "ftp://suf.purs.gov.rs/v/", "http://127.0.0.1/v/", "http://localhost/v/", "http://10.0.0.5/"],
+    [
+        None, "", "nije-link", "ftp://suf.purs.gov.rs/v/", "http://suf.purs.gov.rs/v/", "https://suf.purs.gov.rs:abc/v/",
+        "http://127.0.0.1/v/", "http://localhost/v/", "http://10.0.0.5/", "https://example.com/v/",
+    ],
 )
 def test_fetch_rejects_invalid_or_private_url_without_request(fake_get, url):
     with pytest.raises(utils.InvalidReceiptError):
@@ -77,17 +79,24 @@ def test_fetch_maps_server_and_network_errors_to_purs_unavailable(fake_get, resu
         utils._fetch_url_text(RECEIPT_URL)
 
 
+def test_fetch_allows_hosts_from_settings(fake_get, settings):
+    settings.PURS_ALLOWED_HOSTS = ["suf.purs.gov.rs", "Test.Example.com"]
+
+    assert utils._fetch_url_text("https://test.example.com/v/?vl=X") == "<html></html>"
+    assert utils._fetch_url_text("https://SUF.PURS.GOV.RS:443/v/?vl=X") == "<html></html>"
+
+
 # ----------------------------------------------------------
 #  Create endpoint-i (tok unosa računa)
 # ----------------------------------------------------------
 
 #* Korisnik bez baze: create view-ovi ispod ne pristupaju bazi pre preuzimanja računa
+#* (unos stavki prvo proverava račun u bazi, pa je pokriven u test_api_receipt_import.py)
 REGULAR_USER = SimpleNamespace(is_authenticated=True, role="REGULAR", id=1)
 
 VIEWS = [
     pytest.param(CompanyViewSet, {"url": RECEIPT_URL}, id="companies"),
     pytest.param(CompanyUnitViewSet, {"url": RECEIPT_URL, "company": 999999999}, id="company-units"),
-    pytest.param(ItemViewSet, {"url": RECEIPT_URL, "receipt": 1}, id="items"),
 ]
 
 

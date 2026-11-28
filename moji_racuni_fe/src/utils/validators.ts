@@ -134,13 +134,16 @@ export const validateRegistrationForm = ({
 };
 
 export const validatePasswordUpdateForm = ({
+  currentPassword,
   password,
   passwordRepeat,
 }: {
+  currentPassword: string;
   password: string;
   passwordRepeat: string;
 }) => {
   const validation = {
+    currentPassword: currentPassword === "" ? "Unesite trenutnu lozinku!" : "",
     password: "",
     passwordRepeat: validatePasswordRepeatRules(password, passwordRepeat),
   };

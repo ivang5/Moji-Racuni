@@ -9,6 +9,7 @@ type ToastData = {
   title: string;
   text: string;
   link?: ToastLink;
+  error?: boolean;
 };
 
 const useToast = (defaultDuration = 7000) => {

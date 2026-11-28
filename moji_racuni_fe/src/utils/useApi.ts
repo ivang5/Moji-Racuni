@@ -20,7 +20,6 @@ const useApi = () => {
   };
 
   const {
-    getReceipts,
     getReceipt,
     getLastReceipt,
     filterReceipts,
@@ -206,7 +205,6 @@ const useApi = () => {
   };
 
   return {
-    getReceipts,
     getReceipt,
     getLastReceipt,
     getReceiptsByHour,

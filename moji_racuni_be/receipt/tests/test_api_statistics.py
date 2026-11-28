@@ -236,7 +236,6 @@ def test_most_items_on_receipt(alice_client, bob_client, admin_stats_client):
 # ----------------------------------------------------------
 
 def test_plot_returns_five_base64_png_images(alice_client, monkeypatch, tmp_path):
-    #* plot_stat snima PNG fajlove u trenutni radni direktorijum
     monkeypatch.chdir(tmp_path)
 
     body = _get(alice_client, "/api/receipts/plot/", limit=10)
@@ -244,6 +243,25 @@ def test_plot_returns_five_base64_png_images(alice_client, monkeypatch, tmp_path
     assert set(body) == {"receipts", "spending", "companies", "types", "items"}
     for image in body.values():
         assert base64.b64decode(image).startswith(b"\x89PNG\r\n\x1a\n")
+    #* Slike se prave u memoriji, ništa se ne upisuje na disk
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_plot_for_admin_without_company_types(admin_api_client, stats_data):
+    #* ADMIN nema svoje tipove preduzeća (prazni pie grafikoni), ranije je to bio 500
+    body = _get(admin_api_client, "/api/receipts/plot/", limit=10)
+
+    assert set(body) == {"receipts", "spending", "companies", "types", "items"}
+
+
+def test_plot_for_user_without_receipts(regular_client):
+    body = _get(regular_client, "/api/receipts/plot/", limit=10)
+
+    assert set(body) == {"receipts", "spending", "companies", "types", "items"}
+
+
+def test_plot_requires_authentication(api_client):
+    assert api_client.get("/api/receipts/plot/", {**PERIOD, "limit": 10}).status_code == 401
 
 
 def test_plot_without_limit_returns_400(alice_client):

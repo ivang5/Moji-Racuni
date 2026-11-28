@@ -102,7 +102,11 @@
     }
 
     &--password {
-      height: 348px;
+      // tri polja (trenutna, nova i ponovljena lozinka): visina prema sadržaju
+      // (align-self, jer bi je flex kontejner modala inače razvukao do dna ekrana)
+      align-self: flex-start;
+      height: auto;
+      min-height: 348px;
       margin-top: 60px;
       border-radius: 20px;
 
@@ -111,7 +115,8 @@
       }
 
       @include respond-to(tablet) {
-        height: 378px;
+        height: auto;
+        min-height: 378px;
         margin-top: 80px;
       }
 

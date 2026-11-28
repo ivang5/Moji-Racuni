@@ -1,4 +1,10 @@
-import { createContext, useState, useEffect, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useState,
+  useEffect,
+  type ReactNode,
+} from "react";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router";
 import type { AuthTokens, JwtPayload } from "../types/models";
@@ -15,27 +21,33 @@ type RegisterForm = HTMLFormElement & {
   regPassword: HTMLInputElement;
 };
 
+// Greške validacije sa BE-a po poljima, npr. { password: ["Ova lozinka je prekratka..."] }
+export type FieldErrors = Record<string, string[]>;
+
+export type RegistrationResult = {
+  status: number;
+  errors: FieldErrors;
+};
+
 type AuthContextValue = {
   user: JwtPayload | null;
-  setUser: (user: JwtPayload | null) => void;
   authTokens: AuthTokens | null;
-  setAuthTokens: (tokens: AuthTokens | null) => void;
+  storeAuthTokens: (tokens: AuthTokens) => void;
   loginUser: (
     e: React.FormEvent<HTMLFormElement>,
   ) => Promise<number | undefined>;
   registerUser: (
     e: React.FormEvent<HTMLFormElement>,
-  ) => Promise<number | undefined>;
+  ) => Promise<RegistrationResult | undefined>;
   logoutUser: () => void;
 };
 
 const defaultAuthContext: AuthContextValue = {
   user: null,
-  setUser: () => undefined,
   authTokens: null,
-  setAuthTokens: () => undefined,
+  storeAuthTokens: () => undefined,
   loginUser: async () => 0,
-  registerUser: async () => 0,
+  registerUser: async () => ({ status: 0, errors: {} }),
   logoutUser: () => undefined,
 };
 
@@ -66,6 +78,32 @@ const decodeAccessToken = (tokens: AuthTokens | null): JwtPayload | null => {
   }
 };
 
+const readFieldErrors = async (response: Response): Promise<FieldErrors> => {
+  try {
+    const data = await response.json();
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return {};
+    }
+    return Object.fromEntries(
+      Object.entries(data).filter(([, messages]) => Array.isArray(messages)),
+    ) as FieldErrors;
+  } catch {
+    return {};
+  }
+};
+
+// Odjava poništava refresh token na BE-u; ishod se ne čeka (korisnik se odjavljuje u svakom slučaju)
+const revokeRefreshToken = (refresh: string) => {
+  fetch(`${API_BASE_URL}/api/token/blacklist/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ refresh }),
+    keepalive: true,
+  }).catch(() => undefined);
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authTokens, setAuthTokens] = useState(() => getStoredTokens());
   const [user, setUser] = useState(() => decodeAccessToken(getStoredTokens()));
@@ -77,6 +115,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(decodeAccessToken(authTokens));
     setLoading(false);
   }, [authTokens]);
+
+  const storeAuthTokens = useCallback((tokens: AuthTokens) => {
+    localStorage.setItem("authTokens", JSON.stringify(tokens));
+    setAuthTokens(tokens);
+    setUser(jwtDecode(tokens.access));
+  }, []);
 
   const callLogin = async (username: string, password: string) => {
     try {
@@ -90,12 +134,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           password: password,
         }),
       });
-      const data = await response.json();
 
       if (response.status === 200) {
-        setAuthTokens(data);
-        setUser(jwtDecode(data.access));
-        localStorage.setItem("authTokens", JSON.stringify(data));
+        storeAuthTokens(await response.json());
         navigate("/");
       } else {
         return response.status;
@@ -105,32 +146,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const checkUsername = async (username: string) => {
-    try {
-      if (!Number.isNaN(Number(username))) {
-        return 404;
-      }
-      const response = await fetch(`${API_BASE_URL}/api/users/${username}/`);
-      return response.status;
-    } catch {
-      return 0;
-    }
-  };
-
   const loginUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget as LoginForm;
-    const usernameCheck = await checkUsername(form.username.value);
-
-    if (usernameCheck === 200) {
-      return await callLogin(form.username.value, form.password.value);
-    }
-
-    if (usernameCheck === 404) {
-      return 404;
-    }
-
-    return 0;
+    return await callLogin(form.username.value, form.password.value);
   };
 
   const registerUser = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -147,23 +166,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: form.regEmail.value,
           username: form.regUsername.value,
           password: form.regPassword.value,
-          role: "REGULAR",
-          date_joined: "2022-11-12",
-          is_active: true,
         }),
       });
 
       if (response.status === 201) {
         await callLogin(form.regUsername.value, form.regPassword.value);
       } else {
-        return response.status;
+        return {
+          status: response.status,
+          errors:
+            response.status === 400 ? await readFieldErrors(response) : {},
+        };
       }
     } catch {
-      return 0;
+      return { status: 0, errors: {} };
     }
   };
 
   const logoutUser = () => {
+    const refresh = getStoredTokens()?.refresh;
+    if (refresh) {
+      revokeRefreshToken(refresh);
+    }
     setAuthTokens(null);
     setUser(null);
     localStorage.removeItem("authTokens");
@@ -172,9 +196,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const contextData = {
     user: user,
-    setUser: setUser,
     authTokens: authTokens,
-    setAuthTokens: setAuthTokens,
+    storeAuthTokens: storeAuthTokens,
     loginUser: loginUser,
     registerUser: registerUser,
     logoutUser: logoutUser,

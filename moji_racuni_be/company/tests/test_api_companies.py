@@ -1,8 +1,12 @@
 """
-Karakterizacioni testovi: preduzeća i prodajna mesta (/api/companies/..., /api/company/units/...).
+Testovi: preduzeća i prodajna mesta (/api/companies/..., /api/company/units/...).
 Kreiranje preko linka računa je u receipt/tests/test_api_receipt_import.py.
+
+Prijavljen korisnik bez prava na akciju dobija 403, a 401 samo neprijavljen korisnik.
 """
 import io
+import os
+import re
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -27,30 +31,26 @@ def alice_client(auth_client, stats_data):
 
 
 # ----------------------------------------------------------
-#  GET /api/companies/, /api/companies/<tin>/
+#  GET /api/companies/<tin>/
 # ----------------------------------------------------------
 
-def test_companies_list_returns_all_companies(regular_client):
-    company = CompanyFactory(tin=100000001, name="Alfa Market")
+def test_companies_list_is_removed(regular_client):
+    #* Lista svih preduzeća nije korišćena na FE (FE koristi /api/companies/filter/)
+    CompanyFactory(tin=100000001, name="Alfa Market")
 
-    response = regular_client.get("/api/companies/")
-
-    assert response.status_code == 200
-    assert response.json() == [{"tin": company.tin, "name": "Alfa Market", "image": None, "type": []}]
+    assert regular_client.get("/api/companies/").status_code == 405
 
 
-def test_companies_require_authentication(api_client):
-    assert api_client.get("/api/companies/").status_code == 401
+def test_companies_require_authentication(api_client, stats_data):
+    assert api_client.get(f"/api/companies/{stats_data.c1.tin}/").status_code == 401
 
 
 def test_company_retrieve(regular_client, stats_data):
     response = regular_client.get(f"/api/companies/{stats_data.c1.tin}/")
 
     assert response.status_code == 200
-    body = response.json()
-    assert (body["tin"], body["name"], body["image"]) == (100000001, "Alfa Market", None)
-    #* type sadrži tipove SVIH korisnika (ovde alice "Market" i bob "Prodavnica")
-    assert sorted(body["type"]) == sorted([stats_data.alice_market.id, stats_data.bob_prodavnica.id])
+    #* Bez polja type: veza sa tipovima sadrži tipove svih korisnika (alice "Market", bob "Prodavnica")
+    assert response.json() == {"tin": 100000001, "name": "Alfa Market", "image": None}
 
 
 def test_company_retrieve_unknown_returns_404(regular_client):
@@ -179,8 +179,9 @@ def test_change_type_replaces_only_own_type(alice_client, stats_data):
     response = alice_client.put(f"/api/companies/{d.c1.tin}/change-type/", {"type": d.alice_apoteka.id}, format="json")
 
     assert response.status_code == 200
+    assert response.json() == {"tin": d.c1.tin, "name": d.c1.name, "image": None}
     #* alice "Market" zamenjen sa "Apoteka", bob "Prodavnica" ostaje
-    assert sorted(response.json()["type"]) == sorted([d.alice_apoteka.id, d.bob_prodavnica.id])
+    assert sorted(t.id for t in d.c1.type.all()) == sorted([d.alice_apoteka.id, d.bob_prodavnica.id])
 
 
 def test_change_type_none_removes_own_type(alice_client, stats_data):
@@ -189,7 +190,7 @@ def test_change_type_none_removes_own_type(alice_client, stats_data):
     response = alice_client.put(f"/api/companies/{d.c1.tin}/change-type/", {"type": "none"}, format="json")
 
     assert response.status_code == 200
-    assert response.json()["type"] == [d.bob_prodavnica.id]
+    assert list(d.c1.type.all()) == [d.bob_prodavnica]
 
 
 def test_change_type_to_type_of_other_user_returns_404(alice_client, stats_data):
@@ -211,55 +212,115 @@ def test_change_type_of_unknown_company_returns_404(alice_client, stats_data):
 #  PUT /api/companies/<tin>/change-img/ (ADMIN)
 # ----------------------------------------------------------
 
-def _png_upload(name="logo.png"):
+def _image_upload(name="logo.png", fmt="PNG", size=(4, 4), content_type="image/png"):
     buffer = io.BytesIO()
-    Image.new("RGB", (4, 4), "green").save(buffer, format="PNG")
-    return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
+    Image.new("RGB", size, "green").save(buffer, format=fmt)
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type=content_type)
 
 
-def test_admin_changes_company_image(admin_api_client, settings, tmp_path):
+@pytest.fixture
+def media_root(settings, tmp_path):
     settings.MEDIA_ROOT = str(tmp_path)
+    return tmp_path
+
+
+def _change_img(client, company, upload):
+    return client.put(f"/api/companies/{company.tin}/change-img/", {"img": upload}, format="multipart")
+
+
+@pytest.mark.parametrize(
+    "fmt, content_type, extension",
+    [("PNG", "image/png", "png"), ("JPEG", "image/jpeg", "jpg"), ("WEBP", "image/webp", "webp")],
+)
+def test_admin_changes_company_image(admin_api_client, media_root, fmt, content_type, extension):
     company = CompanyFactory(tin=100000001)
 
-    response = admin_api_client.put(f"/api/companies/{company.tin}/change-img/", {"img": _png_upload()}, format="multipart")
+    response = _change_img(admin_api_client, company, _image_upload("../../logo firme.png", fmt, content_type=content_type))
 
     assert response.status_code == 200
-    assert response.json()["image"] == "/media/images/logo.png"
     company.refresh_from_db()
-    assert company.image.name == "images/logo.png"
-    assert (tmp_path / "images" / "logo.png").exists()
+    #* Ime fajla je nasumično (uuid), ekstenzija prema stvarnom formatu slike
+    assert re.fullmatch(rf"images/[0-9a-f]{{32}}\.{extension}", company.image.name)
+    assert response.json()["image"] == f"/media/{company.image.name}"
+    assert (media_root / company.image.name).exists()
 
 
-def test_regular_cannot_change_company_image(regular_client, settings, tmp_path):
-    settings.MEDIA_ROOT = str(tmp_path)
+def test_changing_company_image_deletes_old_file(admin_api_client, media_root):
+    company = CompanyFactory(tin=100000001)
+    _change_img(admin_api_client, company, _image_upload())
+    company.refresh_from_db()
+    old_name = company.image.name
+
+    response = _change_img(admin_api_client, company, _image_upload())
+
+    assert response.status_code == 200
+    company.refresh_from_db()
+    assert company.image.name != old_name
+    assert not (media_root / old_name).exists()
+    assert sorted(p.name for p in (media_root / "images").iterdir()) == [company.image.name.split("/")[1]]
+
+
+@pytest.mark.parametrize(
+    "upload",
+    [
+        pytest.param(SimpleUploadedFile("logo.png", b"nije slika", content_type="image/png"), id="nije-slika"),
+        pytest.param(
+            SimpleUploadedFile("logo.svg", b'<svg xmlns="http://www.w3.org/2000/svg"></svg>', content_type="image/svg+xml"),
+            id="svg",
+        ),
+        pytest.param(_image_upload("logo.gif", "GIF", content_type="image/gif"), id="gif"),
+        pytest.param(_image_upload("logo.png", size=(4097, 1)), id="prevelike-dimenzije"),
+        pytest.param(None, id="bez-fajla"),
+    ],
+)
+def test_change_company_image_rejects_invalid_upload(admin_api_client, media_root, upload):
+    company = CompanyFactory(tin=100000001)
+    data = {"img": upload} if upload is not None else {}
+
+    response = admin_api_client.put(f"/api/companies/{company.tin}/change-img/", data, format="multipart")
+
+    assert response.status_code == 400
+    assert "img" in response.json()
+    company.refresh_from_db()
+    assert not company.image
+    assert not (media_root / "images").exists()
+
+
+def test_change_company_image_rejects_too_large_file(admin_api_client, media_root):
+    company = CompanyFactory(tin=100000001)
+    #* Šum se ne kompresuje: PNG 1000x1000 RGB je ~3 MB (granica je 2 MB)
+    buffer = io.BytesIO()
+    Image.frombytes("RGB", (1000, 1000), os.urandom(3 * 1000 * 1000)).save(buffer, format="PNG")
+    upload = SimpleUploadedFile("logo.png", buffer.getvalue(), content_type="image/png")
+
+    response = _change_img(admin_api_client, company, upload)
+
+    assert response.status_code == 400
+    assert response.json() == {"img": ["Slika može imati najviše 2 MB."]}
+    company.refresh_from_db()
+    assert not company.image
+
+
+def test_regular_cannot_change_company_image(regular_client, media_root):
     company = CompanyFactory(tin=100000001)
 
-    response = regular_client.put(f"/api/companies/{company.tin}/change-img/", {"img": _png_upload()}, format="multipart")
+    response = _change_img(regular_client, company, _image_upload())
 
-    assert response.status_code == 401
+    assert response.status_code == 403
     company.refresh_from_db()
     assert not company.image
 
 
 # ----------------------------------------------------------
-#  DELETE /api/companies/<tin>/ (ADMIN)
+#  DELETE /api/companies/<tin>/ (uklonjeno, FE ga ne koristi)
 # ----------------------------------------------------------
 
-def test_admin_deletes_company_and_units_keep_null_company(admin_api_client):
-    unit = CompanyUnitFactory()
-
-    response = admin_api_client.delete(f"/api/companies/{unit.company_id}/")
-
-    assert response.status_code == 204
-    assert not Company.objects.filter(tin=unit.company_id).exists()
-    unit.refresh_from_db()
-    assert unit.company is None
-
-
-def test_regular_cannot_delete_company(regular_client):
+@pytest.mark.parametrize("client_fixture", ["admin_api_client", "regular_client"])
+def test_company_delete_is_removed(request, client_fixture):
+    client = request.getfixturevalue(client_fixture)
     company = CompanyFactory()
 
-    assert regular_client.delete(f"/api/companies/{company.tin}/").status_code == 401
+    assert client.delete(f"/api/companies/{company.tin}/").status_code == 405
     assert Company.objects.filter(tin=company.tin).exists()
 
 
@@ -300,15 +361,11 @@ def test_company_unit_retrieve_unknown_returns_404(regular_client):
     assert regular_client.get("/api/company/units/999999/").status_code == 404
 
 
-def test_admin_deletes_company_unit(admin_api_client):
+@pytest.mark.parametrize("client_fixture", ["admin_api_client", "regular_client"])
+def test_company_unit_delete_is_removed(request, client_fixture):
+    #* Brisanje prodajnog mesta nije korišćeno na FE
+    client = request.getfixturevalue(client_fixture)
     unit = CompanyUnitFactory()
 
-    assert admin_api_client.delete(f"/api/company/units/{unit.id}/").status_code == 204
-    assert not CompanyUnit.objects.filter(id=unit.id).exists()
-
-
-def test_regular_cannot_delete_company_unit(regular_client):
-    unit = CompanyUnitFactory()
-
-    assert regular_client.delete(f"/api/company/units/{unit.id}/").status_code == 401
+    assert client.delete(f"/api/company/units/{unit.id}/").status_code == 405
     assert CompanyUnit.objects.filter(id=unit.id).exists()

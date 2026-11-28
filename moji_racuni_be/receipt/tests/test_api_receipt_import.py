@@ -48,7 +48,7 @@ def test_import_receipt_end_to_end(regular_client, regular_user, purs):
     r = _import(regular_client)
 
     assert r.company.status_code == 201
-    assert r.company.json() == {"tin": TIN, "name": "Test Prodavnica", "image": None, "type": []}
+    assert r.company.json() == {"tin": TIN, "name": "Test Prodavnica", "image": None}
 
     assert r.unit.status_code == 201
     unit_id = r.unit.json()["id"]
@@ -118,8 +118,47 @@ def test_import_updates_existing_company_name(regular_client, purs):
 def test_admin_cannot_import_receipt_or_items(admin_api_client, purs):
     receipt = ReceiptFactory()
 
-    assert admin_api_client.post("/api/receipts/", {"url": URL, "companyUnit": receipt.companyUnit_id}, format="json").status_code == 401
-    assert admin_api_client.post("/api/items/", {"url": URL, "receipt": receipt.id}, format="json").status_code == 401
+    #* Prijavljen korisnik bez prava dobija 403 (401 je samo za neprijavljenog)
+    assert admin_api_client.post("/api/companies/", {"url": URL}, format="json").status_code == 403
+    assert admin_api_client.post("/api/company/units/", {"url": URL, "company": TIN}, format="json").status_code == 403
+    assert admin_api_client.post("/api/receipts/", {"url": URL, "companyUnit": receipt.companyUnit_id}, format="json").status_code == 403
+    assert admin_api_client.post("/api/items/", {"url": URL, "receipt": receipt.id}, format="json").status_code == 403
+    assert purs.calls == []
+
+
+@pytest.mark.parametrize("receipt_id", ["foreign", 999999, "abc", None], ids=["tudji", "nepostojeci", "neispravan", "bez-racuna"])
+def test_items_cannot_be_added_to_foreign_or_unknown_receipt(regular_client, other_regular_user, purs, receipt_id):
+    foreign = ReceiptFactory(user=other_regular_user)
+    if receipt_id == "foreign":
+        receipt_id = foreign.id
+
+    response = regular_client.post("/api/items/", {"url": URL, "receipt": receipt_id}, format="json")
+
+    assert response.status_code == 404
+    #* Račun se proverava pre preuzimanja sa PURS-a
+    assert purs.calls == []
+    assert not Item.objects.exists()
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://example.com/v/?vl=X",
+        "http://suf.purs.gov.rs/v/?vl=X",
+        "https://suf.purs.gov.rs:8443/v/?vl=X",
+        "https://suf.purs.gov.rs.example.com/v/?vl=X",
+        "https://suf.purs.gov.rs@example.com/v/?vl=X",
+        "https://192.168.1.1/v/?vl=X",
+    ],
+    ids=["drugi-domen", "http", "drugi-port", "sufiks-domena", "userinfo", "ip-adresa"],
+)
+def test_import_rejects_urls_outside_purs_without_request(regular_client, purs, url):
+    responses = [
+        regular_client.post("/api/companies/", {"url": url}, format="json"),
+        regular_client.post("/api/company/units/", {"url": url, "company": TIN}, format="json"),
+    ]
+
+    assert [r.status_code for r in responses] == [400, 400]
     assert purs.calls == []
 
 
@@ -140,3 +179,22 @@ def test_receipt_import_errors_return_4xx_or_502(regular_client, purs, response,
     assert result.status_code == expected_status
     assert set(result.json()) == {"detail"}
     assert Receipt.objects.count() == 1
+
+
+@pytest.mark.parametrize(
+    "response, expected_status",
+    [
+        pytest.param(SimpleNamespace(status_code=200, text="<html>nije račun</html>"), 400, id="nepoznata-stranica"),
+        pytest.param(SimpleNamespace(status_code=302, text=""), 400, id="redirect"),
+        pytest.param(SimpleNamespace(status_code=503, text=""), 502, id="purs-nedostupan"),
+    ],
+)
+def test_items_import_errors_return_4xx_or_502(regular_client, regular_user, purs, response, expected_status):
+    receipt = ReceiptFactory(user=regular_user)
+    purs.response = response
+
+    result = regular_client.post("/api/items/", {"url": URL, "receipt": receipt.id}, format="json")
+
+    assert result.status_code == expected_status
+    assert set(result.json()) == {"detail"}
+    assert not Item.objects.exists()

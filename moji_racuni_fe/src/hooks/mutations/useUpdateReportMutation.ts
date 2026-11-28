@@ -7,13 +7,8 @@ import useApi from "../../utils/useApi";
 type UpdateReportPayload = {
   id: number;
   reportInfo: {
-    date: string;
-    request: string;
     response: string;
     closed: boolean;
-    seen: boolean;
-    receipt: number;
-    user: number;
   };
 };
 
