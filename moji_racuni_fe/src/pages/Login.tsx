@@ -73,10 +73,16 @@ const Login = () => {
 
     const response = await loginUser(e);
 
-    if (response === 404) {
-      validationObj.username = "Korisničko ime ne postoji!";
-    } else if (response === 401) {
-      validationObj.password = "Pogrešna lozinka!";
+    if (response === undefined) {
+      return;
+    }
+
+    // Ista poruka za nepostojeće ime i pogrešnu lozinku (ne otkriva koja korisnička imena postoje)
+    if (response === 401) {
+      validationObj.server = "Pogrešno korisničko ime ili lozinka!";
+    } else if (response === 429) {
+      validationObj.server =
+        "Previše pokušaja prijave, pokušajte ponovo za minut.";
     } else {
       validationObj.server =
         "Došlo je do greške, pokušajte ponovo za nekoliko minuta...";
@@ -107,8 +113,22 @@ const Login = () => {
 
     const response = await registerUser(e);
 
-    if (response === 409) {
+    if (response === undefined) {
+      return;
+    }
+
+    const { status, errors } = response;
+
+    if (status === 409) {
       validationObj.username = "Korisničko ime već postoji!";
+    } else if (status === 400 && Object.keys(errors).length > 0) {
+      // Greške validacije sa BE-a (npr. pravila za lozinku, zauzet email)
+      validationObj.email = errors.email?.join(" ") ?? "";
+      validationObj.username = errors.username?.join(" ") ?? "";
+      validationObj.password = errors.password?.join(" ") ?? "";
+    } else if (status === 429) {
+      validationObj.server =
+        "Previše pokušaja registracije, pokušajte ponovo kasnije.";
     } else {
       validationObj.server =
         "Izvinjavamo se, došlo je do greške, pokušajte ponovo za par minuta...";

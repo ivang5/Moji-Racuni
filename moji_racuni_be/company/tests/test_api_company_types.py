@@ -1,10 +1,9 @@
 """
-Karakterizacioni testovi: lični tipovi preduzeća (/api/company/types/...).
+Testovi: lični tipovi preduzeća (/api/company/types/...).
 """
 import pytest
 
 from company.models import CompanyType
-from company.tests.factories import CompanyTypeFactory
 from receipt.tests.datasets import PERIOD
 
 pytestmark = pytest.mark.django_db
@@ -65,29 +64,31 @@ def test_create_type_without_description_returns_400(regular_client, regular_use
     assert "description" in response.json()
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: korisnik kreira tip preduzeća za drugog korisnika (polje user)")
 def test_create_type_always_belongs_to_current_user(regular_client, regular_user, other_regular_user):
     response = regular_client.post(
         "/api/company/types/", {"name": "Podmetnut", "description": "x", "user": other_regular_user.id}, format="json"
     )
 
-    assert response.status_code in (201, 400)
+    #* Polje user iz tela se ignoriše
+    assert response.status_code == 201
+    assert response.json()["user"] == regular_user.id
     assert not CompanyType.objects.filter(user=other_regular_user).exists()
+
+
+def test_create_type_without_name_returns_400(regular_client):
+    response = regular_client.post("/api/company/types/", {"description": "Bez naziva"}, format="json")
+
+    assert response.status_code == 400
+    assert "name" in response.json()
 
 
 # ----------------------------------------------------------
 #  GET/PUT/DELETE /api/company/types/<id>/
 # ----------------------------------------------------------
 
-def test_retrieve_own_type(alice_client, stats_data):
-    response = alice_client.get(f"/api/company/types/{stats_data.alice_market.id}/")
-
-    assert response.status_code == 200
-    assert response.json()["name"] == "Market"
-
-
-def test_retrieve_type_of_other_user_returns_404(alice_client, stats_data):
-    assert alice_client.get(f"/api/company/types/{stats_data.bob_prodavnica.id}/").status_code == 404
+def test_retrieve_single_type_is_removed(alice_client, stats_data):
+    #* Pojedinačan tip nije korišćen na FE (lista tipova je na GET /api/company/types/)
+    assert alice_client.get(f"/api/company/types/{stats_data.alice_market.id}/").status_code == 405
 
 
 def test_update_own_type(alice_client, stats_data):
@@ -120,7 +121,6 @@ def test_update_type_of_other_user_returns_404(alice_client, stats_data):
     assert t.name == "Prodavnica"
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: korisnik može da \"prebaci\" svoj tip drugom korisniku (polje user)")
 def test_update_type_cannot_change_owner(alice_client, stats_data):
     t = stats_data.alice_market
 

@@ -137,17 +137,24 @@ describe("validacija formi", () => {
 
   it("validatePasswordUpdateForm", () => {
     expect(
-      validatePasswordUpdateForm({ password: "", passwordRepeat: "" }),
+      validatePasswordUpdateForm({
+        currentPassword: "",
+        password: "",
+        passwordRepeat: "",
+      }),
     ).toEqual({
+      currentPassword: "Unesite trenutnu lozinku!",
       password: "Lozinka ne može biti prazna!",
       passwordRepeat: "Lozinka ne može biti prazna!",
     });
     expect(
       validatePasswordUpdateForm({
+        currentPassword: "stara",
         password: "tajna",
         passwordRepeat: "druga",
       }),
     ).toEqual({
+      currentPassword: "",
       password: "",
       passwordRepeat: "Lozinke moraju biti iste!",
     });

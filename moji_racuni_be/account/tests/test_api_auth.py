@@ -1,12 +1,10 @@
 """
-Karakterizacioni testovi: JWT prijava/refresh, registracija, provera postojanja korisnika.
-
-Beleže TRENUTNO ponašanje API-ja (status kodovi, oblik odgovora). Nebezbedno ponašanje nije
-zaključano kao ispravno: za njega postoje xfail testovi sa željenim ponašanjem.
+Testovi: JWT prijava/refresh/odjava, registracija, zaštita od enumeracije i brute-force-a.
 """
 import jwt
 import pytest
 from django.conf import settings
+from rest_framework.throttling import ScopedRateThrottle
 
 from account.api.views import MyTokenObtainPairSerializer
 from account.models import User
@@ -127,6 +125,54 @@ def test_token_refresh_with_invalid_token_returns_401(api_client):
     assert response.json()["code"] == "token_not_valid"
 
 
+def test_token_refresh_of_deleted_user_returns_401(api_client, regular_user):
+    tokens = _obtain(api_client, "regular")
+    regular_user.delete()
+
+    response = api_client.post("/api/token/refresh/", {"refresh": tokens["refresh"]}, format="json")
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": "No active account found for the given token."}
+
+
+def test_token_refresh_of_blocked_user_returns_401(api_client, regular_user):
+    tokens = _obtain(api_client, "regular")
+    regular_user.is_active = False
+    regular_user.save()
+
+    response = api_client.post("/api/token/refresh/", {"refresh": tokens["refresh"]}, format="json")
+
+    assert response.status_code == 401
+
+
+def test_token_lifetimes_follow_settings(api_client, regular_user):
+    tokens = _obtain(api_client, "regular")
+    access, refresh = _claims(tokens["access"]), _claims(tokens["refresh"])
+
+    assert access["exp"] - access["iat"] == settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds()
+    assert refresh["exp"] - refresh["iat"] == settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()
+
+
+# ----------------------------------------------------------
+#  POST /api/token/blacklist/ (odjava)
+# ----------------------------------------------------------
+
+def test_logout_blacklists_refresh_token(api_client, regular_user):
+    tokens = _obtain(api_client, "regular")
+
+    response = api_client.post("/api/token/blacklist/", {"refresh": tokens["refresh"]}, format="json")
+
+    assert response.status_code == 200
+    refresh = api_client.post("/api/token/refresh/", {"refresh": tokens["refresh"]}, format="json")
+    assert refresh.status_code == 401
+
+
+def test_logout_with_invalid_token_returns_401(api_client):
+    response = api_client.post("/api/token/blacklist/", {"refresh": "nije-token"}, format="json")
+
+    assert response.status_code == 401
+
+
 def test_protected_endpoint_without_token_returns_401(api_client):
     response = api_client.get("/api/receipts/last/")
 
@@ -143,9 +189,6 @@ def _registration_payload(**overrides):
         "email": "novi@example.com",
         "username": "novi",
         "password": "Nova-lozinka-123",
-        "role": "REGULAR",
-        "date_joined": "2022-11-12",
-        "is_active": True,
     }
     payload.update(overrides)
     return payload
@@ -195,7 +238,6 @@ def test_registration_without_password_returns_400(api_client):
     assert not User.objects.filter(username="novi").exists()
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: is_active pri registraciji ne sme da zadaje klijent")
 def test_registration_ignores_client_supplied_is_active(api_client):
     response = api_client.post("/api/users/", _registration_payload(is_active=False), format="json")
 
@@ -203,41 +245,116 @@ def test_registration_ignores_client_supplied_is_active(api_client):
     assert User.objects.get(username="novi").is_active is True
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: date_joined pri registraciji ne sme da zadaje klijent")
 def test_registration_ignores_client_supplied_date_joined(api_client):
     api_client.post("/api/users/", _registration_payload(date_joined="2000-01-01"), format="json")
 
     assert User.objects.get(username="novi").date_joined.year != 2000
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: registracija mora da primeni AUTH_PASSWORD_VALIDATORS")
-def test_registration_rejects_weak_password(api_client):
-    response = api_client.post("/api/users/", _registration_payload(password="1"), format="json")
+@pytest.mark.parametrize(
+    "password, message",
+    [
+        ("1", "Ova lozinka je prekratka. Mora da sadrži najmanje 8 znakova."),
+        ("password123", "Ova lozinka je među najčešće korišćenim lozinkama."),
+        ("1234567890", "Ova lozinka sadrži samo cifre."),
+        ("novi-korisnik", "Lozinka je previše slična korisničko ime."),
+    ],
+    ids=["kratka", "cesta", "samo-cifre", "slicna-korisnickom-imenu"],
+)
+def test_registration_rejects_weak_password(api_client, password, message):
+    payload = _registration_payload(username="novi_korisnik", password=password)
+
+    response = api_client.post("/api/users/", payload, format="json")
 
     assert response.status_code == 400
+    #* Poruke validatora su na srpskom, FE ih prikazuje ispod polja za lozinku
+    assert message in response.json()["password"]
+    assert not User.objects.filter(username="novi_korisnik").exists()
+
+
+@pytest.mark.parametrize("email", ["", "nije-email", None], ids=["prazan", "nevalidan", "bez-polja"])
+def test_registration_requires_valid_email(api_client, email):
+    payload = _registration_payload(email=email)
+    if email is None:
+        del payload["email"]
+
+    response = api_client.post("/api/users/", payload, format="json")
+
+    assert response.status_code == 400
+    assert "email" in response.json()
+    assert not User.objects.filter(username="novi").exists()
+
+
+def test_registration_with_existing_email_returns_400(api_client, regular_user):
+    #* Email je jedinstven bez obzira na velika i mala slova
+    response = api_client.post("/api/users/", _registration_payload(email="Regular@Example.com"), format="json")
+
+    assert response.status_code == 400
+    assert response.json() == {"email": ["Korisnik sa ovom email adresom već postoji."]}
     assert not User.objects.filter(username="novi").exists()
 
 
 # ----------------------------------------------------------
-#  GET /api/users/<username>/ (provera postojanja, bez prijave)
+#  Enumeracija korisničkih imena
 # ----------------------------------------------------------
 
-def test_user_exists_returns_true_for_existing_username(api_client, regular_user):
-    response = api_client.get("/api/users/regular/")
-
-    assert response.status_code == 200
-    assert response.json() is True
-
-
-def test_user_exists_returns_404_for_unknown_username(api_client):
-    response = api_client.get("/api/users/ne_postoji/")
-
-    assert response.status_code == 404
-
-
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: endpoint omogućava enumeraciju korisničkih imena bez prijave")
 def test_anonymous_cannot_enumerate_usernames(api_client, regular_user):
+    #* Endpoint za proveru postojanja korisničkog imena (GET /api/users/<username>/) je uklonjen
     existing = api_client.get("/api/users/regular/")
     missing = api_client.get("/api/users/ne_postoji/")
 
-    assert existing.status_code == missing.status_code
+    assert existing.status_code == missing.status_code == 404
+
+
+def test_login_error_does_not_reveal_whether_username_exists(api_client, regular_user):
+    wrong_password = api_client.post("/api/token/", {"username": "regular", "password": "pogresna"}, format="json")
+    unknown_user = api_client.post("/api/token/", {"username": "ne_postoji", "password": "pogresna"}, format="json")
+
+    assert wrong_password.status_code == unknown_user.status_code == 401
+    assert wrong_password.json() == unknown_user.json()
+
+
+# ----------------------------------------------------------
+#  Throttling (brute-force zaštita)
+# ----------------------------------------------------------
+
+@pytest.fixture
+def low_throttle_rates(monkeypatch):
+    for scope in ("login", "token_refresh", "register", "password"):
+        monkeypatch.setitem(ScopedRateThrottle.THROTTLE_RATES, scope, "2/min")
+
+
+def test_login_is_throttled(api_client, regular_user, low_throttle_rates):
+    payload = {"username": "regular", "password": "pogresna"}
+    statuses = [api_client.post("/api/token/", payload, format="json").status_code for _ in range(3)]
+
+    assert statuses == [401, 401, 429]
+    #* Ni ispravna lozinka ne prolazi dok traje ograničenje
+    correct = api_client.post("/api/token/", {"username": "regular", "password": DEFAULT_PASSWORD}, format="json")
+    assert correct.status_code == 429
+
+
+def test_token_refresh_is_throttled(api_client, low_throttle_rates):
+    statuses = [
+        api_client.post("/api/token/refresh/", {"refresh": "nije-token"}, format="json").status_code for _ in range(3)
+    ]
+
+    assert statuses == [401, 401, 429]
+
+
+def test_registration_is_throttled(api_client, low_throttle_rates):
+    statuses = [
+        api_client.post(
+            "/api/users/", _registration_payload(username=f"novi{i}", email=f"novi{i}@example.com"), format="json"
+        ).status_code
+        for i in range(3)
+    ]
+
+    assert statuses == [201, 201, 429]
+    assert not User.objects.filter(username="novi2").exists()
+
+
+def test_other_endpoints_are_not_throttled(regular_client, low_throttle_rates):
+    statuses = {regular_client.get("/api/company/types/").status_code for _ in range(5)}
+
+    assert statuses == {200}

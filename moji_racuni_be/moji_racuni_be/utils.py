@@ -4,7 +4,7 @@ import logging
 import re
 import requests
 from urllib.parse import urlparse
-import ipaddress
+from django.conf import settings
 from django.db import connection
 from rest_framework.exceptions import APIException
 
@@ -353,33 +353,22 @@ def get_items(receipt, receipt_id):
     return items
 
 
-def _is_public_fetch_url(url):
+def _is_allowed_receipt_url(url):
+    """
+    Računi se preuzimaju samo sa PURS-a: https i host iz PURS_ALLOWED_HOSTS (podrazumevani port).
+    Time server ne može da se iskoristi za zahteve ka proizvoljnim (i internim) adresama.
+    """
     parsed = urlparse(url)
-    if parsed.scheme not in ["http", "https"]:
+    if parsed.scheme != "https":
         return False
-
-    host = parsed.hostname
-    if not host:
-        return False
-
-    if host in ["localhost", "127.0.0.1", "::1"]:
-        return False
-
     try:
-        ip = ipaddress.ip_address(host)
-        if (
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_multicast
-            or ip.is_reserved
-        ):
-            return False
+        port = parsed.port
     except ValueError:
-        # Host is not a direct IP literal, allow DNS hostname.
-        pass
-
-    return True
+        return False
+    if port not in (None, 443):
+        return False
+    host = (parsed.hostname or "").lower()
+    return host in {allowed.lower() for allowed in settings.PURS_ALLOWED_HOSTS}
 
 
 def _fetch_url_text(url):
@@ -387,7 +376,7 @@ def _fetch_url_text(url):
     Preuzima stranicu računa. Nikad ne vraća None: u slučaju greške baca
     InvalidReceiptError (400) ili PursUnavailableError (502).
     """
-    if not isinstance(url, str) or not _is_public_fetch_url(url):
+    if not isinstance(url, str) or not _is_allowed_receipt_url(url):
         raise InvalidReceiptError()
     try:
         response = requests.get(
@@ -1508,9 +1497,10 @@ def filter_users(id, username, email, orderBy, ascendingOrder):
     safe_order_direction = _sanitize_order_direction(ascendingOrder)
 
     with connection.cursor() as cursor:
+        #* Eksplicitne kolone: heš lozinke i ostala interna polja ne smeju u odgovor
         cursor.execute(
             f'''
-            SELECT * FROM account_user
+            SELECT id, username, email, role, date_joined, is_active FROM account_user
                 WHERE CAST(id AS CHAR) LIKE %s
                 AND username LIKE %s
                 AND email LIKE %s

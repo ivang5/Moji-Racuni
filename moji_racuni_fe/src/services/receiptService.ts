@@ -1,9 +1,4 @@
 const createReceiptService = (api: any, getResponse: any) => {
-  const getReceipts = async (page: number) => {
-    const { response, data } = await api(`/api/receipts/?page=${page}/`);
-    return getResponse(response, data);
-  };
-
   const getReceipt = async (id: number) => {
     const { response, data } = await api(`/api/receipts/${id}/`);
     return getResponse(response, data);
@@ -56,7 +51,6 @@ const createReceiptService = (api: any, getResponse: any) => {
   };
 
   return {
-    getReceipts,
     getReceipt,
     getLastReceipt,
     filterReceipts,

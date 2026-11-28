@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "../../api/errors";
 import { userKeys } from "../../services/queryKeys";
 import useApi from "../../utils/useApi";
 
@@ -19,31 +18,9 @@ const useUpdateUserMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, userInfo }: UpdateUserPayload) => {
-      const response = await api.updateUser(id, userInfo);
-
-      if (response === 404) {
-        throw new ApiError("User not found.", {
-          code: "NOT_FOUND",
-          status: 404,
-        });
-      }
-
-      if (response === 409) {
-        throw new ApiError("User update conflict.", {
-          code: "CONFLICT",
-          status: 409,
-        });
-      }
-
-      if (!response) {
-        throw new ApiError("Unable to update user.", {
-          code: "UNKNOWN_ERROR",
-        });
-      }
-
-      return response;
-    },
+    // Greške (404, 409, 400 sa porukama po poljima) baca api.updateUser kao ApiError
+    mutationFn: async ({ id, userInfo }: UpdateUserPayload) =>
+      await api.updateUser(id, userInfo),
     onSuccess: (updatedUser) => {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
       if (updatedUser?.id) {

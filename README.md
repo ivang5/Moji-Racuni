@@ -10,8 +10,11 @@ Web aplikacija za praćenje finansija. Skladišti podatke sa fiskalnih računa i
   - Izvršiti `uv sync` (instalira Python 3.14 i zavisnosti iz `uv.lock`)
   - Kreirati `.env` fajl po uzoru na `moji_racuni_be/.env.example`.
     - Za lokalni razvoj obavezno postaviti `DJANGO_DEBUG=True`.
+    - Kada `DJANGO_DEBUG` nije uključen, `DJANGO_SECRET_KEY` mora biti dugačka nasumična vrednost (komanda za generisanje je u `.env.example`); bez nje se aplikacija ne pokreće.
     - Ako pristupate sa drugih uređaja u mreži, u `DJANGO_ALLOWED_HOSTS` dodajte IP host uređaja (npr. `192.168.1.10`).
     - Za frontend lokalno, ostaviti `CORS_ALLOW_ALL_ORIGINS=True` ili podesiti `CORS_ALLOWED_ORIGINS` na frontend adrese.
+    - Opciona podešavanja (trajanje JWT tokena, ograničenje broja pokušaja prijave, HTTPS, logovanje) su opisana u `.env.example`. HTTPS podešavanja su podrazumevano isključena, da bi pristup preko `http://<ip>` u lokalnoj mreži radio.
+    - Logoi preduzeća se čuvaju u `moji_racuni_be/media/` (Django ih servira samo uz `DJANGO_DEBUG=True`).
   - Izvršiti `uv run python manage.py migrate`
   - Izvršiti `uv run python manage.py createsuperuser` (za kreiranje administratora koji treba da bude predefinisan)
 - Unutar `moji_racuni_fe` direktorijuma:

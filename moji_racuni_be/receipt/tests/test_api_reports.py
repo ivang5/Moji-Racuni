@@ -1,7 +1,14 @@
 """
-Karakterizacioni testovi: prijave nepravilnosti na računu (/api/reports/...).
+Testovi: prijave nepravilnosti na računu (/api/reports/...).
+
+Prijavljen korisnik bez prava na akciju dobija 403; tuđa prijava se REGULAR korisniku ponaša kao
+nepostojeća (404).
 """
+import datetime as dt
+from zoneinfo import ZoneInfo
+
 import pytest
+from django.utils import timezone
 
 from receipt.models import Report
 from receipt.tests.factories import ReceiptFactory, ReportFactory, utc
@@ -39,23 +46,14 @@ def _ids(rows):
 
 
 # ----------------------------------------------------------
-#  GET /api/reports/
+#  GET /api/reports/ (uklonjeno, FE koristi /api/reports/filter/)
 # ----------------------------------------------------------
 
-def test_reports_list_regular_sees_own(regular_client, reports):
-    r1, r2, _ = reports
+@pytest.mark.parametrize("client_fixture", ["regular_client", "admin_api_client"])
+def test_reports_list_is_removed(request, client_fixture, reports):
+    client = request.getfixturevalue(client_fixture)
 
-    response = regular_client.get("/api/reports/")
-
-    assert response.status_code == 200
-    body = response.json()
-    assert (body["pageCount"], body["pageNum"]) == (1, 1)
-    assert sorted(_ids(body["reports"])) == [r1.id, r2.id]
-    assert set(body["reports"][0]) == REPORT_FIELDS
-
-
-def test_reports_list_admin_sees_all(admin_api_client, reports):
-    assert sorted(_ids(admin_api_client.get("/api/reports/").json()["reports"])) == sorted(r.id for r in reports)
+    assert client.get("/api/reports/").status_code == 405
 
 
 # ----------------------------------------------------------
@@ -119,17 +117,21 @@ def test_report_retrieve_own(regular_client, reports):
     response = regular_client.get(f"/api/reports/{reports[0].id}/")
 
     assert response.status_code == 200
+    assert set(response.json()) == REPORT_FIELDS
     assert response.json()["request"] == "Pogrešan iznos"
     assert response.json()["date"] == "2025-04-01T10:00:00Z"
+
+
+def test_report_retrieve_admin_sees_any_report(admin_api_client, reports):
+    assert admin_api_client.get(f"/api/reports/{reports[2].id}/").status_code == 200
 
 
 def test_report_retrieve_unknown_returns_404(regular_client):
     assert regular_client.get("/api/reports/999999/").status_code == 404
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: REGULAR čita tuđu prijavu")
 def test_report_retrieve_foreign_is_forbidden(regular_client, reports):
-    assert regular_client.get(f"/api/reports/{reports[2].id}/").status_code in (403, 404)
+    assert regular_client.get(f"/api/reports/{reports[2].id}/").status_code == 404
 
 
 # ----------------------------------------------------------
@@ -158,67 +160,85 @@ def test_last_report_without_reports_returns_404(admin_api_client):
     assert admin_api_client.get("/api/reports/last/").status_code == 404
 
 
-def test_last_report_for_regular_returns_401(regular_client):
-    assert regular_client.get("/api/reports/last/").status_code == 401
+def test_last_report_for_regular_returns_403(regular_client):
+    assert regular_client.get("/api/reports/last/").status_code == 403
 
 
 # ----------------------------------------------------------
 #  POST /api/reports/
 # ----------------------------------------------------------
 
-def test_create_report_for_own_receipt(regular_client, regular_user, other_regular_user):
+def test_create_report_for_own_receipt(regular_client, regular_user):
     receipt = ReceiptFactory(user=regular_user)
-    #* Isti oblik kao Receipts.tsx; polje user iz tela se ignoriše (postavlja se na prijavljenog korisnika)
-    payload = {"date": "2025-05-01 12:00:00", "receipt": receipt.id, "request": "Pogrešna cena", "user": other_regular_user.id}
+    #* Isti oblik kao Receipts.tsx
+    payload = {"receipt": receipt.id, "request": "Pogrešna cena"}
 
     response = regular_client.post("/api/reports/", payload, format="json")
 
     assert response.status_code == 201
     body = response.json()
     assert set(body) == REPORT_FIELDS
-    assert body["user"] == regular_user.id
+    assert (body["user"], body["receipt"], body["request"]) == (regular_user.id, receipt.id, "Pogrešna cena")
     assert (body["closed"], body["seen"], body["response"]) == (False, False, None)
     assert Report.objects.get(id=body["id"]).user == regular_user
+
+
+def test_create_report_ignores_server_side_fields(regular_client, regular_user, other_regular_user):
+    receipt = ReceiptFactory(user=regular_user)
+    payload = {
+        "receipt": receipt.id, "request": "Pogrešna cena", "date": "2000-01-01 12:00:00", "user": other_regular_user.id,
+        "response": "Sam sebi odgovaram", "closed": True, "seen": True,
+    }
+
+    response = regular_client.post("/api/reports/", payload, format="json")
+
+    assert response.status_code == 201
+    report = Report.objects.get(id=response.json()["id"])
+    assert report.user == regular_user
+    assert report.date.year != 2000
+    assert (report.response, report.closed, report.seen) == (None, False, False)
 
 
 def test_create_report_without_request_returns_400(regular_client, regular_user):
     receipt = ReceiptFactory(user=regular_user)
 
-    response = regular_client.post("/api/reports/", {"date": "2025-05-01 12:00:00", "receipt": receipt.id}, format="json")
+    response = regular_client.post("/api/reports/", {"receipt": receipt.id}, format="json")
 
     assert response.status_code == 400
     assert "request" in response.json()
 
 
-def test_create_report_by_admin_returns_401(admin_api_client, regular_user):
+def test_create_report_by_admin_returns_403(admin_api_client, regular_user):
     receipt = ReceiptFactory(user=regular_user)
 
-    response = admin_api_client.post(
-        "/api/reports/", {"date": "2025-05-01 12:00:00", "receipt": receipt.id, "request": "x"}, format="json"
-    )
+    response = admin_api_client.post("/api/reports/", {"receipt": receipt.id, "request": "x"}, format="json")
 
-    assert response.status_code == 401
+    assert response.status_code == 403
+    assert not Report.objects.exists()
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: REGULAR može da prijavi tuđi račun")
 def test_create_report_for_foreign_receipt_is_rejected(regular_client, other_regular_user):
     receipt = ReceiptFactory(user=other_regular_user)
 
-    response = regular_client.post(
-        "/api/reports/", {"date": "2025-05-01 12:00:00", "receipt": receipt.id, "request": "Tuđi račun"}, format="json"
-    )
+    response = regular_client.post("/api/reports/", {"receipt": receipt.id, "request": "Tuđi račun"}, format="json")
 
-    assert response.status_code in (400, 403, 404)
+    #* Tuđi račun se ponaša kao nepostojeći
+    assert response.status_code == 400
+    assert response.json() == {"receipt": [f'Invalid pk "{receipt.id}" - object does not exist.']}
     assert not Report.objects.filter(receipt=receipt).exists()
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: datum prijave šalje klijent, a treba da ga postavlja server")
 def test_create_report_date_is_set_by_server(regular_client, regular_user):
     receipt = ReceiptFactory(user=regular_user)
 
     response = regular_client.post("/api/reports/", {"receipt": receipt.id, "request": "Bez datuma"}, format="json")
 
     assert response.status_code == 201
+    #* Kao i vreme računa: lokalno (srpsko) vreme označeno kao UTC, bez mikrosekundi
+    local_now = timezone.now().astimezone(ZoneInfo("Europe/Belgrade")).replace(tzinfo=dt.timezone.utc)
+    report_date = Report.objects.get(id=response.json()["id"]).date
+    assert report_date.microsecond == 0
+    assert abs(report_date - local_now) < dt.timedelta(minutes=1)
 
 
 # ----------------------------------------------------------
@@ -241,17 +261,42 @@ def test_admin_responds_to_report(admin_api_client, reports):
     response = admin_api_client.put(f"/api/reports/{r1.id}/", payload, format="json")
 
     assert response.status_code == 200
+    assert set(response.json()) == REPORT_FIELDS
     r1.refresh_from_db()
     assert (r1.response, r1.closed, r1.seen) == ("Hvala, ispravljeno.", True, False)
 
 
-def test_update_report_with_invalid_data_returns_400(admin_api_client, reports):
-    response = admin_api_client.put(f"/api/reports/{reports[0].id}/", {"response": "x"}, format="json")
+def test_admin_response_changes_only_response_and_closed(admin_api_client, reports, other_regular_user):
+    r2 = reports[1]
+    r2.seen = True
+    r2.save()
+    original = (r2.date, r2.request, r2.receipt_id, r2.user_id)
+    payload = {
+        "date": "2000-01-01T00:00:00Z", "request": "Izmenjeno", "response": "Novi odgovor", "closed": True,
+        "seen": True, "receipt": reports[2].receipt_id, "user": other_regular_user.id,
+    }
+
+    response = admin_api_client.put(f"/api/reports/{r2.id}/", payload, format="json")
+
+    assert response.status_code == 200
+    r2.refresh_from_db()
+    assert (r2.date, r2.request, r2.receipt_id, r2.user_id) == original
+    #* Nov odgovor korisnik još nije video
+    assert (r2.response, r2.closed, r2.seen) == ("Novi odgovor", True, False)
+
+
+@pytest.mark.parametrize("payload", [{}, {"response": ""}, {"closed": True}], ids=["prazno", "prazan-odgovor", "bez-odgovora"])
+def test_update_report_without_response_returns_400(admin_api_client, reports, payload):
+    response = admin_api_client.put(f"/api/reports/{reports[0].id}/", payload, format="json")
 
     assert response.status_code == 400
+    assert "response" in response.json()
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: REGULAR menja tuđu prijavu")
+def test_update_unknown_report_returns_404(admin_api_client):
+    assert admin_api_client.put("/api/reports/999999/", {"response": "x"}, format="json").status_code == 404
+
+
 def test_regular_cannot_update_foreign_report(regular_client, reports):
     r3 = reports[2]
     payload = {
@@ -261,12 +306,11 @@ def test_regular_cannot_update_foreign_report(regular_client, reports):
 
     response = regular_client.put(f"/api/reports/{r3.id}/", payload, format="json")
 
-    assert response.status_code in (403, 404)
+    assert response.status_code == 403
     r3.refresh_from_db()
     assert r3.request == "Pogrešan datum"
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: REGULAR može sam da odgovori na/zatvori svoju prijavu")
 def test_regular_cannot_respond_to_or_close_own_report(regular_client, reports):
     r1 = reports[0]
     payload = {
@@ -274,8 +318,9 @@ def test_regular_cannot_respond_to_or_close_own_report(regular_client, reports):
         "seen": True, "receipt": r1.receipt_id, "user": r1.user_id,
     }
 
-    regular_client.put(f"/api/reports/{r1.id}/", payload, format="json")
+    response = regular_client.put(f"/api/reports/{r1.id}/", payload, format="json")
 
+    assert response.status_code == 403
     r1.refresh_from_db()
     assert (r1.response, r1.closed) == (None, False)
 
@@ -295,17 +340,16 @@ def test_set_seen_on_own_report(regular_client, reports):
     assert r2.seen is True
 
 
-def test_set_seen_by_admin_returns_401(admin_api_client, reports):
-    assert admin_api_client.put(f"/api/reports/{reports[1].id}/set-seen/").status_code == 401
+def test_set_seen_by_admin_returns_403(admin_api_client, reports):
+    assert admin_api_client.put(f"/api/reports/{reports[1].id}/set-seen/").status_code == 403
 
 
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: REGULAR označava tuđu prijavu kao viđenu")
 def test_set_seen_on_foreign_report_is_forbidden(regular_client, reports):
     r3 = reports[2]
 
     response = regular_client.put(f"/api/reports/{r3.id}/set-seen/")
 
-    assert response.status_code in (403, 404)
+    assert response.status_code == 404
     r3.refresh_from_db()
     assert r3.seen is False
 
@@ -320,7 +364,7 @@ def test_regular_deletes_own_report(regular_client, reports):
 
 
 def test_regular_cannot_delete_foreign_report(regular_client, reports):
-    assert regular_client.delete(f"/api/reports/{reports[2].id}/").status_code == 401
+    assert regular_client.delete(f"/api/reports/{reports[2].id}/").status_code == 404
     assert Report.objects.filter(id=reports[2].id).exists()
 
 

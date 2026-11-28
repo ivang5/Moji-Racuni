@@ -1,5 +1,5 @@
 """
-Karakterizacioni testovi: računi (lista, filter, detalji, poslednji račun, brisanje).
+Testovi: računi (filter, detalji, poslednji račun, brisanje).
 Unos računa preko linka je u test_api_receipt_import.py.
 """
 import pytest
@@ -29,58 +29,16 @@ def _ids(rows):
 
 
 # ----------------------------------------------------------
-#  GET /api/receipts/
+#  GET /api/receipts/ (uklonjeno, FE koristi /api/receipts/filter/)
 # ----------------------------------------------------------
 
-def test_receipts_list_regular_is_paginated_and_serialized(regular_client, regular_user, other_regular_user):
-    own = [ReceiptFactory(user=regular_user) for _ in range(13)]
-    ReceiptFactory(user=other_regular_user)
+@pytest.mark.parametrize("client_fixture", ["regular_client", "admin_api_client"])
+def test_receipts_list_is_removed(request, client_fixture, regular_user):
+    #* Ranije je ADMIN ovde dobijao sve račune svih korisnika odjednom (bez paginacije)
+    client = request.getfixturevalue(client_fixture)
+    ReceiptFactory(user=regular_user)
 
-    #* FE (receiptService.ts) šalje "?page=<n>/" -> neispravan broj stranice -> prva stranica
-    response = regular_client.get("/api/receipts/?page=1/")
-
-    assert response.status_code == 200
-    body = response.json()
-    assert set(body) == {"pageCount", "pageNum", "receipts"}
-    assert (body["pageCount"], body["pageNum"]) == (2, 1)
-    assert len(body["receipts"]) == 12
-    assert set(body["receipts"][0]) == SERIALIZED_RECEIPT_FIELDS
-    page2 = regular_client.get("/api/receipts/", {"page": 2}).json()
-    assert set(_ids(body["receipts"]) + _ids(page2["receipts"])) == {r.id for r in own}
-
-
-def test_receipt_serialized_shape(regular_client, regular_user):
-    receipt = ReceiptFactory(user=regular_user, date=utc(2025, 1, 6, 9, 15), totalPrice="1000.00", totalVat="90.91")
-
-    row = regular_client.get("/api/receipts/").json()["receipts"][0]
-
-    #* ModelSerializer: DECIMAL -> string, datum -> ISO sa "Z"
-    assert row == {
-        "id": receipt.id,
-        "date": "2025-01-06T09:15:00Z",
-        "link": receipt.link,
-        "totalPrice": "1000.00",
-        "totalVat": "90.91",
-        "user": regular_user.id,
-        "companyUnit": receipt.companyUnit_id,
-    }
-
-
-def test_receipts_list_admin_returns_deduplicated_raw_rows(admin_api_client, stats_data):
-    body = admin_api_client.get("/api/receipts/").json()
-
-    d = stats_data
-    assert (body["pageCount"], body["pageNum"]) == (1, 1)
-    #* B1 ima isti link kao A1 -> izbačen
-    assert sorted(_ids(body["receipts"])) == sorted(r.id for r in [d.a1, d.a2, d.a3, d.a4, d.a_out, d.b2])
-
-
-@pytest.mark.xfail(strict=True, reason="Bezbednosni propust: ADMIN lista vraća SVE račune umesto jedne stranice")
-def test_receipts_list_admin_returns_single_page(admin_api_client, regular_user):
-    for _ in range(13):
-        ReceiptFactory(user=regular_user)
-
-    assert len(admin_api_client.get("/api/receipts/").json()["receipts"]) == 12
+    assert client.get("/api/receipts/").status_code == 405
 
 
 # ----------------------------------------------------------
@@ -204,12 +162,21 @@ def test_receipts_filter_without_required_params_returns_400(regular_client):
 # ----------------------------------------------------------
 
 def test_receipt_retrieve_own(regular_client, regular_user):
-    receipt = ReceiptFactory(user=regular_user)
+    receipt = ReceiptFactory(user=regular_user, date=utc(2025, 1, 6, 9, 15), totalPrice="1000.00", totalVat="90.91")
 
     response = regular_client.get(f"/api/receipts/{receipt.id}/")
 
     assert response.status_code == 200
-    assert response.json()["id"] == receipt.id
+    #* ModelSerializer: DECIMAL -> string, datum -> ISO sa "Z"
+    assert response.json() == {
+        "id": receipt.id,
+        "date": "2025-01-06T09:15:00Z",
+        "link": receipt.link,
+        "totalPrice": "1000.00",
+        "totalVat": "90.91",
+        "user": regular_user.id,
+        "companyUnit": receipt.companyUnit_id,
+    }
     assert set(response.json()) == SERIALIZED_RECEIPT_FIELDS
 
 
@@ -225,8 +192,9 @@ def test_receipt_retrieve_admin_sees_any_receipt(admin_api_client, regular_user)
     assert admin_api_client.get(f"/api/receipts/{receipt.id}/").status_code == 200
 
 
-def test_receipt_retrieve_unknown_returns_404(regular_client):
-    assert regular_client.get("/api/receipts/999999/").status_code == 404
+@pytest.mark.parametrize("receipt_id", ["999999", "abc"], ids=["nepostojeci", "neispravan"])
+def test_receipt_retrieve_unknown_returns_404(regular_client, receipt_id):
+    assert regular_client.get(f"/api/receipts/{receipt_id}/").status_code == 404
 
 
 # ----------------------------------------------------------
@@ -256,8 +224,9 @@ def test_last_receipt_without_receipts_returns_404(regular_client):
     assert regular_client.get("/api/receipts/last/").status_code == 404
 
 
-def test_last_receipt_for_admin_returns_401(admin_api_client):
-    assert admin_api_client.get("/api/receipts/last/").status_code == 401
+def test_last_receipt_for_admin_returns_403(admin_api_client):
+    #* Prijavljen korisnik bez prava dobija 403 (401 je samo za neprijavljenog)
+    assert admin_api_client.get("/api/receipts/last/").status_code == 403
 
 
 # ----------------------------------------------------------

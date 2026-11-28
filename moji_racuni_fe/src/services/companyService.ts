@@ -1,3 +1,5 @@
+import { toApiError } from "../api/errors";
+
 const createCompanyService = (api: any, getResponse: any) => {
   const getCompanyUnits = async (tin: string) => {
     const { response, data } = await api(`/api/company/units/?tin=${tin}`);
@@ -131,12 +133,15 @@ const createCompanyService = (api: any, getResponse: any) => {
     const formData = new FormData();
     formData.append("img", image);
 
+    // Content-Type (sa boundary-jem) za FormData postavlja browser
     const { response, data } = await api(`/api/companies/${tin}/change-img/`, {
       method: "PUT",
       body: formData,
-      headers: { "Content-Type": "multipart/form-data" },
     });
-    return getResponse(response, data, 200);
+    if (response.status !== 200) {
+      throw toApiError(response.status, data, "Unable to change image.");
+    }
+    return data;
   };
 
   const changeCompanyType = async (

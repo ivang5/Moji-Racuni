@@ -8,11 +8,7 @@ const useCreateReportMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (report: {
-      date: string;
-      receipt: number;
-      request: string;
-    }) => {
+    mutationFn: async (report: { receipt: number; request: string }) => {
       const response = await api.createReport(report);
 
       if (response === 404) {

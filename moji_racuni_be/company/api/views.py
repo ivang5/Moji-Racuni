@@ -1,22 +1,27 @@
+from uuid import uuid4
+
 from rest_framework.response import Response
-from rest_framework.decorators import permission_classes
 from rest_framework import viewsets
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import transaction
 from django.shortcuts import get_object_or_404
-from .serializers import CompanySerializer, CompanyUnitSerializer, CompanyTypeSerializer
-from company.models import CompanyType, Company, CompanyUnit
+from .serializers import CompanySerializer, CompanyUnitSerializer, CompanyTypeSerializer, CompanyImageSerializer
+from company.models import Company, CompanyUnit
 from moji_racuni_be import utils
+from moji_racuni_be.permissions import IsAdminRole, IsRegularRole
 
-@permission_classes([IsAuthenticated])
+
 class CompanyViewSet(viewsets.ViewSet):
-    def list(self, request):
-        companies = Company.objects.all()
-        serializer = CompanySerializer(companies, many=True)
-        return Response(serializer.data)
-    
+    def get_permissions(self):
+        #* Preduzeća se unose samo kroz unos računa (REGULAR); logo menja ADMIN
+        if self.action == 'create':
+            return [IsRegularRole()]
+        if self.action == 'change_img':
+            return [IsAdminRole()]
+        return super().get_permissions()
+
     @action(detail=False, url_path='visited', url_name='visited')
     def visited(self, request):
         user = request.user
@@ -115,45 +120,39 @@ class CompanyViewSet(viewsets.ViewSet):
     @action(detail=True, methods=['put'], url_path='change-type', url_name='change_type')
     def change_type(self, request, pk=None):
         user = request.user
-        company_queryset = Company.objects.all()
-        company = get_object_or_404(company_queryset, pk=pk)
         type = request.data.get('type')
         type_queryset = user.companytype_set.all()
-        if (type != 'none'):
-            company_type = get_object_or_404(type_queryset, pk=type)
-        for comp_type in company.type.all():
-            for user_type in type_queryset:
-                if (comp_type.id == user_type.id):
-                    company.type.remove(user_type)
-        if (type != 'none'):
-            company.type.add(company_type)
-        company.save()
+        #* Zaključan red preduzeća: paralelne izmene istog preduzeća se izvršavaju jedna za drugom
+        with transaction.atomic():
+            company = get_object_or_404(Company.objects.select_for_update(), pk=pk)
+            if (type != 'none'):
+                company_type = get_object_or_404(type_queryset, pk=type)
+            company.type.remove(*company.type.filter(user=user))
+            if (type != 'none'):
+                company.type.add(company_type)
         serializer = CompanySerializer(company)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['put'], url_path='change-img', url_name='change_img')
     def change_img(self, request, pk=None):
-        user = request.user
-        if (user.role != "ADMIN"):
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        company_queryset = Company.objects.all()
-        company = get_object_or_404(company_queryset, pk=pk)
-        img = request.data.get('img')
-        company.image = img
-        company.save()
-        serializer = CompanySerializer(company)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def destroy(self, request, pk=None):
-        user = request.user
-        if (user.role != "ADMIN"):
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
         company = get_object_or_404(Company, pk=pk)
-        company.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    
-@permission_classes([IsAuthenticated])
+        serializer = CompanyImageSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        old_image = company.image.name if company.image else None
+        #* Nasumično ime: originalno ime fajla se ne koristi (putanja, kolizije, specijalni znakovi)
+        company.image.save(f"{uuid4().hex}.{serializer.extension}", serializer.validated_data['img'], save=False)
+        company.save(update_fields=['image'])
+        if old_image and old_image != company.image.name:
+            company.image.storage.delete(old_image)
+        return Response(CompanySerializer(company).data, status=status.HTTP_200_OK)
+
+
 class CompanyUnitViewSet(viewsets.ViewSet):
+    def get_permissions(self):
+        if self.action == 'create':
+            return [IsRegularRole()]
+        return super().get_permissions()
+
     def list(self, request):
         allUnits = CompanyUnit.objects.all()
         companyUnits = []
@@ -189,15 +188,7 @@ class CompanyUnitViewSet(viewsets.ViewSet):
         serializer = CompanyUnitSerializer(companyUnit)
         return Response(serializer.data)
 
-    def destroy(self, request, pk=None):
-        user = request.user
-        if (user.role != "ADMIN"):
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        companyUnit = get_object_or_404(CompanyUnit, pk=pk)
-        companyUnit.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
-@permission_classes([IsAuthenticated])
 class CompanyTypeViewSet(viewsets.ViewSet):
     def list(self, request):
         user = request.user
@@ -237,22 +228,13 @@ class CompanyTypeViewSet(viewsets.ViewSet):
         user = request.user
         companyTypes = user.companytype_set.all()
         for type in companyTypes:
-            if type.name == request.data["name"]:
+            if type.name == request.data.get("name"):
                 return Response(status=status.HTTP_409_CONFLICT)
         serializer = CompanyTypeSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def retrieve(self, request, pk=None):
-        queryset = CompanyType.objects.all()
-        companyType = get_object_or_404(queryset, pk=pk)
-        user = request.user
-        if (companyType.user != user):
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = CompanyTypeSerializer(companyType)
-        return Response(serializer.data)
     
     @action(detail=False, url_path='company', url_name='company')
     def get_by_company(self, request):
@@ -275,10 +257,7 @@ class CompanyTypeViewSet(viewsets.ViewSet):
         return Response(companyType)
 
     def update(self, request, pk=None):
-        companyType = get_object_or_404(CompanyType, pk=pk)
-        user = request.user
-        if (companyType.user != user):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        companyType = get_object_or_404(request.user.companytype_set, pk=pk)
         serializer = CompanyTypeSerializer(companyType, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -286,9 +265,6 @@ class CompanyTypeViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk=None):
-        companyType = get_object_or_404(CompanyType, pk=pk)
-        user = request.user
-        if (companyType.user != user):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        companyType = get_object_or_404(request.user.companytype_set, pk=pk)
         companyType.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

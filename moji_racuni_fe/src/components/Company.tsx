@@ -68,6 +68,7 @@ const Company = ({
               <input
                 className="company__img-input"
                 type="file"
+                accept="image/jpeg,image/png,image/webp"
                 ref={imgInput}
                 onChange={(e) => {
                   changeCompanyImg(e);
